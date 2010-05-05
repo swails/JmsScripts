@@ -1,0 +1,106 @@
+This is my directory for python/bash script development:
+
+Do all development on scripts in this folder! That way
+the most recent version of every script will be in this
+folder. This is especially important for utilities.py, as
+this will be a module included in just about every script
+as I believe it improves efficiency, and also makes less
+work for me since I can continually reuse the same common
+utilities. NOTE: MMPBSA.py and its related files are NOT in
+this directory as it is independently maintained.
+
+
+
+
+
+Inventory with description (Almost guaranteed to be out of date)
+
+AvgCol.py <file1> <file2> <file3> ... <file n> <column>
+   This script calculates the average of the specified column across all files.
+   Written in python by Jason
+
+scan.sh
+   This script must be edited for your specific system, but it takes a prmtop
+   and inpcrd and 4 atoms that define a dihedral and produces a potential energy
+   profile for that dihedral using sander. Result file is profile.dat
+   Written in bash by Jason
+
+SMDprep.sh
+   This script prepares a bunch of files (sander jar output) to be used by the
+   jarzynski program. Read the header for a description of use.
+   Written in bash by Jason
+
+SMD_to_FE.f90
+   This program asks simple questions about your system and takes a file prepared
+   by SMDprep.sh and calculates a free energy profile from them.
+   Written in Fortran90 (need ifort or gfortran to compile) by Jason.
+
+gnuplotnxy.py <datafile> {<script to write>}
+   This script very quickly makes a gnuplot script that will graph data in a file
+   exactly the same way that using the command 'xmgrace -nxy' would.
+   Written in python by Jason
+
+phipsigen.py -i <inputfile> -o <output_prefix> -p <prmtop> -y <mdcrd1> <mdcrd2> ... <mdcrdN> {-nobin} -gnuplot (DEFAULT) || -origin
+   This script will create Ramachandran plot files for specified residues in data files
+   suitable for viewing and creating graphs in gnuplot.
+   Written in Python by Jason.
+
+
+utilities.py
+   This is the accompanying python script for just about every python script in
+   here perhaps.  Hopefully an inventory of its functions has been kept up-to-
+   date in its description. Feel free to add to it.
+   Written in python (primarily thus far) by Jason
+
+AA_decomp.py <prmtop>
+   This script will break down the composition of amino acids in a given topology file.
+   It may be extended to prmtops later if the need arises. It returns the number of each
+   kind of amino acid, and it recognizes all names for each residue AMBER uses.
+   Written in Python by Jason
+
+sum.py <file1> <file2> <file3> ... <file n> <column>
+   This script calculates the sum of the specified column across all files.
+   Written in python by Jason
+
+Integrate_Trap.py <data_file>
+   This script calculates the integral numerically using the trapezoid approximation for a data file.
+   Written in python by Jason
+
+mass.py <prmtop>
+   This script calculates the total mass of all atoms in a given prmtop.
+   Written in python by Jason
+
+energyvectors.sh
+   This script will print out all of the energy "vectors" in a given run of MMPBSA.py. Edit the head
+   of the file to add further flexibility to the script.
+   Written in sh by Jason
+
+makeParm.py <options>
+   This script will create a prmtop and topology file based on the options passed on the command
+   line. It currently will take PDB files as inputs.
+   Written in python by Jason
+
+pkachunks.py <interval> <prefix> <cpin> <cpout1> <cpout2> ... <cpoutN>
+   This script will dump pKas as a function of time in chunks based on interval.  It will truncate
+   the "chunks" at each <interval> full record. The prefix will be the base of each file name, and
+   the suffix will be the number of the chunk.
+
+2Dbinning.py -f <data_file> -o <output_file> {-bins <NUMxNUM>} {-binrange <NUM-NUM> <NUM-NUM>} 
+   This script will take a data file with 2 columns and bin that data. Do not put any whitespace
+   inside NUMxNUM or NUM-NUM. The bin number will be chosen based on the standard deviation and
+   the binrange will be chosen based on the range of your data.
+   Witten in python by Jason
+
+maxmin.py -f <file> -n <column>
+   This script will take a data file and will return the maximum and minimum of the data file
+   corresponding to the given column (which defaults to 1)
+   Written in python by Jason
+
+cpinutil.py -p <prmtop> -igb <2 or 5> -resname <resname list> -notresname <resname list>           \
+            -resnum <residue numbers> -notresnum <residue numbers> -minpKa <value> -maxpKa <value> \
+            -states <list of states> -system <system name> {--ignore-warnings}
+
+   This script will take a prmtop and igb value and it will create a CPIN file for use with
+   sander's constant pH implementation with the given options.
+   Written in python by Jason
+

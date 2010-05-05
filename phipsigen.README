@@ -1,0 +1,29 @@
+                    INSTRUCTIONS FOR USE 
+
+Follow the command line usage message. phipsigen -help gives you
+the usage message. -gnuplot sets the output for gnuplot (and will
+also write the corresponding gnuplot scripts to load easily into
+gnuplot. -origin sets the output for origin. -nobin prevents the
+script from binning the phi-psi angles.  You will get two sets of
+data from this script: prefix.residue.dat which you can plot in 2-D
+to get the individual points on the ramachandran torus projection,
+and prefix.bin.dat which are the binned data files that plot prob-
+abilities as a function of PHI (x) and PSI (y) angles. These are
+the files plotted by the gnuplot scripts written by this script.
+
+
+
+Command line usage:
+
+phipsigen.py -i <inputfile> -o <output_prefix> -p <prmtop> -y <mdcrd1> <mdcrd2> ... <mdcrdN> {-nobin} -gnuplot (DEFAULT) || -origin
+
+Input file format:
+"""
+You are allowed any comment line that does not have an equal sign
+residue = 4, 5, 8, 20-25, 9
+bins = 50x50
+"""
+
+residue and bin keywords are case-INsensitive, and must be on different lines. There can be any kind of whitespace you want
+separating entries, but the residue lists must be comma-delimited and there must be an x separating the two bin dimensions.
+Note that this is the number of bins for PHI x PSI, not the bin width.

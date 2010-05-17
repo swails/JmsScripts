@@ -60,8 +60,7 @@ ektot = []
 eptot = []
 restr = []
 eamber = []
-if constp:
-   density = []
+density = []
 
 print >> sys.stdout, "Parsing mdout file..."
 

@@ -99,8 +99,11 @@ maxmin.py -f <file> -n <column>
 cpinutil.py -p <prmtop> -igb <2 or 5> -resname <resname list> -notresname <resname list>           \
             -resnum <residue numbers> -notresnum <residue numbers> -minpKa <value> -maxpKa <value> \
             -states <list of states> -system <system name> {--ignore-warnings}
-
    This script will take a prmtop and igb value and it will create a CPIN file for use with
    sander's constant pH implementation with the given options.
    Written in python by Jason
 
+analyzeConvergence.py <mdout> <mdcrd> <prmtop> {<gnuplot_script_prefix>}
+   This script will take an mdout and mdcrd file and create gnuplot scripts to graph the various
+   metrics of an equilibrated system (i.e. total energy, volume, pressure, density, RMS)
+   Written in python by Jason

@@ -80,34 +80,39 @@ for x in range(len(mdoutlines)):
 
    # get potential terms
    if mdoutlines[x].startswith(" NSTEP"):
-      y = x
-      words = mdoutlines[y].split()
-      step.append(int(words[2]))
-      temp.append(float(words[8]))
-      pres.append(float(words[11]))
-      y += 1
-      words = mdoutlines[y].split()
-      etot.append(float(words[2]))
-      ektot.append(float(words[5]))
-      eptot.append(float(words[8]))
-      y += 4
-      words = mdoutlines[y].split()
-      restr.append(float(words[8]))
-      eamber.append(eptot[len(eptot)-1]-restr[len(restr)-1])
-      if constp:
-         y += 2
+      try:
+         y = x
          words = mdoutlines[y].split()
-         density.append(float(words[2]))
+         step.append(int(words[2]))
+         temp.append(float(words[8]))
+         pres.append(float(words[11]))
+         y += 1
+         words = mdoutlines[y].split()
+         etot.append(float(words[2]))
+         ektot.append(float(words[5]))
+         eptot.append(float(words[8]))
+         y += 3
+         words = mdoutlines[y].split()
+         restr.append(float(words[8]))
+         eamber.append(eptot[len(eptot)-1]-restr[len(restr)-1])
+         if constp:
+            y += 2
+            words = mdoutlines[y].split()
+            density.append(float(words[2]))
+      except IndexError:
+         print >> sys.stderr, mdoutlines[y]
+         print >> sys.stderr, 'Error occurred on parsing the last line.'
+         sys.exit()
 
 if mdcrd != '':
    print >> sys.stdout, "Gathering RMS data with {0}...".format(ptraj)
    trajin = open('__ptraj.in','w')
    trajin.write("""trajin {0}
 strip :WAT
-rms first mass out __rms.dat
+rms first mass out __RMS.dat
 """.format(mdcrd))
    trajin.close()
-   os.system("{0} {1} __ptraj.in 2>>__ptraj.out 1>>__ptraj.out")
+   os.system("{0} {1} __ptraj.in 2>>__ptraj.out 1>>__ptraj.out".format(ptraj,prmtop))
 
 print >> sys.stdout, "Printing data files..."
 

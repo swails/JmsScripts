@@ -231,7 +231,7 @@ if binning:
             psiprintval = psistart
             if gnuformat:
                outputfile.write('\n')
-         outputfile.write(str(phiprintval) + ' ' + str(psiprintval) + ' ' + str(float(phipsibins[y])/float(number_frames)) + '\n')
+         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)))
          psiprintval = psiprintval + psiinterval
 
       outputfile.close()
@@ -244,7 +244,7 @@ if binning:
       for x in range(len(residues)):
          gnuscript = open(prefix + '.' + str(residues[x]) + '.gnu','w')
 
-         gnuscript.write('unset surface\nset contour base\nset cntrparam levels 20\nset cntrparam bspline\nset cntrparam order 7\n'\
+         gnuscript.write('unset surface\nset contour base\nset cntrparam levels 20\nset cntrparam bspline\nset cntrparam order 7\n'
                          + 'set view 0,0\nunset ztics\n')
          gnuscript.write('splot \'' + prefix + '.' + str(residues[x]) + '.bin.dat\' w l')
          gnuscript.close()

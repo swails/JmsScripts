@@ -106,8 +106,8 @@ try:
             if len(bins) != 2:
                print 'Error: Invalid input file!'
                sys.exit()
-            bins[0] = float(bins[0].strip())
-            bins[1] = float(bins[1].strip())
+            bins[0] = int(bins[0].strip())
+            bins[1] = int(bins[1].strip())
 except ValueError:
    print 'Error: Invalid input file!'
    sys.exit()

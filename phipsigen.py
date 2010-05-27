@@ -167,7 +167,7 @@ ptrajin.close()
 
 tptrajstart = time.time()
 print 'Running ptraj to dump dihedral data...'
-os.system('ptraj ' + topname + ' _PHIPSI_ptraj.in >& _PHIPSI_ptraj.out')
+os.system('ptraj ' + topname + ' _PHIPSI_ptraj.in > _PHIPSI_ptraj.out 2>&1')
 tptrajend = time.time()
 
 print 'Creating combined phi/psi files...'

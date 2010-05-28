@@ -107,3 +107,8 @@ analyzeConvergence.py <mdout> <mdcrd> <prmtop> {<gnuplot_script_prefix>}
    This script will take an mdout and mdcrd file and create gnuplot scripts to graph the various
    metrics of an equilibrated system (i.e. total energy, volume, pressure, density, RMS)
    Written in python by Jason
+
+integrateRama.py -i <Ramachandran_datafile> -phi <NxN> -psi <NxN>
+   This script will integrate a Ramachandran data file inside the defined range and return
+   just that number. It should be used with phipsigen.py.
+   Written in python by Jason

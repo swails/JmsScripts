@@ -23,7 +23,13 @@ def fileexists(filename): # returns logical True if file exists, False if not
    return True
 ###############################################################################
 
-os.system('rm _TITR_*')
+if len(sys.argv) > 1:
+   if sys.argv[1] == '-h' or sys.argv[1] == '-help' or sys.argv[1] == '--help':
+      print 'Usage: GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \\' 
+      print '                    -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>'
+      sys.exit()
+
+os.system('rm -f _TITR_*')
 
 # Edit these files for your system
 
@@ -34,10 +40,26 @@ repetitions   = 5       # how many times to titrate and average
 tolerance     = 0.008   # how tolerant we should be before we call it a success
 maxcycles     = 10      # how many times to iterate through to find the statene
 ns            = 2       # how many ns each titration is
+cpinname      = "cpin"  # the name of the cpin file
+
+for x in range(1,len(sys.argv)):
+   if sys.argv[x] == '-igb':
+      igb = int(sys.argv[x+1])
+   elif sys.argv[x] == '-pka':
+      pka = int(sys.argv[x+1])
+   elif sys.argv[x] == '-resname':
+      residuename = sys.argv[x+1]
+   elif sys.argv[x] == '-maxcyc':
+      maxcycles = int(sys.argv[x+1])
+   elif sys.argv[x] == '-ns':
+      ns = float(sys.argv[x+1])
+   elif sys.argv[x] == '-cpin':
+      cpinname = sys.argv[x+1]
+   elif sys.argv[x] == '-reps':
+      repetitions = int(sys.argv[x+1])
 
 # Not frequently edited
 
-cpinname      = "cpin"  # the name of the cpin file
 system_prefix = residuename.lower()
 
 # Very unlikely to change
@@ -202,6 +224,7 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
    subfactor = beta * math.log(ratio/0.5) * nd / np
 
    protene -= subfactor
+   enehist.append(protene)
 
    for x in range(len(protnum)):
       statenes[protnum[x]] -= subfactor

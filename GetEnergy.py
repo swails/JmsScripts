@@ -232,7 +232,7 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
 
    subfactor = beta * math.log(ratio/0.5) * nd / np
 
-   if zeroene == 'prot':
+   if zeroene == 'deprot':
       for x in range(len(protnum)):
          statenes[protnum[x]] -= subfactor
    else:

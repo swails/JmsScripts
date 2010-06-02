@@ -297,7 +297,7 @@ def getData(residue, igb):
                    0.5973,      # C
                   -0.5679 ] ]   # O 
 
-   if resname == "HIP":
+   if residue == "HIP":
       pKa1 = 6.5
       pKa2 = 7.1
 
@@ -374,7 +374,7 @@ def getData(residue, igb):
                    0.7341,      # C
                   -0.5894 ] ]   # 0
 
-   if resname == "LYS":
+   if residue == "LYS":
       pKa = 10.4
 
       if igb == 2:

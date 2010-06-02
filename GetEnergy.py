@@ -21,13 +21,17 @@ def fileexists(filename): # returns logical True if file exists, False if not
       return False
    file.close()
    return True
+
+def printusage():
+   print 'Usage: GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \\'
+   print '                    -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>'
+   sys.exit()
+
 ###############################################################################
 
 if len(sys.argv) > 1:
    if sys.argv[1] == '-h' or sys.argv[1] == '-help' or sys.argv[1] == '--help':
-      print 'Usage: GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \\' 
-      print '                    -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>'
-      sys.exit()
+      printusage()
 
 os.system('rm -f _TITR_*')
 
@@ -57,6 +61,9 @@ for x in range(1,len(sys.argv)):
       cpinname = sys.argv[x+1]
    elif sys.argv[x] == '-reps':
       repetitions = int(sys.argv[x+1])
+   elif sys.argv[x].startswith('-'):
+      print 'Unknown command-line argument ' + sys.argv[x]
+      printusage()
 
 # Not frequently edited
 

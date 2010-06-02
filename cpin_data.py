@@ -5,7 +5,7 @@ def getData(residue, igb):
    import sys, math
 
 # Factors to adjust TI energies
-   KB = 0.00198720666181781788 # kcal/mol * K
+   KB = 0.00199 # kcal/mol * K
    LN_TO_LOG = math.log(10)
    TEMP = 300
 

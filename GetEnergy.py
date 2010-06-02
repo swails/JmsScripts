@@ -262,7 +262,7 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
 
 statenestring = 'State Energies: '
 for x in range(len(statenes)):
-   statenestring += str(statenes[x]) + ', '
+   statenestring += '{0:.5f}, '.format(statenes[x])
 
 output = open("FINAL_RESULTS.txt","w")
 output.write(statenestring + 'Final Ratio: {0}\n'.format(ratio))

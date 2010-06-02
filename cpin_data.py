@@ -17,9 +17,9 @@ def getData(residue, igb):
 
       # set the relative energies for the different igb choices
       if igb == 2:
-         relene = 26.76101 + KB * LN_TO_LOG * TEMP * pKa
+         relene = 26.77653 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 5:
-         relene = 26.77252 + KB * LN_TO_LOG * TEMP * pKa
+         relene = 26.77068 + KB * LN_TO_LOG * TEMP * pKa
       else:
          relene = 0.0
 
@@ -123,9 +123,9 @@ def getData(residue, igb):
       pKa = 4.4
 
       if igb == 2:
-         relene = 8.3976585 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 8.39766 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 0.0
+         relene = 8.21030 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -243,9 +243,9 @@ def getData(residue, igb):
       pKa = 9.6
       
       if igb == 2:
-         relene = -65.0791 + KB * TEMP * LN_TO_LOG * pKa
+         relene = -65.0791 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -78.34438
+         relene = -65.9437 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 

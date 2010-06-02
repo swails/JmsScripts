@@ -277,4 +277,4 @@ print enehist
 print ratiohist
 print statenestring + 'Final Ratio: {0}'.format(ratio)
 
-print '\nTiming: {0} hr.'.format((tend-tstart)/3600)
+print '\nTiming: {0:.2f} hr.'.format((tend-tstart)/3600)

@@ -52,7 +52,7 @@ for x in range(1,len(sys.argv)):
    if sys.argv[x] == '-igb':
       igb = int(sys.argv[x+1])
    elif sys.argv[x] == '-pka':
-      pka = int(sys.argv[x+1])
+      pka = float(sys.argv[x+1])
    elif sys.argv[x] == '-resname':
       residuename = sys.argv[x+1]
    elif sys.argv[x] == '-maxcyc':

@@ -7,7 +7,9 @@
 #                                                                             #
 ###############################################################################
 
-import math, os, sys
+import math, os, sys, time
+
+tstart = time.time()
 
 sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
 
@@ -268,6 +270,10 @@ output = open("FINAL_RESULTS.txt","w")
 output.write(statenestring + 'Final Ratio: {0}\n'.format(ratio))
 output.close()
 
+tend = time.time()
+
 print enehist
 print ratiohist
 print statenestring + 'Final Ratio: {0}'.format(ratio)
+
+print '\nTiming: {0} hr.'.format((tend-tstart)/3600)

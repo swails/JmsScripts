@@ -11,13 +11,17 @@ import math, os, sys
 
 sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
 
-def fileexists(filename):
+###############################################################################
+
+#  User-defined functions
+def fileexists(filename): # returns logical True if file exists, False if not
    try:
       file = open(filename,'r')
    except IOError:
       return False
    file.close()
    return True
+###############################################################################
 
 os.system('rm _TITR_*')
 
@@ -26,9 +30,9 @@ os.system('rm _TITR_*')
 igb           = 5       # GB model to use
 pka           = 4.0     # The pKa of the residue
 residuename   = "AS4"   # The name of the residue to titrate
-repetitions   = 5       # how many times to titrate and average
+repetitions   = 1       # how many times to titrate and average
 tolerance     = 0.008   # how tolerant we should be before we call it a success
-maxcycles     = 1       # how many times to iterate through to find the statene
+maxcycles     = 2       # how many times to iterate through to find the statene
 ns            = 0.5     # how many ns each titration is
 
 # Not frequently edited
@@ -40,9 +44,15 @@ system_prefix = residuename.lower()
 
 statenes = []   # list of the state energies
 protcnts = []   # list of the corresponding protonation counts
+ratiohist= []   # the history of the ratios
+enehist  = []   # the history of the energies
 ratio    = 1    # the ratio of protonated:deprotonated -- we want it to be 0.5
 ene_line = 0    # which line of the cpin has the state energies
 nstlim   = int(ns * 0.5 * 1e6) # number of iterations
+kboltz   = 0.00199 # boltzmann's constant in kcal/mol K
+temp     = 300  # temperature
+beta     = 1 / (kboltz * temp) # 1 / k T
+zero     = 1e-8
 
 # The text for the leap script to make the files
 leap_script = """source leaprc.constph
@@ -109,18 +119,55 @@ for x in range(len(statenes)): # make sure they're all floats and ints
    protcnts[x] = int(protcnts[x].strip())
 
 
+# find the number of deprotonated states and the number of protonated states:
+if len(statenes) != len(protcnts):
+   print 'Error: statene list is not equal to protcnt list in the CPIN file!'
+   sys.exit()
+
+min,max = 99999,-99999     # min and max number of protons in all states
+protnum,deprotnum = [],[]  # the array of indices that correspond to prot, deprot states
+
+for x in range(len(protcnts)): # find the deprotonated and protonated forms states by max/min num of protons
+   if protcnts[x] < min:
+      min = protcnts[x]
+   if protcnts[x] > max:
+      max = protcnts[x]
+
+for x in range(len(protcnts)): # build list of prot, deprot state indices
+   if protcnts[x] == min:
+      deprotnum.append(x)
+   if protcnts[x] == max:
+      protnum.append(x)
+
+# make sure that deprotonated states have energy of 0. Protonated forms will have identical non-zero energies
+protene = statenes[protnum[0]]
+enehist.append(protene)
+for x in range(len(deprotnum)):
+   if statenes[deprotnum[x]] != 0:
+      print 'Error: Deprotonated form must have energy of zero!'
+      sys.exit()
+for x in range(len(protnum)):
+   if abs(statenes[protnum[x]] - protene) > zero:
+      print 'Error: Protonated states must all have the same energy!'
+      sys.exit()
+
+# debug printing
 print statenes
 print protcnts
 
+# set up some numbers we need for calculating new energies
+nd = float(len(deprotnum))
+np = float(len(protnum))
+
 # We now have enough to start the iteration
 step = 0
-while (step < maxcycles and ratio - 0.5 > tolerance):
+while (step < maxcycles and abs(ratio - 0.5) > tolerance):
 
    print '\n\n Starting step {0}'.format(step+1)
 
    ratio = 0
 
-   for y in range(repetitions): # loop through number of samples
+   for x in range(repetitions): # loop through number of samples
 
       # run sander
       print 'Running sander...'
@@ -136,16 +183,49 @@ while (step < maxcycles and ratio - 0.5 > tolerance):
 
       # get the new ratio from that file
       get_ratio = open('_TITR_pka.dat','r')
-      ratio += float(get_ratio.readline().strip())
+      tmp = float(get_ratio.readline().strip())
       get_ratio.close()
+
+      # print the ratio and add it to ratio for averaging
+      print tmp 
+      ratio += tmp
 
    ratio /= float(repetitions)
    print 'New ratio is {0}'.format(ratio)
+   ratiohist.append(ratio)
 
    print 'Calculating new state energies...'
 
+#   subfactor = -1 / beta * math.log( (nd * ratio / 0.5 + math.sqrt(4 * nd ** 2 * ratio ** 2 + 8 * ratio * math.exp(-beta*protene) * \
+#                             np * (nd + np * math.exp(-beta*protene) ) ) ) / (4 * ratio * np * math.exp(-beta * protene) ) )
+
+   subfactor = beta * math.log(ratio/0.5) * nd / np
+
+   protene -= subfactor
+
+   for x in range(len(protnum)):
+      statenes[protnum[x]] -= subfactor
+
    print 'New state energy array is '
    print statenes
+
+   print 'Writing new cpin file...'
+
+   os.system('rm -f {0}'.format(cpinname))
+   cpin = open(cpinname,'w')
+
+   stateneline = ' STATENE='
+   for x in range(len(statenes)):
+      stateneline += '{0:.5f},'.format(statenes[x])
+   stateneline += '\n'
+
+   for x in range(len(cpinlines)):
+      if x != ene_line:
+         cpin.write(cpinlines[x])
+      else:
+         cpin.write(stateneline)
+
+   cpin.close()
 
    step += 1
 
@@ -155,7 +235,9 @@ for x in range(len(statenes)):
    statenestring += str(statenes[x]) + ', '
 
 output = open("FINAL_RESULTS.txt","w")
-output.write(statenestring + 'Final Ratio: {0}'.format(ratio))
+output.write(statenestring + 'Final Ratio: {0}\n'.format(ratio))
 output.close()
 
+print enehist
+print ratiohist
 print statenestring + 'Final Ratio: {0}'.format(ratio)

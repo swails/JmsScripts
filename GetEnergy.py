@@ -30,10 +30,10 @@ os.system('rm _TITR_*')
 igb           = 5       # GB model to use
 pka           = 4.0     # The pKa of the residue
 residuename   = "AS4"   # The name of the residue to titrate
-repetitions   = 1       # how many times to titrate and average
+repetitions   = 5       # how many times to titrate and average
 tolerance     = 0.008   # how tolerant we should be before we call it a success
-maxcycles     = 2       # how many times to iterate through to find the statene
-ns            = 0.5     # how many ns each titration is
+maxcycles     = 10      # how many times to iterate through to find the statene
+ns            = 2       # how many ns each titration is
 
 # Not frequently edited
 

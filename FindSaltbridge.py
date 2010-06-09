@@ -27,7 +27,7 @@ def clean():
    os.system('rm -f _FSB_*')
 
 def printusage(): # usage statement
-   print 'FindSaltbridge.py -p prmtop -y mdcrd1,mdcrd2,... -o output_list'
+   print 'FindSaltbridge.py -p prmtop -y mdcrd1 mdcrd2 ... -o output_list'
    clean()
    sys.exit()
 

@@ -125,7 +125,7 @@ set cntrparam bspline
 set cntrparam order 7
 set view 0,0
 unset ztics\n""")
-   script.write('splot \'' + output_file + '\' w l')
+   script.write('plot \'' + output_file + '\' w l')
    script.close()
 
 

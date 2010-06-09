@@ -27,23 +27,32 @@ def clean():
    os.system('rm -f _FSB_*')
 
 def printusage(): # usage statement
-   print 'FindSaltbridge.py -p prmtop -y mdcrd1 mdcrd2 ... -o output_list'
+   print 'FindSaltbridge.py -p prmtop -y mdcrd1 mdcrd2 ... -o output_list -percent percent_population'
    clean()
    sys.exit()
 
 if len(sys.argv) > 1 and (sys.argv[1] == '-h' or sys.argv[1] == '-help' or sys.argv[1] == '--help'): # ask for help
    printusage()
 
-for x in range(len(sys.argv)):
-   if sys.argv[x] == '-p':
-      prmtop = sys.argv[x+1]
-   elif sys.argv[x] == '-o':
-      output = sys.argv[x+1]
-   elif sys.argv[x] == '-y':
-      x += 1
-      while x < len(sys.argv) and not sys.argv[x].startswith('-'):
-         mdcrds.append(sys.argv[x])
+try:
+   for x in range(len(sys.argv)):
+      if sys.argv[x] == '-p':
+         prmtop = sys.argv[x+1]
+      elif sys.argv[x] == '-o':
+         output = sys.argv[x+1]
+      elif sys.argv[x] == '-percent':
+         fraction = float(sys.argv[x+1])
+      elif sys.argv[x] == '-y':
          x += 1
+         while x < len(sys.argv) and not sys.argv[x].startswith('-'):
+            mdcrds.append(sys.argv[x])
+            x += 1
+except IndexError:
+   print 'Error: Improper command!'
+   printusage()
+except ValueError:
+   print 'Error: "percent" must be a floating point decimal!'
+   printusage()
 
 if len(mdcrds) == 0: # if no mdcrd supplied, give default
    mdcrds.append('mdcrd')

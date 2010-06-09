@@ -40,6 +40,7 @@ for x in range(len(sys.argv)):
    elif sys.argv[x] == '-o':
       output = sys.argv[x+1]
    elif sys.argv[x] == '-y':
+      x += 1
       while x < len(sys.argv) and not sys.argv[x].startswith('-'):
          mdcrds.append(sys.argv[x])
          x += 1
@@ -77,7 +78,8 @@ for x in range(len(residues)): # build acceptor list and donor list
 
 for x in range(len(acceptor_inds)): # build list of pairs
    for y in range(len(donor_inds)):
-      pairs.append([acceptor_inds[x],donor_inds[y],0])
+      if acceptor_inds[x] != donor_inds[y]:
+         pairs.append([acceptor_inds[x],donor_inds[y],0])
 
 file = open('_FSB_dist.ptraj','w')
 
@@ -98,20 +100,22 @@ file.close()
 
 os.system('ptraj {0} _FSB_dist.ptraj'.format(prmtop))
 
+print 'Done with ptraj...'
+
 outputfile = open(output,'w',0)
 
 for x in range(len(pairs)):
-   file = open('_FSB_{0}_{1}.dat','r')
+   file = open('_FSB_{0}_{1}.dat'.format(pairs[x][0],pairs[x][1]),'r')
    within = 0.0
    total = 0.0
    for line in file:
       words = line.split()
-      if float(words[1]) < cutoff:
+      if float(words[1]) < tolerance:
          within += 1.0
       total += 1.0
    file.close()
    if within / total >= fraction:
-      outputfile.write('{0} {1} - {2} {3} : Fraction {4:.3f}\n'.format(residues[pairs[x][0]-1], pairs[x][0], 
-                 residues[pairs[x][1]-1], pairs[x][1], within / total))
+      outputfile.write('{0} {1} - {2} {3} : Fraction {4:.3f}\n'.format(residues[pairs[x][0]-1].ljust(3), str(pairs[x][0]).rjust(3),
+                 residues[pairs[x][1]-1].ljust(3), str(pairs[x][1]).rjust(3), within / total))
 
 outputfile.close()

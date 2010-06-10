@@ -120,14 +120,7 @@ outputfile.close()
 
 if script_name != '':
    script = open(script_name,'w')
-   script.write("""unset surface
-set contour base
-set cntrparam levels 20
-set cntrparam bspline
-set cntrparam order 7
-set view 0,0
-unset ztics\n""")
-   script.write('plot \'' + output_file + '\' w l')
+   script.write("plot '{0}' w l".format(output_file))
    script.close()
 
 

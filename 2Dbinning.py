@@ -96,7 +96,8 @@ if bins[0] == 0 or bins[1] == 0:
    yinttmp = 3.5 * utilities.stdev(data2,'no') / float(len(data2)) ** (1/3)
    bins[0] = int(math.ceil(binrange[1] - binrange[0]/xinttmp))
    bins[1] = int(math.ceil(binrange[3] - binrange[2]/yinttmp))
-if normalize: pointweight /= float(len(data1))
+if normalize: 
+   pointweight /= float(len(data1)) * (binrange[1]-binrange[0])*(binrange[3]-binrange[2])/(bins[0]*bins[1])
 
 xinterval = (binrange[1] - binrange[0])/bins[0]
 yinterval = (binrange[3] - binrange[2])/bins[1]

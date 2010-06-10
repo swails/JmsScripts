@@ -88,7 +88,7 @@ if bins == 0:
    bins = int(math.ceil(binrange[1] - binrange[0]/inttmp))
 
 if normalize: 
-   pointweight /= float(len(data))
+   pointweight /= float(len(data)) * (binrange[1] - binrange[0])/bins
 
 interval = (binrange[1] - binrange[0])/bins
 

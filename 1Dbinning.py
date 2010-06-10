@@ -86,7 +86,8 @@ if (binrange[0] == 0 and binrange[1] == 0) or (binrange[2] == 0 and binrange[3] 
 if bins == 0:
    inttmp = 3.5 * utilities.stdev(data,'no') / float(len(data)) ** (1/3)
    bins = int(math.ceil(binrange[1] - binrange[0]/inttmp))
-   if normalize: pointweight /= float(len(data))
+   if normalize: 
+      pointweight /= float(len(data))
 
 interval = (binrange[1] - binrange[0])/bins
 

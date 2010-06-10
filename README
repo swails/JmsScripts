@@ -112,3 +112,10 @@ integrateRama.py -i <Ramachandran_datafile> -phi <NxN> -psi <NxN>
    This script will integrate a Ramachandran data file inside the defined range and return
    just that number. It should be used with phipsigen.py.
    Written in python by Jason
+
+FindSaltbridge.py -p <prmtop> -y <mdcrd1> <mdcrd2> ... -o <output_list>
+   This script will locate salt bridges in a (set of) trajectory/ies.  It will print an
+   output file that has the salt bridges that are more than 25% populated (along with the
+   fraction population).
+   Written in python by Jason
+

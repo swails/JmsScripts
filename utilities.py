@@ -24,6 +24,7 @@
 # round: rounds a given floating point number to a given decimal point *deprecated*
 # resnum: returns the number of residues in a given amber topology file
 # getresinfo: gets residue information based on prmtop flag from a given prmtop file
+# getallresinfo: gets info for all residues from given flag name for a given prmtop
 # fileexists: checks for the existence of a file and prints out a warning if it's not there
 # getresindex: returns the rank in alphabetical order of a given amino acid
 # getresdecmp: returns the amino acid decomposition of a given prmtop in an alphabetical
@@ -142,30 +143,33 @@ def resnum(topfile):
 
 def getresinfo(res, topname, flag):
 
-   topfile = open(topname, 'r')
-   toplines = topfile.readlines()
-   topfile.close()
-   inblock = 0
-   residues_left = res
-   residues_in_line = 0
+   infos = getallresinfo(topname, flag) # get all residue info
+   return infos[res-1] # and simply return the residue of interest
+
+def getallresinfo(prmtop, flag):
+   import sys
+
+# open topology file, read into memory, and close it
+   top = open(prmtop,'r')
+   toplines = top.readlines()
+   top.close()
+
+   items = [] # this is the array that holds all pieces of information gathered from a specific part of top file
 
    for x in range(len(toplines)):
-      if x < 8:
-         continue
+      if flag in toplines[x]: # if flag is found in the topology line...
+         x = x + 1 # skip to next line
+         while not 'FORMAT' in toplines[x]: # skip over comments
+            x = x + 1
+         x = x + 1 # skip over FORMAT line
+         while not 'FLAG' in toplines[x]: # read until %FLAG is reached (next prmtop section)
+            words = toplines[x].split() # split along whitespace (will not work for every block)
+            for y in range(len(words)):
+               items.append(words[y]) # add on each item in order
+            x = x + 1
+         break # jump out of for loop
 
-      if flag.lower() in toplines[x-2].lower():
-         inblock = 1
-
-      if inblock == 1:
-         words = toplines[x].split()
-
-         residues_in_line = len(words)
-         if residues_in_line >= residues_left:
-            return words[residues_left - 1]
-         else:
-            residues_left = residues_left - residues_in_line
-
-   return -1
+   return items # return array with all the information
 
 def fileexists(file):
    try:

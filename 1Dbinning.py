@@ -86,7 +86,9 @@ if (binrange[0] == 0 and binrange[1] == 0) or (binrange[2] == 0 and binrange[3] 
 if bins == 0:
    inttmp = 3.5 * utilities.stdev(data,'no') / float(len(data)) ** (1/3)
    bins = int(math.ceil(binrange[1] - binrange[0]/inttmp))
-   if normalize: pointweight /= float(len(data))
+
+if normalize: 
+   pointweight /= float(len(data)) * (binrange[1] - binrange[0])/bins
 
 interval = (binrange[1] - binrange[0])/bins
 
@@ -118,14 +120,7 @@ outputfile.close()
 
 if script_name != '':
    script = open(script_name,'w')
-   script.write("""unset surface
-set contour base
-set cntrparam levels 20
-set cntrparam bspline
-set cntrparam order 7
-set view 0,0
-unset ztics\n""")
-   script.write('splot \'' + output_file + '\' w l')
+   script.write("plot '{0}' w l".format(output_file))
    script.close()
 
 

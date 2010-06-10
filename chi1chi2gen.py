@@ -3,8 +3,8 @@
 ###################################################################
 #                                                                 #
 # This program takes an amber input and uses ptraj to generate    #
-# phi-psi Ramachandran plots for specified residues. It formats   #
-# the output for use in gnuplot.                                  #
+# chi1-chi2 plots for specified residues. It formats the output   #
+# for use in gnuplot.                                             #
 #                                                                 #
 # Last update: 10/21/2009   (by jms)                              # 
 #  by Jason Swails                                                #
@@ -34,7 +34,7 @@ import utilities            # user-defined modules
 
 tglobalstart = time.time()
 if len(sys.argv) == 1 or '-help' in sys.argv[1]:
-   print 'Usage: phipsigen.py -i inputfile -o output_prefix -p prmtop -y mdcrd1 mdcrd2 ... mdcrdN {-nobin} {-origin || -gnuplot}'
+   print 'Usage: chi1chi2gen.py -i inputfile -o output_prefix -p prmtop -y mdcrd1 mdcrd2 ... mdcrdN {-nobin} {-origin || -gnuplot}'
    print 'Default is "gnuplot" format'
    sys.exit()
 
@@ -158,11 +158,11 @@ for x in range(len(residues)):
    prevres = str(residues[x] - 1)
    curres  = str(residues[x])
    nextres = str(residues[x] + 1)
-   ptrajin.write('dihedral phires' + curres + ' :' + prevres + '@C :' + curres + '@N :' + \
-                 curres + '@CA :' + curres + '@C out _PHIPSI_phires' + curres + '\n')
+   ptrajin.write('dihedral phires' + curres + ' :' + curres + '@N :' + curres + '@CA :' + \
+                 curres + '@CB :' + curres + '@CG out _PHIPSI_phires' + curres + '\n')
 
-   ptrajin.write('dihedral psires' + curres + ' :' + curres + '@N :' + curres + '@CA :' + \
-                 curres + '@C :' + nextres + '@N out _PHIPSI_psires' + curres + '\n')
+   ptrajin.write('dihedral psires' + curres + ' :' + curres + '@CA :' + curres + '@CB :' + \
+                 curres + '@CG :' + curres + '@OD1 out _PHIPSI_psires' + curres + '\n')
 ptrajin.close()
 
 tptrajstart = time.time()
@@ -231,7 +231,7 @@ if binning:
             psiprintval = psistart
             if gnuformat:
                outputfile.write('\n')
-         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
+         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)))
          psiprintval = psiprintval + psiinterval
 
       outputfile.close()

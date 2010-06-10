@@ -170,18 +170,18 @@ for x in range(len(protcnts)): # build list of prot, deprot state indices
    if protcnts[x] == max:
       protnum.append(x)
 
-# make sure that deprotonated states have energy of 0. Protonated forms will have identical non-zero energies
-protene = statenes[protnum[0]]
-enehist.append(protene)
+# make sure that either protonated or deprotonated has energy of zero
+
+zeroene = 'deprot'
 for x in range(len(deprotnum)):
-   if statenes[deprotnum[x]] != 0:
-      print 'Error: Deprotonated form must have energy of zero!'
-      sys.exit()
+   if statenes[deprotnum[x]] != 0.0:
+      zeroene = 'prot'
 for x in range(len(protnum)):
-   if abs(statenes[protnum[x]] - protene) > zero:
-      print 'Error: Protonated states must all have the same energy!'
+   if zeroene == 'prot' and statenes[protnum[x]] != 0:
+      print 'Error: Either deprot or prot must have zero energies!'
       sys.exit()
 
+enehist.append(statenes)
 # debug printing
 print statenes
 print protcnts
@@ -225,21 +225,23 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
    print 'New ratio is {0}'.format(ratio)
    ratiohist.append(ratio)
 
-   print 'Calculating new state energies...'
+   if abs(ratio - 0.5) < tolerance: # don't calc new energy if converged
+      break
 
-#   subfactor = -1 / beta * math.log( (nd * ratio / 0.5 + math.sqrt(4 * nd ** 2 * ratio ** 2 + 8 * ratio * math.exp(-beta*protene) * \
-#                             np * (nd + np * math.exp(-beta*protene) ) ) ) / (4 * ratio * np * math.exp(-beta * protene) ) )
+   print 'Calculating new state energies...'
 
    subfactor = beta * math.log(ratio/0.5) * nd / np
 
-   protene -= subfactor
-   enehist.append(protene)
-
-   for x in range(len(protnum)):
-      statenes[protnum[x]] -= subfactor
+   if zeroene == 'deprot':
+      for x in range(len(protnum)):
+         statenes[protnum[x]] -= subfactor
+   else:
+      for x in range(len(deprotnum)):
+         statenes[deprotnum[x]] += subfactor
 
    print 'New state energy array is '
    print statenes
+   enehist.append(statenes)
 
    print 'Writing new cpin file...'
 

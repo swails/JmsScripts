@@ -243,9 +243,9 @@ def getData(residue, igb):
       pKa = 9.6
       
       if igb == 2:
-         relene = -65.0791 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -65.0791  - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -65.9437 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -64.21455 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 

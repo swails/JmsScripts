@@ -81,7 +81,7 @@ def getData(residue, igb):
                    0.0000,      # HD11
                    0.0000 ],    # HD12
 
-                 [ relene,      # Relative energy  STATE 2 Protonated syn O1
+                 [ relene,      # Relative energy  STATE 3 Protonated syn O1
                    1,           # Relative protonation
                   -0.4157,      # N
                    0.2719,      # H
@@ -100,7 +100,7 @@ def getData(residue, igb):
                    0.4747,      # HD11
                    0.0000 ],    # HD12
 
-                 [ relene,      # Relative energy  STATE 2 Protonated anti O1
+                 [ relene,      # Relative energy  STATE 4 Protonated anti O1
                    1,           # Relative protonation
                   -0.4157,      # N
                    0.2719,      # H
@@ -332,7 +332,7 @@ def getData(residue, igb):
                    0.7341,      # C
                   -0.5894 ],    # 0
 
-                 [ relene1,     # Relative energy  STATE 0 HID
+                 [ relene1,     # Relative energy  STATE 1 HID
                    1,           # Relative Protonation
                   -0.3479,      # N
                    0.2747,      # H
@@ -353,7 +353,7 @@ def getData(residue, igb):
                    0.7341,      # C
                   -0.5894 ],    # 0
 
-                 [ relene2,     # Relative energy  STATE 0 HIE
+                 [ relene2,     # Relative energy  STATE 2 HIE
                    1,           # Relative Protonation
                   -0.3479,      # N
                    0.2747,      # H

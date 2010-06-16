@@ -119,3 +119,9 @@ FindSaltbridge.py -p <prmtop> -y <mdcrd1> <mdcrd2> ... -o <output_list>
    fraction population).
    Written in python by Jason
 
+GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \
+             -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>
+   This script will tweak the statene values until a 50/50 protonation population is 
+   reached, and it will return the final state energy and population.
+   Written in python by Jason
+

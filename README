@@ -125,3 +125,6 @@ GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_itera
    reached, and it will return the final state energy and population.
    Written in python by Jason
 
+checkCharges.py cpin1 cpin2
+   This script checks to make sure that the charge arrays between 2 cpins are the same.
+   Written in python by Jason

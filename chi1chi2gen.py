@@ -13,15 +13,15 @@
 
 #################   INSTRUCTIONS FOR USE   ########################
 #
-#  Follow the command line usage message. phipsigen -help gives you
+#  Follow the command line usage message. chi1chi2gen -help gives you
 #  the usage message. -gnuplot sets the output for gnuplot (and will
 #  also write the corresponding gnuplot scripts to load easily into
 #  gnuplot. -origin sets the output for origin. -nobin prevents the
-#  script from binning the phi-psi angles.  You will get two sets of
+#  script from binning the chi1-chi2 angles.  You will get two sets of
 #  data from this script: prefix.residue.dat which you can plot in 2-D
 #  to get the individual points on the ramachandran torus projection,
 #  and prefix.bin.dat which are the binned data files that plot prob-
-#  abilities as a function of PHI (x) and PSI (y) angles. These are
+#  abilities as a function of CHI1 (x) and CHI2 (y) angles. These are
 #  the files plotted by the gnuplot scripts written by this script.
 #
 ###################################################################
@@ -33,18 +33,49 @@ import sys, math, os, time  # modules that should exist on system
 import utilities            # user-defined modules
 
 tglobalstart = time.time()
-if len(sys.argv) == 1 or '-help' in sys.argv[1]:
+
+chi_defines = {'ALA' : -1, 
+               'ARG' : ['N','CA','CB','CG','CD'],
+               'ASH' : ['N','CA','CB','CG','OD1'],
+               'ASP' : ['N','CA','CB','CG','OD1'],
+               'AS4' : ['N','CA','CB','CG','OD1'],
+               'ASN' : ['N','CA','CB','CG','OD1'],
+               'CYM' : -1,
+               'CYS' : ['N','CA','CB','SG','HG'],
+               'CYX' : -1,
+               'GLH' : ['N','CA','CB','CG','CD'],
+               'GLN' : ['N','CA','CB','CG','CD'],
+               'GLU' : ['N','CA','CB','CG','CD'],
+               'GL4' : ['N','CA','CB','CG','CD'],
+               'GLY' : -1,
+               'HID' : ['N','CA','CB','CG','ND1'],
+               'HIE' : ['N','CA','CB','CG','ND1'],
+               'HIP' : ['N','CA','CB','CG','ND1'],
+               'ILE' : ['N','CA','CB','CG1','CD1'],
+               'LEU' : ['N','CA','CB','CG','CD1'],
+               'LYN' : ['N','CA','CB','CG','CD'],
+               'LYS' : ['N','CA','CB','CG','CD'],
+               'MET' : ['N','CA','CB','CG','SD'],
+               'PHE' : ['N','CA','CB','CG','CD1'],
+               'PRO' : ['N','CA','CB','CG','CD'],
+               'SER' : ['N','CA','CB','OG','HG'],
+               'THR' : ['N','CA','CB','OG1','HG1'],
+               'TRP' : ['N','CA','CB','CG','CD1'],
+               'TYR' : ['N','CA','CB','CG','CD1'],
+               'VAL' : ['N','CA','CB','CG1','HG11'] }
+               
+if len(sys.argv) == 1 or '-help' in sys.argv[1] or sys.argv[1] == '-h':
    print 'Usage: chi1chi2gen.py -i inputfile -o output_prefix -p prmtop -y mdcrd1 mdcrd2 ... mdcrdN {-nobin} {-origin || -gnuplot}'
    print 'Default is "gnuplot" format'
    sys.exit()
 
 if '-clea' in sys.argv[1]:
-   os.system('rm -f _PHIPSI_*')
+   os.system('rm -f _CHI1CHI2_*')
    sys.exit()
 
 # default values
 infile = 'inputfile'
-prefix = 'PHIPSI_res'
+prefix = 'CHI1CHI2_res'
 topname = 'prmtop'
 bins = [50,50]
 mdcrds = []
@@ -115,6 +146,8 @@ except ValueError:
 if utilities.fileexists(topname) == -1:
    sys.exit()
 
+residue_names = utilities.getallresinfo(topname,'RESIDUE_LABEL')
+
 if len(mdcrds) == 0:
    mdcrds.append('mdcrd')
 
@@ -124,10 +157,7 @@ if residue_number == -1:
    sys.exit()
 
 for x in range(len(residues)):
-   if residues[x] == 2 or residues[x] == residue_number:
-      print 'Error: You cannot get phi/psi dihedrals for either terminus!'
-      sys.exit()
-   elif residues[x] < 1:
+   if residues[x] < 1:
       print 'Error: You chose a nonsensical residue (residue 0 or less)'
       sys.exit()
    elif residues[x] > residue_number:
@@ -146,8 +176,8 @@ if ptraj == 'none':
 else:
    print 'ptraj Found! Using ' + ptraj
 
-os.system('rm -f _PHIPSI_*')
-ptrajin = open('_PHIPSI_ptraj.in','w')
+os.system('rm -f _CHI1CHI2_*')
+ptrajin = open('_CHI1CHI2_ptraj.in','w')
 for x in range(len(mdcrds)):
    ptrajin.write('trajin ' + mdcrds[x] + '\n')
 
@@ -155,25 +185,28 @@ ptrajin.write('\n')
 
 for x in range(len(residues)):
 
-   prevres = str(residues[x] - 1)
-   curres  = str(residues[x])
-   nextres = str(residues[x] + 1)
-   ptrajin.write('dihedral phires' + curres + ' :' + curres + '@N :' + curres + '@CA :' + \
-                 curres + '@CB :' + curres + '@CG out _PHIPSI_phires' + curres + '\n')
+   rsnu = residues[x]
+   rsna = residue_names[rsnu-1]
 
-   ptrajin.write('dihedral psires' + curres + ' :' + curres + '@CA :' + curres + '@CB :' + \
-                 curres + '@CG :' + curres + '@OD1 out _PHIPSI_psires' + curres + '\n')
+   if chi_defines[rsna] == -1:
+      print >> sys.stderr, 'Residue {0} ({1}) omitted. No chi1-chi2 defined for this residue'.format(rsnu,rsna)
+   else:
+      ptrajin.write('dihedral phires{0} :{0}@{1} :{0}@{2} :{0}@{3} :{0}@{4} out _CHI1CHI2_phires{0}\n'.format(rsnu,chi_defines[rsna][0],
+                    chi_defines[rsna][1],chi_defines[rsna][2],chi_defines[rsna][3]))
+
+      ptrajin.write('dihedral psires{0} :{0}@{1} :{0}@{2} :{0}@{3} :{0}@{4} out _CHI1CHI2_psires{0}\n'.format(rsnu,chi_defines[rsna][1],
+                     chi_defines[rsna][2],chi_defines[rsna][3],chi_defines[rsna][4]))
 ptrajin.close()
 
 tptrajstart = time.time()
 print 'Running ptraj to dump dihedral data...'
-os.system('ptraj ' + topname + ' _PHIPSI_ptraj.in > _PHIPSI_ptraj.out 2>&1')
+os.system('ptraj ' + topname + ' _CHI1CHI2_ptraj.in > _CHI1CHI2_ptraj.out 2>&1')
 tptrajend = time.time()
 
-print 'Creating combined phi/psi files...'
+print 'Creating combined chi1/chi2 files...'
 for x in range(len(residues)):
-   phifile = open('_PHIPSI_phires' + str(residues[x]),'r')
-   psifile = open('_PHIPSI_psires' + str(residues[x]),'r')
+   phifile = open('_CHI1CHI2_phires' + str(residues[x]),'r')
+   psifile = open('_CHI1CHI2_psires' + str(residues[x]),'r')
    combfile = open(prefix + '.' + str(residues[x]) + '.dat', 'w')
 
    philine = phifile.readline()

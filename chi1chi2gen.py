@@ -62,7 +62,10 @@ chi_defines = {'ALA' : -1,
                'THR' : ['N','CA','CB','OG1','HG1'],
                'TRP' : ['N','CA','CB','CG','CD1'],
                'TYR' : ['N','CA','CB','CG','CD1'],
-               'VAL' : ['N','CA','CB','CG1','HG11'] }
+               'VAL' : ['N','CA','CB','CG1','HG11'],
+               'ACE' : -1,
+               'NME' : -1,
+               'NHE' : -1 }
                
 if len(sys.argv) == 1 or '-help' in sys.argv[1] or sys.argv[1] == '-h':
    print 'Usage: chi1chi2gen.py -i inputfile -o output_prefix -p prmtop -y mdcrd1 mdcrd2 ... mdcrdN {-nobin} {-origin || -gnuplot}'

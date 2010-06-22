@@ -27,7 +27,7 @@ def clean():
    os.system('rm -f _FSB_*')
 
 def printusage(): # usage statement
-   print 'FindSaltbridge.py -p prmtop -y mdcrd1 mdcrd2 ... -o output_list -percent percent_population'
+   print 'FindSaltbridge.py -p prmtop -y mdcrd1 mdcrd2 ... -o output_list -fraction fraction_population'
    clean()
    sys.exit()
 
@@ -40,7 +40,7 @@ try:
          prmtop = sys.argv[x+1]
       elif sys.argv[x] == '-o':
          output = sys.argv[x+1]
-      elif sys.argv[x] == '-percent':
+      elif sys.argv[x] == '-fraction':
          fraction = float(sys.argv[x+1])
       elif sys.argv[x] == '-y':
          x += 1

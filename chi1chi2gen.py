@@ -267,7 +267,7 @@ if binning:
             psiprintval = psistart
             if gnuformat:
                outputfile.write('\n')
-         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)))
+         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
          psiprintval = psiprintval + psiinterval
 
       outputfile.close()

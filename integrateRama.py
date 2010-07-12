@@ -43,4 +43,4 @@ for line in data:
    if words[0] > phi[0] and words[0] < phi[1] and words[1] > psi[0] and words[1] < psi[1]:
       sum += words[2]
 
-print sum
+print sum * (phi[1]-phi[0]) * (psi[1]-psi[0])

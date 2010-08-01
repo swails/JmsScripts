@@ -122,6 +122,7 @@ class amberParm:
          return self.pointers[pointer.upper()]
       except KeyError:
          print >> stderr, 'No pointer {0} in prmtop. Pointers are: '.format(pointer.upper()) + POINTER_VARIABLES
+         return -1
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -135,7 +136,10 @@ class amberParm:
       gathering_data = False
       number_items_perline = 0
       size_item = 0
-      self.version = '' # reset version each time we read the topology file
+      self.version = '' # reset all topology information each time rdparm is called
+      self.formats = {}
+      self.parm_data = {}
+      self.flag_list = []
 
       try: # open up the prmtop file, catching if it doesn't exist
          prmtop = open(self.prm_name, 'r')

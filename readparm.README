@@ -1,0 +1,115 @@
+This is a document describing how the "readparm.py" python module.
+
+Introduction:
+   This module, when imported into a python script/session, gives access
+   to AMBER prmtop manipulations.  See the available functions and object
+   variables for instructions on use.
+
+CONTAINS:
+
+Classes:
+   ** To create an instance of a class, assign it to a variable with 
+      "variable = className(arguments)
+
+   o  amberParm(prm_name): This creates an amberParm object.  For example,
+      to create an amberParm object in the variable "parm" using the "prmtop"
+      file, use the following command:  parm = amberParm("prmtop")
+
+Functions:
+   ** These are functions intrinsic to each specified class.  Therefore, it
+      only makes sense to invoke these functions with one of the associated
+      objects.  The objects associated with each function is indicated in 
+      brackets for each function.  For example, if you want to perform some function 
+      "func" on object "obj" with argument "arg", use the following command:
+      obj.func(arg)
+
+   o  __init__(prm_name) [amberParm]: The initialization routine called automatically
+      when an amberParm object is instantiated.  You should never actually call this.
+
+   o  ptr(pointer) [amberParm]: Returns the value of the passed pointer.  Example pointers
+      are "natom" and "nres".  Passing an incorrect pointer to this functions returns a
+      list of valid pointers.  The argument is case-INsensitive. returns value of pointer
+      or -1 in case of error
+
+   o  rdparm() [amberParm]: Reads the prmtop and loads all of the data into the data
+      arrays and dictionaries.  This is called automatically in __init__ when an amberParm
+      object is instantiated, but it can be re-called to replace all data with a fresh
+      copy from the original prmtop anytime.
+
+   o  writeParm(new_prmtop_name) [amberParm]: Writes a new AMBER prmtop file from the
+      current prmtop data in the object.  Useful if you change, eg. charges, masses, etc.
+      and want to write out a new prmtop file.  By default it will not overwrite the
+      original prmtop file.  See "overwrite" in Variables below to change this behavior.
+
+Variables:
+   ** Each instance of the object has its own set of the variables listed below.  The class
+      associated with each variable is indicated in brackets.  The type of variable that it
+      is is specified in curly braces right before that.  Access the variable through the
+      object.  For example, accessing variable "var" from object "obj" is done with the
+      following syntax: obj.var
+
+   o  formats {Dictionary} [amberParm]: Lists all of the fortran format strings for each
+      section of the prmtop file.  Each format can be accessed via the case-sensitive name
+      of the FLAG name.  For example, the format of the numbers in the CHARGE section is 
+      accessed via "formats['CHARGE']" (notice the quotes). To access this format in an object
+      "obj", use the following syntax: obj.formats["CHARGE"]
+
+   o  parm_data {Dictionary} [amberParm]: Lists all of the data in the topology file split
+      up by section.  The data in each section is stored in an array accessed in a manner
+      identical to the way formats are accessed above.  For example, the charge of the first
+      atom of the system is stored in "parm_data['CHARGE'][0]".  To access this value in an
+      object "obj", use the following syntax: obj.parm_data["CHARGE"][0]
+
+   o  flag_list {Array} [amberParm]: Lists all of the flags in the order in which they appear
+      in the original prmtop file.  These can all be used as keys to access data in formats
+      and parm_data described above.
+
+   o  version {String} [amberParm]: Version string for each prmtop file.  Contains the version
+      of the prmtop file as well as the time and date of its creation.  Typically the first line
+      of each prmtop file.  The time/date is changed by writeParm to the time at which writeParm
+      was called.  It can be reset to the original (along with everything else) using the rdparm
+      function.
+
+   o  prm_name {String} [amberParm]: Name of the prmtop file.  It has to exist.  If you change the 
+      name, you'll have to re-run rdparm to load the data from that prmtop into the object.
+
+   o  overwrite {Logical} [amberParm]: Logical that controls whether (True) or not (False) 
+      writeParm will write a prmtop to the file with the name prm_name, overwriting the
+      original.  Default is "False".  Do not use quotes setting this variable.  To allow over-
+      writing for object "obj", use the following command: obj.overwrite = True
+
+   o  prm_exists {Logical} [amberParm]: Logical that provides an easy test to see whether the
+      prm_name passed to amberParm was found or not.  This is set to True in rdparm if an
+      exception is not raised trying to open the file.  This is NOT meant to be changed by hand.
+
+   o  pointers {Dictionary} [amberParm]:  Dictionary that holds all of the pointers in the POINTERS
+      section of the prmtop file.  The keys are the case-sensitive, upper-case variables used in 
+      the AMBER programs.  The ptr(pointer) function, described above, was meant to access this
+      dictionary, as it gives better error messages and removes case sensitivity, so it's suggested
+      that you use that function to access the values of the POINTERS rather than this dictionary
+      explicitly.
+
+NOTES:
+   The charges in AMBER topology files are electron-charges multiplied by a factor of 18.2223. However,
+   this multiplicative factor is automatically removed in rdparm() and re-added before being written
+   again in writeParm(), and again removed after it's written.  Therefore, only deal with charges in 
+   terms of electron-charges when manipulating charges in amberParm objects.
+
+EXAMPLE OF USE
+
+The following python program will take an AMBER topology named "prmtop" and change the charge of the first
+atom to -0.9.  It will then print out the change that it made to the screen and write a new prmtop file
+named "new.prmtop"
+
+"""
+from readparm import amberParm
+
+prm = amberParm("prmtop")
+orig_charge = prm.parm_data["CHARGE"][0]
+prm.parm_data["CHARGE"][0] = -0.9
+new_charge = prm.parm_data["CHARGE"][0]
+prm.writeParm("new.prmtop")
+
+print 'Charge changed from %s to %s' % (orig_charge, new_charge)
+"""
+

@@ -128,3 +128,10 @@ GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_itera
 checkCharges.py cpin1 cpin2
    This script checks to make sure that the charge arrays between 2 cpins are the same.
    Written in python by Jason
+
+readparm.py
+   This is a python module that contains the amberParm class.  This allows you to instantiate
+   a prmtop object, modify the data, and rewrite a new topology file.  It currently only has 
+   writeParm() that's typically called outside (rdparm is called upon instantiation).  This 
+   will be built on later, but you can still alter the data and write a new topology file.
+   Written in python by Jason

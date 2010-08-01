@@ -158,4 +158,9 @@ class amberParm:
 
       new_prm.close() # close new prmtop
 
+      # eliminate multiplicative constant on charges to reduce to fraction-e charges
+      for i in range(len(self.parm_data["CHARGE"])):
+         self.parm_data["CHARGE"][i] /= AMBER_ELECTROSTATIC
+
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

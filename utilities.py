@@ -121,18 +121,20 @@ def round(number, decimals):
 def resnum(topfile):
 
    parm = amberParm(topfile)
-   parm.rdparm()
-   return parm.parm_data["POINTERS"][11]
+   return parm.ptr("NRES")
+
+def natom(topfile):
+   
+   parm = amberParm(topfile)
+   return parm.ptr("NATOM")
 
 def getresinfo(res, topname, flag):
 
    parm = amberParm(topname)
-   parm.rdparm()
    return parm.parm_data[flag][res-1] # and simply return the residue of interest
 
 def getallresinfo(prmtop, flag):
    parm = amberParm(topname)
-   parm.rdparm()
    return parm.parm_data[flag]
 
 def fileexists(file):
@@ -210,23 +212,7 @@ def getresdecmp_prmtop(file):
    
    lines = prmtop.readlines()
    prmtop.close()
-   residues = []
-   
-   for x in range(len(lines)):
-      if 'RESIDUE_LABEL' in lines[x]:
-# skip any comment lines
-         while not 'FORMAT' in lines[x]:
-            x = x + 1
-# skip past the FORMAT statement
-         x = x + 1
-# read in all of the residues and append them to the 'residue' list
-         while not '%' in lines[x]:
-            words = lines[x].split()
-            for y in range(len(words)):
-               residues.append(words[y])
-            x = x + 1
-# after this while loop, all of the residues are loaded into the list
-         break
+   residues = getallresinfo('RESIDUE_LABEL')
    
    for x in range(len(residues)):
       index = getresindex(residues[x]) - 1

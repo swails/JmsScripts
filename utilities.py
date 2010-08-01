@@ -33,7 +33,7 @@
 #
 ##########################################################################################
 
-
+from readparm import *
 
 def which(program):
    import os
@@ -120,56 +120,20 @@ def round(number, decimals):
 
 def resnum(topfile):
 
-   try:
-      top = open(topfile, 'r')
-   except IOError:
-      print 'Error: topology file ' + topfile + ' does not exist!'
-      return -1
-
-   lines = top.readlines()
-   top.close()
-
-   #   read the number of residues
-   for x in range(len(lines)):
-      if lines[x].startswith('%FLAG POINTERS'):
-         x = x + 1
-         while not lines[x].startswith('%FORMAT'): # skip over comments
-            x = x + 1
-         words = lines[x+2].split()
-         return int(words[1])
-
-   print 'Error: Could not find %FLAG POINTERS in topology file ' + topfile + '!'
-   return -1
+   parm = amberParm(topfile)
+   parm.rdparm()
+   return parm.parm_data["POINTERS"][11]
 
 def getresinfo(res, topname, flag):
 
-   infos = getallresinfo(topname, flag) # get all residue info
-   return infos[res-1] # and simply return the residue of interest
+   parm = amberParm(topname)
+   parm.rdparm()
+   return parm.parm_data[flag][res-1] # and simply return the residue of interest
 
 def getallresinfo(prmtop, flag):
-   import sys
-
-# open topology file, read into memory, and close it
-   top = open(prmtop,'r')
-   toplines = top.readlines()
-   top.close()
-
-   items = [] # this is the array that holds all pieces of information gathered from a specific part of top file
-
-   for x in range(len(toplines)):
-      if flag in toplines[x]: # if flag is found in the topology line...
-         x = x + 1 # skip to next line
-         while not 'FORMAT' in toplines[x]: # skip over comments
-            x = x + 1
-         x = x + 1 # skip over FORMAT line
-         while not 'FLAG' in toplines[x]: # read until %FLAG is reached (next prmtop section)
-            words = toplines[x].split() # split along whitespace (will not work for every block)
-            for y in range(len(words)):
-               items.append(words[y]) # add on each item in order
-            x = x + 1
-         break # jump out of for loop
-
-   return items # return array with all the information
+   parm = amberParm(topname)
+   parm.rdparm()
+   return parm.parm_data[flag]
 
 def fileexists(file):
    try:

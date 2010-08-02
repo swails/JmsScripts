@@ -1,5 +1,6 @@
 from sys import stderr, stdout
 from datetime import datetime
+from math import fsum
 
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223
@@ -14,8 +15,7 @@ NPHIH  : number of dihedrals containing hydrogen
 MPHIA  : number of dihedrals not containing hydrogen
 NHPARM : currently not used
 NPARM  : currently not used
-NEXT   : number of excluded atoms
-NRES   : number of residues
+NEXT   : number of excluded atoms NRES   : number of residues
 NBONA  : MBONA + number of constraint bonds
 NTHETA : MTHETA + number of constraint angles
 NPHIA  : MPHIA + number of constraint dihedrals
@@ -257,5 +257,19 @@ class amberParm:
       # eliminate multiplicative constant on charges to reduce to fraction-e charges
       for i in range(len(self.parm_data["CHARGE"])):
          self.parm_data["CHARGE"][i] /= AMBER_ELECTROSTATIC
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def mass(self):
+      return fsum(self.parm_data["MASS"])
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def charge(self):
+      return fsum(self.parm_data["CHARGE"])
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

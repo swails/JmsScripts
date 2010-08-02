@@ -84,9 +84,9 @@ Variables:
       original.  Default is "False".  Do not use quotes setting this variable.  To allow over-
       writing for object "obj", use the following command: obj.overwrite = True
 
-   o  prm_exists {Logical} [amberParm]: Logical that provides an easy test to see whether the
-      prm_name passed to amberParm was found or not.  This is set to True in rdparm if an
-      exception is not raised trying to open the file.  This is NOT meant to be changed by hand.
+   o  exists {Logical} [amberParm]: Logical that provides an easy test to see whether the prm_name
+      passed to amberParm was found or not.  This is set to True in rdparm if an exception is not
+      raised trying to open the file.  This is NOT meant to be changed by hand.
 
    o  pointers {Dictionary} [amberParm]:  Dictionary that holds all of the pointers in the POINTERS
       section of the prmtop file.  The keys are the case-sensitive, upper-case variables used in 

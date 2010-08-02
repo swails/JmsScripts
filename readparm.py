@@ -68,7 +68,7 @@ class amberParm:
    version = ''
    prm_name = ''
    overwrite = False
-   prm_exists = False
+   exists = False
    pointers = {}
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -147,7 +147,7 @@ class amberParm:
          print >> stderr, 'Error: %s does not exist!' % self.prm_name
          return
 
-      self.prm_exists = True
+      self.exists = True
       prmlines = prmtop.readlines() # load all lines into memory
       prmtop.close() # close the file now
 

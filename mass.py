@@ -2,22 +2,23 @@
 
 ####################################################
 #                                                  #
-# This utility prints the total mass of a system   #
+# This utility prints the total mass of a em   #
 # described by the prmtop.                         #
 #                                                  #
 #    Written by Jason Swails, 08/02/2010           #
 #                                                  #
 ####################################################
 
-
-import sys
+from sys import stderr, stdout, exit, argv
 from readparm import amberParm
 
-if len(sys.argv) != 2 or '-help' in sys.argv[1] or sys.argv[1] == '-h':
+if len(argv) != 2 or '-help' in argv[1] or argv[1] == '-h':
    print 'mass.py <prmtop>'
-   sys.exit()
+   exit()
 
-prm = amberParm(sys.argv[1])
+prm = amberParm(argv[1])
 
-if prm.prm_exists:
-   print >> sys.stdout, 'The mass of ' + sys.argv[1] + ' is ' + str(prm.mass()) + ' g/mol.'
+if prm.exists:
+   print >> stdout, 'The mass of ' + argv[1] + ' is ' + str(prm.mass()) + ' g/mol.'
+else:
+   print >> stderr, 'Prmtop {0} does not exist!'.format(argv[1])

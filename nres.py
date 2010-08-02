@@ -14,8 +14,13 @@ if len(argv) != 2:
 
 x = amberParm(argv[1])
 
+if argv[0].endswith('natom.py'):
+   ptr = "NATOM"
+elif argv[0].endswith('nres.py'):
+   ptr = "NRES"
+
 if x.exists:
-   print x.ptr(argv[0].strip('.py'))
+   print x.ptr(ptr)
 
 else:
    print >> stderr, '{0} does not exist!'.format(argv[1])

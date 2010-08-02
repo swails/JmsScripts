@@ -53,19 +53,9 @@ def which(program):
    return 'none'
 
 def average(list):
+   from math import fsum
 
-   sum = 0
-   for x in range(len(list)):
-
-      try:
-         sum = sum + float(list[x])
-      except ValueError:
-         return -1
-
-   if len(list) == 0:
-      return -1
-
-   return sum / len(list)
+   return fsum(list) / float(len(list))
 
 def stdev(list,avg):
 # it must be passed 2 arguments. pass it a string if you want stdev to calculate
@@ -282,13 +272,4 @@ def getresdecmp_pdb(file):
    return residue_decomp
 
 def minmax(list):
-   max = list[0]
-   min = list[0]
-
-   for x in range(len(list)):
-      if list[x] > max:
-         max = list[x]
-      if list[x] < min:
-         min = list[x]
-
-   return [min,max]
+   return [min(list),max(list)]

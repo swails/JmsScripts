@@ -1,0 +1,113 @@
+This is a document describing how the "pbsjob.py" python module.
+
+Introduction:
+   This module, when imported into a python script/session, gives access
+   to PBS script objects and allows you to manipulate them.  See the available
+   functions and object variables for instructions on use.
+
+CONTAINS:
+
+Classes:
+   ** To create an instance of a class, assign it to a variable with 
+      "variable = className(arguments)
+
+   o  PBSjob(script): This creates a PBSjob object that will execute the lines from
+      "script" in the PBS job script.  If no script is provided, none is used by default
+      For example, to create a PBSjob object named "jobfile" from the script "script", 
+      use the following command: jobfile = PBSjob("script")
+
+Functions:
+   ** These are functions intrinsic to each specified class.  Therefore, it
+      only makes sense to invoke these functions with one of the associated
+      objects.  The objects associated with each function is indicated in 
+      brackets for each function.  For example, if you want to perform some function 
+      "func" on object "obj" with argument "arg", use the following command:
+      obj.func(arg)
+
+   o  __init__(script) [PBSjob]: The initialization routine called automatically when a
+      PBSjob object is instantiated.  You should never actually call this. script is optional
+      and can be loaded at any point by using the "script" function described below.
+
+   o  script(script_name) [PBSjob]: Loads all of the contents from script_name into the list
+      of commands to be run in the PBS job. If a shell executor (eg. #!/bin/bash) is defined
+      at the top of the script, then the shell used there will replace the object's current
+      "shell" variable defined below.
+
+   o  addCommand(command) [PBSjob]: Adds the command with a newline character at the end to
+      the list of commands that will be run in the PBS job.
+
+   o  preview() [PBSjob]: Prints out the jobfile that would be submitted if you used "submit".
+      Lets you know of any errors that were caught
+
+   o  submit() [PBSjob]: Submits the job file to the scheduler if there are no errors caught.
+
+   o  makeDefault() [PBSjob]: Takes the current values for all PBS options and writes them
+      to the .pbsdefaults file so it can be automatically loaded in each time.
+
+   o  randomName(flag) [PBSjob]: It will take the name of a Final Fantasy game (FF2, FF3, ...,
+      FF13) and set the name of the job to the randomly chosen character.  If no flag (or a 
+      wrong flag) is passed, a name will be chosen at random from all of the games.
+
+Variables:
+   ** Each instance of the object has its own set of the variables listed below.  The class
+      associated with each variable is indicated in brackets.  The type of variable that it
+      is is specified in curly braces right before that.  Access the variable through the
+      object.  For example, accessing variable "var" from object "obj" is done with the
+      following syntax: obj.var
+
+   o  date_time {string} [PBSjob]: Option for the -a PBS flag.
+
+   o  account {string} [PBSjob]: Option for the -A PBS flag
+
+   o  interval {string} [PBSjob]: Option for the -c PBS flag
+
+   o  err_path {string} [PBSjob]: Option for the -e PBS flag
+
+   o  hold {logical} [PBSjob]: Option for the -h PBS flag
+
+   o  join {string} [PBSjob]: Option for the -j PBS flag
+
+   o  keep {string} [PBSjob]: Option for the -k PBS flag
+
+   o  resources {array} [PBSjob]: All options for the -l PBS flag
+
+   o  mail_ops {string} [PBSjob]: Option for the -m PBS flag
+
+   o  email {string} [PBSjob]: Option for the -M PBS flag
+
+   o  name {string} [PBSjob]: Option for the -N PBS flag
+
+   o  out_path {string} [PBSjob]: Option for the -o PBS flag
+
+   o  priority {integer} [PBSjob]: Option for the -p PBS flag (must be between -1024 and 1023)
+
+   o  queue {string} [PBSjob]: Option for the -q PBS flag
+
+   o  shell {string} [PBSjob]: Option for the -S PBS flag
+
+   o  workdir {string} [PBSjob]: Directory where job should change to before any commands are
+      run. Defaults to $PBS_O_WORKDIR, which is the directory that the job is submitted from.
+
+   o  command {array} [PBSjob]: Array of commands to be used. Don't modify this directly,
+      use the "addCommand" function described above, or the "script" function.
+   
+NOTES:
+   Default values for the various flags can be loaded into the file .pbsdefaults in the user's home
+   directory
+
+EXAMPLE OF USE
+
+The following python program will take a script with your default values and print out what it will
+submit to the queue, then it will actually submit it. (It will also pick a random FF10 character's
+name :-) as the name of the job). Then it deletes the PBSjob object.
+
+"""
+from pbsjob import PBSjob
+
+job = PBSjob("script")
+job.randomName("FF10")
+print job.preview()
+job.submit()
+del job
+"""
+

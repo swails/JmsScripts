@@ -4,6 +4,7 @@
 
 from sys import stderr, stdout, exit, argv
 from readparm import amberParm
+from os import path
 
 def usage():
    print >> stderr, "{0} <prmtop>".format(argv[0])
@@ -14,13 +15,8 @@ if len(argv) != 2:
 
 x = amberParm(argv[1])
 
-if argv[0].endswith('natom.py'):
-   ptr = "NATOM"
-elif argv[0].endswith('nres.py'):
-   ptr = "NRES"
-
 if x.exists:
-   print x.ptr(ptr)
+   print x.ptr(path.split(argv[0])[1].strip('.py'))
 
 else:
    print >> stderr, '{0} does not exist!'.format(argv[1])

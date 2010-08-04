@@ -159,7 +159,7 @@ class PBSjob:
       from os import system
       submit_string = self.preview()
       if self.valid:
-         system('cat << EOF\n%s\nEOF | qsub' % submit_string)
+         system('qsub << EOF\n%s\nEOF' % submit_string)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

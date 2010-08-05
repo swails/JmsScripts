@@ -41,10 +41,10 @@ Functions:
       and want to write out a new prmtop file.  By default it will not overwrite the
       original prmtop file.  See "overwrite" in Variables below to change this behavior.
 
-   o  mass() [amberParm]: Calculates the mass of the whole prmtop as a sum of all masses
+   o  totMass() [amberParm]: Calculates the mass of the whole prmtop as a sum of all masses
       in the "MASS" section
 
-   o  charge() [amberParm]: Calculates the net charge of the whole prmtop as a sum of all
+   o  totCharge() [amberParm]: Calculates the net charge of the whole prmtop as a sum of all
       charges in the "CHARGE" section.
 
 Variables:

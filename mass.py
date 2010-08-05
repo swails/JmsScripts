@@ -19,6 +19,6 @@ if len(argv) != 2 or '-help' in argv[1] or argv[1] == '-h':
 prm = amberParm(argv[1])
 
 if prm.exists:
-   print >> stdout, 'The mass of ' + argv[1] + ' is ' + str(prm.mass()) + ' g/mol.'
+   print >> stdout, 'The mass of ' + argv[1] + ' is ' + str(prm.totMass()) + ' g/mol.'
 else:
    print >> stderr, 'Prmtop {0} does not exist!'.format(argv[1])

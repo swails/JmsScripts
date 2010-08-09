@@ -1,9 +1,9 @@
 
 !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-!@								     @
+!@                                                                   @
 !@ This program uses Jarzynski relationship to calculate free energy @
 !@ profiles from work done in independent SMD simulations            @
-!@								     @
+!@                                                                   @
 !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 !
 ! Program written by Jason Swails, jason.swails@gmail.com

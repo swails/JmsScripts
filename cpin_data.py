@@ -434,5 +434,42 @@ def getData(residue, igb):
                    0.7341,      # C
                   -0.5894 ] ]   # O
 
+   if residue == "CYS":
+      pKa = 8.55
+
+      if igb == 2:
+         relene = 77.4736 #- KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 5:
+         relene = 77.4736 #- KB * TEMP * LN_TO_LOG * pKa
+      else:
+         relene = 0.0
+
+      return   [ [ relene,      # Relative energy  STATE 0 CYS
+                   1,           # Relative protonation
+                  -0.4157,      # N
+                   0.2719,      # H
+                   0.0213,      # CA
+                   0.1124,      # HA
+                  -0.1231,      # CB
+                   0.1112,      # HB2
+                   0.1112,      # HB3
+                  -0.3119,      # SG
+                   0.1933,      # HG
+                   0.5973,      # C
+                  -0.5679 ],    # O
+
+                 [ 0,           # Relative energy  STATE 1 CYM
+                   0,           # Relative protonation
+                  -0.4157,      # N
+                   0.2719,      # H
+                   0.0213,      # CA
+                   0.1124,      # HA
+                  -0.3593,      # CB
+                   0.1122,      # HB2
+                   0.1122,      # HB3
+                  -0.8844,      # SG
+                   0.0000,      # HG
+                   0.5973,      # C
+                  -0.5679 ] ]   # O
       
    return -1

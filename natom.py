@@ -7,7 +7,7 @@ from readparm import amberParm
 from os import path
 
 def usage():
-   print >> stderr, "{0} <prmtop>".format(argv[0])
+   print >> stderr, "{0} <prmtop>".format(path.split(argv[0])[1])
    exit()
 
 if len(argv) != 2:

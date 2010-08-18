@@ -135,3 +135,28 @@ readparm.py
    writeParm() that's typically called outside (rdparm is called upon instantiation).  This 
    will be built on later, but you can still alter the data and write a new topology file.
    Written in python by Jason
+
+pbsjob.py
+   This is a python module that contains the PBSjob class.  This is designed to make job 
+   submissions on PBS systems easier.  The pbsjob.README file has more information about
+   this module.
+   Writen in python by Jason
+
+gaussjobs.py <gaussian_input> {<job_name>}
+   This is a python script that will automatically submit a job according to ~/.pbsdefaults
+   to the queue.  It should work for any system with a .pbsdefaults set up.
+   Written in python by Jason
+
+redjobs.py {<job_name>}
+   This is a python script that will automatically submit a job according to ~/.pbsdefaults
+   to the queue for RED.  It should work for any system with a .pbsdefaults set up.
+   Written in python by Jason
+
+natom.py <prmtop>
+   Returns the number of atoms defined by a prmtop file.
+   Written in python by Jason (NOTE: Hard link of nres.py)
+
+nres.py <prmtop>
+   Returns the number of residues defined by a prmtop file.
+   Written in python by Jason (NOTE: Hard link of natom.py)
+

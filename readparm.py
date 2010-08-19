@@ -77,41 +77,42 @@ class amberParm:
 
       self.prm_name = prm_name # name of the prmtop file
       self.rdparm()
-      try: # try to load all of the pointers into the 
-         self.pointers["NATOM"] = self.parm_data["POINTERS"][0]
-         self.pointers["NTYPES"] = self.parm_data["POINTERS"][1]
-         self.pointers["NBONH"] = self.parm_data["POINTERS"][2]
-         self.pointers["MBONA"] = self.parm_data["POINTERS"][3]
-         self.pointers["NTHETH"] = self.parm_data["POINTERS"][4]
-         self.pointers["MTHETA"] = self.parm_data["POINTERS"][5]
-         self.pointers["NPHIH"] = self.parm_data["POINTERS"][6]
-         self.pointers["MPHIA"] = self.parm_data["POINTERS"][7]
-         self.pointers["NHPARM"] = self.parm_data["POINTERS"][8]
-         self.pointers["NPARM"] = self.parm_data["POINTERS"][9]
-         self.pointers["NEXT"] = self.parm_data["POINTERS"][10]
-         self.pointers["NRES"] = self.parm_data["POINTERS"][11]
-         self.pointers["NBONA"] = self.parm_data["POINTERS"][12]
-         self.pointers["NTHETA"] = self.parm_data["POINTERS"][13]
-         self.pointers["NPHIA"] = self.parm_data["POINTERS"][14]
-         self.pointers["NUMBND"] = self.parm_data["POINTERS"][15]
-         self.pointers["NUMANG"] = self.parm_data["POINTERS"][16]
-         self.pointers["NPTRA"] = self.parm_data["POINTERS"][17]
-         self.pointers["NATYP"] = self.parm_data["POINTERS"][18]
-         self.pointers["NPHB"] = self.parm_data["POINTERS"][19]
-         self.pointers["IFPERT"] = self.parm_data["POINTERS"][20]
-         self.pointers["NBPER"] = self.parm_data["POINTERS"][21]
-         self.pointers["NGPER"] = self.parm_data["POINTERS"][22]
-         self.pointers["NDPER"] = self.parm_data["POINTERS"][23]
-         self.pointers["MBPER"] = self.parm_data["POINTERS"][24]
-         self.pointers["MGPER"] = self.parm_data["POINTERS"][25]
-         self.pointers["MDPER"] = self.parm_data["POINTERS"][26]
-         self.pointers["IFBOX"] = self.parm_data["POINTERS"][27]
-         self.pointers["NMXRS"] = self.parm_data["POINTERS"][28]
-         self.pointers["IFCAP"] = self.parm_data["POINTERS"][29]
-      except KeyError:
-         print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
-      except IndexError:
-         print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
+      if self.exists:
+         try: # try to load all of the pointers into the 
+            self.pointers["NATOM"] = self.parm_data["POINTERS"][0]
+            self.pointers["NTYPES"] = self.parm_data["POINTERS"][1]
+            self.pointers["NBONH"] = self.parm_data["POINTERS"][2]
+            self.pointers["MBONA"] = self.parm_data["POINTERS"][3]
+            self.pointers["NTHETH"] = self.parm_data["POINTERS"][4]
+            self.pointers["MTHETA"] = self.parm_data["POINTERS"][5]
+            self.pointers["NPHIH"] = self.parm_data["POINTERS"][6]
+            self.pointers["MPHIA"] = self.parm_data["POINTERS"][7]
+            self.pointers["NHPARM"] = self.parm_data["POINTERS"][8]
+            self.pointers["NPARM"] = self.parm_data["POINTERS"][9]
+            self.pointers["NEXT"] = self.parm_data["POINTERS"][10]
+            self.pointers["NRES"] = self.parm_data["POINTERS"][11]
+            self.pointers["NBONA"] = self.parm_data["POINTERS"][12]
+            self.pointers["NTHETA"] = self.parm_data["POINTERS"][13]
+            self.pointers["NPHIA"] = self.parm_data["POINTERS"][14]
+            self.pointers["NUMBND"] = self.parm_data["POINTERS"][15]
+            self.pointers["NUMANG"] = self.parm_data["POINTERS"][16]
+            self.pointers["NPTRA"] = self.parm_data["POINTERS"][17]
+            self.pointers["NATYP"] = self.parm_data["POINTERS"][18]
+            self.pointers["NPHB"] = self.parm_data["POINTERS"][19]
+            self.pointers["IFPERT"] = self.parm_data["POINTERS"][20]
+            self.pointers["NBPER"] = self.parm_data["POINTERS"][21]
+            self.pointers["NGPER"] = self.parm_data["POINTERS"][22]
+            self.pointers["NDPER"] = self.parm_data["POINTERS"][23]
+            self.pointers["MBPER"] = self.parm_data["POINTERS"][24]
+            self.pointers["MGPER"] = self.parm_data["POINTERS"][25]
+            self.pointers["MDPER"] = self.parm_data["POINTERS"][26]
+            self.pointers["IFBOX"] = self.parm_data["POINTERS"][27]
+            self.pointers["NMXRS"] = self.parm_data["POINTERS"][28]
+            self.pointers["IFCAP"] = self.parm_data["POINTERS"][29]
+         except KeyError:
+            print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
+         except IndexError:
+            print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -199,6 +199,11 @@ program calcpka
    end if
 
    read(cpout_unit,fmt='(80a)'), line_holder
+   if (line_holder(1:11) .ne. "Solvent pH:") then
+      write(0,'(a,a,a)') 'Error: ', cpout(1), ' is an invalid CPOUT file!'
+      call usage()
+      call exit(1)
+   end if
    read(line_holder(13:),'(f8.5)'), solvph
 
    read(cpout_unit,fmt='(80a)'), line_holder
@@ -267,14 +272,16 @@ program calcpka
                   protonations_chunk(j,resstate(j-1)+1) = protonations_chunk(j,resstate(j-1)+1 ) + 1
                end do
                if (mod(onstep, dump_interval) .eq. 0) then
+                  write(unit=alternative_unit,'(a)') "========================== CUMULATIVE ========================"
                   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
                                       protonated, resname, transitions)
+                  write(unit=alternative_unit,'(a)') "============================ CHUNK ==========================="
                   call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
                                       protonated, resname, transitions)
                   call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
-               end if
-            end if
-         end if
+               end if ! mod(onstep
+            end if ! dump_interval
+         end if ! line_holder(1:8)
 
       end do ! while(.true.)
       
@@ -325,12 +332,13 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
    integer, intent (in)             :: protcnt(0:*)
    integer, intent(in)              :: protonated(0:*)
    real, intent(in)                 :: solvph
-   character (len=40)               :: resname(0:*)
+   character (len=40), intent(in)   :: resname(0:*)
    integer, intent(in)              :: transitions(*)
 
    integer                          :: i, j ! counters
-   real, dimension(trescnt)         :: pkas
+   real, dimension(trescnt)         :: pkas, fracprot
    real                             :: numprot, numdep
+   character (len=40)               :: rnm
 
    do i = 0, trescnt-1
       numprot = 0
@@ -343,10 +351,15 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
          end if
       end do
       pkas(i+1) = solvph - log10(numdep / numprot)
+      fracprot(i+1) = numprot / (numdep + numprot)
    end do
 
+   write(fileno, '(a,f5.3)') "Solvent pH is ", solvph
    do i = 1, trescnt
-      write(fileno, '(a,f8.5,a,i10)') "pKa is ", pkas(i)," transitions are ", transitions(i)
+      rnm = resname(i)
+      write(fileno, '(a,a,f6.3,a,f6.3,a,f5.3,a,i9)') rnm(10:17), ': Offset ', &
+               pkas(i) - solvph, "  Pred ", pkas(i), "  Frac Prot ", fracprot(i), "  Transitions ", &
+               transitions(i)
    end do
 
 end subroutine calculate_pKas

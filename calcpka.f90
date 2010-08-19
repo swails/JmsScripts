@@ -272,10 +272,10 @@ program calcpka
                   protonations_chunk(j,resstate(j-1)+1) = protonations_chunk(j,resstate(j-1)+1 ) + 1
                end do
                if (mod(onstep, dump_interval) .eq. 0) then
-                  write(unit=alternative_unit,'(a)') "========================== CUMULATIVE ========================"
+                  write(unit=alternative_unit,fmt='(a)'), "========================== CUMULATIVE ========================"
                   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
                                       protonated, resname, transitions)
-                  write(unit=alternative_unit,'(a)') "============================ CHUNK ==========================="
+                  write(unit=alternative_unit,fmt='(a)'), "============================ CHUNK ==========================="
                   call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
                                       protonated, resname, transitions)
                   call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
@@ -300,7 +300,7 @@ subroutine usage()
    implicit none
 
    write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} \'
-   write(0,*) '               {-o output} {-t interval} {-ao interval_output}'
+   write(0,*) '               {-o output} {-t dump_interval} {-ao dump_output}'
 
 end subroutine usage
 

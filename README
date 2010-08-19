@@ -160,3 +160,8 @@ nres.py <prmtop>
    Returns the number of residues defined by a prmtop file.
    Written in python by Jason (NOTE: Hard link of natom.py)
 
+calcpka.f90 <cpin> <cpout1> <cpout2> ... <cpoutN> -o <output_file> -t <dump_interval> -ao <dump_file>
+   Does the same thing as calcpka.pl, but does it much faster and also dumps out
+   cumulative and "chunk" pKa values for a given time interval.
+   Written in Fortran90 by Jason
+

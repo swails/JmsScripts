@@ -53,7 +53,8 @@ program calcpka
 !     res_holder         : Holder variable for which residue was selected
 !     state_holder       : Holder for which state was selected for the above residue
 !     onstep             : Which step we are currently on
-!     pkas               : array to hold all of the pkas
+!     protonated         : array that holds the protcnt for protonated for each residue
+!     transitions        : array that holds the number of transitions that each residue has made
 
    ! From dynph.h
    integer, parameter :: STATEINF_FLD_C = 5
@@ -71,13 +72,13 @@ program calcpka
    character (len=128)              :: cpin
    character (len=128), allocatable :: cpout(:)
    character (len=128)              :: output_file = 'none'
-   character (len=128)              :: alternative_output
+   character (len=128)              :: alternative_output = "pKa_evolution.dat"
    character (len=128)              :: arg_holder
    character (len=80)               :: line_holder
 
    integer :: narg
    integer :: num_cpout = 1
-   integer :: dump_interval
+   integer :: dump_interval = 0
    integer :: i, j
    integer :: ios
    logical :: cpout_done = .false.
@@ -99,8 +100,10 @@ program calcpka
    character (len=40)   :: resname(0:TITR_RES_C)
 
    integer, allocatable :: protonations(:,:), protonations_chunk(:,:)
-   logical                              :: updating
-   integer                              :: res_holder, state_holder
+   logical              :: updating
+   integer              :: res_holder, state_holder
+   integer              :: onstep = 0
+   integer, allocatable :: protonated(:), transitions(:)
 
    namelist /cnstph/                              stateinf, &
                                                   resstate, &
@@ -137,17 +140,18 @@ program calcpka
    do while (i .le. narg)
       call getarg(i, arg_holder)
 
-      if (arg_holder .eq. '-o') then
+      if (arg_holder(1:1) .eq. '-') then
          cpout_done = .true.
+      end if
+
+      if (arg_holder .eq. '-o') then
          i = i + 1
          call getarg(i, output_file)
       else if (arg_holder .eq. '-t') then
-         cpout_done = .true.
          i = i + 1
          call getarg(i, arg_holder)
          read (arg_holder,FMT='(I10)') dump_interval
       else if (arg_holder .eq. '-ao') then
-         cpout_done = .true.
          i = i + 1
          call getarg(i, alternative_output)
       else if (cpout_done) then
@@ -181,6 +185,11 @@ program calcpka
       open(unit=output_unit, file=output_file, status='REPLACE')
    end if
 
+   ! open the alternative output file if it's specified
+   if (dump_interval .ne. 0) then
+      open(unit=alternative_unit, file=alternative_output, status='REPLACE')
+   end if
+
    ! open up the first cpout file and get the necessary information
    open(unit=cpout_unit, file=cpout(1), status='OLD',iostat=ios)
    if (ios .ne. 0) then
@@ -197,6 +206,18 @@ program calcpka
    close(cpout_unit)
 
    ! allocate storage for all of the protonations and zero it out
+   allocate(transitions(trescnt))
+   allocate(protonated(trescnt))
+   do i = 1, trescnt
+      transitions(i) = 0
+      protonated(i) = 0
+      do j = 0, stateinf(i-1)%num_states-1
+         if (protcnt(stateinf(i-1)%first_state + j) .gt. protonated(i)) then
+            protonated(i) = protcnt(stateinf(i-1)%first_state + j)
+         end if
+      end do
+   end do
+
    allocate(protonations(trescnt, MAX_NSTATE)) 
    allocate(protonations_chunk(trescnt, MAX_NSTATE))
    call empty_protonation(protonations, trescnt, MAX_NSTATE)
@@ -209,48 +230,61 @@ program calcpka
       ! open up the i-th cpout file, but go to the next if it's not valid
       open(unit=cpout_unit, file=cpout(i), status='OLD', iostat=ios)
       if (ios .ne. 0) then
-         goto 10
+         write(0,'(a,a,a)'), 'Error: CPOUT file ', cpout(i), ' does not exist!'
+         call exit(1)
       end if
 
       ! read the cpout file
       do while(.true.)
          read(unit=cpout_unit,fmt='(80a)',end=9), line_holder
 
-         ! if we reach a full record, skip over it
-         if (line_holder(1:10) .eq. "Solvent pH") then
-            do j = 1, 5 + trescnt
-               read(unit=cpout_unit,fmt='(80a)',end=9), line_holder
-            end do
-         end if ! line_holder(1:10) .eq. "Solvent pH"
-
          ! Now update the protonations
          if (line_holder(1:8) .eq. "Residue ") then
-!           write(*,*) "Good sign"
             updating = .true.
             do while(updating)
-!              write(*,*) "Good sign 2 "
                read(line_holder(9:12),'(i4)'), res_holder
                read(line_holder(21:22),'(i2)'), state_holder
-!              write(*,*) res_holder, state_holder
+               if (protcnt(stateinf(res_holder)%first_state + resstate(res_holder)) .ne. &
+                   protcnt(stateinf(res_holder)%first_state + state_holder)) then
+                  transitions(res_holder + 1) = transitions(res_holder + 1) + 1
+               end if
                resstate(res_holder) = state_holder
                read(cpout_unit,fmt='(80a)',end=9), line_holder
                if (line_holder(1:8) .ne. "Residue ") then 
                   updating = .false.
-!                 write (*,*) "Good sign 3"
                end if
             end do !while(updating)
 
-            do j = 1, trescnt
-               protonations(j,resstate(j)+1) = protonations(j, resstate(j)+1 ) + 1
-            end do ! j = 1, trescnt
+            onstep = onstep + step_size
+            
+            if (dump_interval .eq. 0) then
+               do j = 1, trescnt
+                  protonations(j,resstate(j-1)+1) = protonations(j, resstate(j-1)+1 ) + 1
+               end do ! j = 1, trescnt
+            else
+               do j = 1, trescnt
+                  protonations(j,resstate(j-1)+1) = protonations(j,resstate(j-1)+1 ) + 1
+                  protonations_chunk(j,resstate(j-1)+1) = protonations_chunk(j,resstate(j-1)+1 ) + 1
+               end do
+               if (mod(onstep, dump_interval) .eq. 0) then
+                  call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
+                                      protonated, resname, transitions)
+                  call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
+                                      protonated, resname, transitions)
+                  call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
+               end if
+            end if
          end if
 
       end do ! while(.true.)
       
 
 9  close(cpout_unit)
-10 i = i + 1
+   i = i + 1
    end do
+
+   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, &
+                       output_unit, protonated, resname, transitions)
 
 end program calcpka
 
@@ -265,8 +299,8 @@ end subroutine usage
 
 subroutine empty_protonation(array, index1, index2)
 
-   integer, intent (in)    :: index1, index2
-   integer, intent (inout) :: array(index1, index2)
+   integer, intent (in)  :: index1, index2
+   integer, intent (out) :: array(index1, index2)
    integer :: i, j
 
    do i = 1, index1
@@ -277,4 +311,42 @@ subroutine empty_protonation(array, index1, index2)
 
 end subroutine empty_protonation
 
-!subroutine calculate_pKas
+subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
+                          MAX_NSTATE, fileno, protonated, resname, transitions)
+
+   type :: const_ph_info ! from dynph.h
+      sequence
+      integer :: num_states, first_atom, num_atoms, first_state, first_charge
+   end type const_ph_info
+
+   integer, intent (in)             :: MAX_NSTATE, trescnt, fileno
+   integer, intent (in)             :: protonations(1:trescnt, 1:MAX_NSTATE)
+   type (const_ph_info), intent(in) :: stateinf(0:*)
+   integer, intent (in)             :: protcnt(0:*)
+   integer, intent(in)              :: protonated(0:*)
+   real, intent(in)                 :: solvph
+   character (len=40)               :: resname(0:*)
+   integer, intent(in)              :: transitions(*)
+
+   integer                          :: i, j ! counters
+   real, dimension(trescnt)         :: pkas
+   real                             :: numprot, numdep
+
+   do i = 0, trescnt-1
+      numprot = 0
+      numdep = 0
+      do j = 0, stateinf(i)%num_states-1
+         if (protcnt(stateinf(i)%first_state + j) .eq. protonated(i)) then
+            numprot = numprot + protonations(i+1,j+1)
+         else
+            numdep = numdep + protonations(i+1,j+1)
+         end if
+      end do
+      pkas(i+1) = solvph - log10(numdep / numprot)
+   end do
+
+   do i = 1, trescnt
+      write(fileno, '(a,f8.5,a,i10)') "pKa is ", pkas(i)," transitions are ", transitions(i)
+   end do
+
+end subroutine calculate_pKas

@@ -10,12 +10,7 @@
 #                      current directory, but does not print an error 
 #                      message
 #
-#  getallresinfo: Takes a given flag and returns every value in given 
-#                 prmtop corresponding to that flag
-#
 #  printusage: prints the usage statement for the script
-#
-#  getbondiset: Gets the radius set used to build topology file
 #
 ########################################################################
 
@@ -39,29 +34,6 @@ def fileexists_noprint(file):
    f.close()
    return 0
 
-def getallresinfo(prmtop, flag):
-   import sys
-
-   top = open(prmtop,'r')
-   toplines = top.readlines()
-   top.close()
-   items = []
-
-   for x in range(len(toplines)):
-      if flag in toplines[x]:
-         x = x + 1
-         while not 'FORMAT' in toplines[x]:
-            x = x + 1
-         x = x + 1
-         while not 'FLAG' in toplines[x]:
-            words = toplines[x].split()
-            for y in range(len(words)):
-               items.append(words[y])
-            x = x + 1
-         break
-
-   return items
-
 def printusage():
    import sys
 
@@ -78,20 +50,4 @@ def printusage():
    print "           [--ignore-warnings]" 
 
    sys.exit()
-
-def getbondiset(topname):
-
-   topfile = open(topname, 'r')
-   toplines = topfile.readlines()
-   topfile.close()
-
-   for x in range(len(toplines)):
-
-      if '%FLAG RADIUS_SET' in toplines[x]:
-         x = x + 1
-         while not toplines[x].startswith('%FORMAT'):
-            x = x + 1
-         return toplines[x+1].strip()
-
-   return 'NO RADII SET SPECIFIED'
 

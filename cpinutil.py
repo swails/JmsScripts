@@ -5,7 +5,14 @@
 # simulations.
 
 import sys, string
-import cpin_data, cpin_utilities
+try:
+   import cpin_data
+   from cpin_utilities import *
+   from readparm import amberParm
+except ImportError:
+   print >> sys.stdout, 'Error: You must put cpin_data.py, cpin_utilities.py, and ' + \
+            'readparm.py in a directory referenced by PYTHONPATH!'
+   sys.exit()
 
 ############################# Begin user-defined modules #########################
 def addOn(line, toadd):
@@ -19,10 +26,10 @@ def addOn(line, toadd):
 #############################  End  user-defined modules #########################
 
 if len(sys.argv) < 3:
-   cpin_utilities.printusage()
+   printusage()
 
 if sys.argv[1].startswith('-h') or sys.argv[1].startswith('--h'):
-   cpin_utilities.printusage()
+   printusage()
 
 # list all of the residues that can currently be titrated:
 titratable = "AS4 GL4 HIP TYR LYS CYS"
@@ -147,9 +154,10 @@ try:
          x -= 1
 except IndexError:
    print >> sys.stderr, 'Error: Command line error!'
-   cpin_utilities.printusage()
+   printusage()
 
-if cpin_utilities.fileexists(prmtop) == -1:
+prmtop_object = amberParm(prmtop)
+if not prmtop_object.exists:
    sys.exit()
 if igb == ' ':
    if not ignore_warn:
@@ -157,9 +165,17 @@ if igb == ' ':
             'Be sure to use this value for your constant pH simulations!'
    igb = '5'
 
-prmtop_residues = cpin_utilities.getallresinfo(prmtop, 'RESIDUE_LABEL')
-prmtop_indices = cpin_utilities.getallresinfo(prmtop, 'RESIDUE_POINTER')
-radius_set = cpin_utilities.getbondiset(prmtop)
+try:
+   prmtop_residues = prmtop_object.parm_data["RESIDUE_LABEL"]
+   prmtop_indices = prmtop_object.parm_data['RESIDUE_POINTER']
+except KeyError:
+   'Error: Could not find RESIDUE_LABEL or RESIDUE_POINTER in %s!' % prmtop
+   sys.exit()
+
+try:
+   radius_set = prmtop_object.parm_data["RADIUS_SET"][0].strip()
+except KeyError:
+   radius_set = "NO RADIUS SET SPECIFIED"
 
 if not ignore_warn:
    if radius_set != 'H(N)-modified Bondi radii (mbondi2)':
@@ -168,12 +184,6 @@ if not ignore_warn:
       print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore ' + \
             'this warning.'
       sys.exit()
-
-
-if len(prmtop_residues) == 0 or len(prmtop_indices) == 0:
-   print >> sys.stderr, 'Error: Could not find residue labels or pointers in ' + prmtop + '!'
-   print >> sys.stderr, '       Check your prmtop file to make sure it is valid.'
-   sys.exit()
 
 # Turn resnum and notresnum into integers. Turn igb into integer. Turn maxpKa and
 # minpKa into floats.
@@ -193,7 +203,7 @@ try:
    minpKa = float(minpKa)
 except ValueError:
    print >> sys.stderr, 'Error: Make sure you have the right data types for the right arguments!'
-   utils.printusage()
+   printusage()
 
 # Filter residue names out of titrate_residues based on maxpKa and minpKa
 
@@ -358,7 +368,7 @@ line = ' '
 
 for x in range(len(titrated_residue_nums)):
    # FIRST_ATOM
-   holder = prmtop_indices[titrated_residue_nums[x]-1]
+   holder = str(prmtop_indices[titrated_residue_nums[x]-1])
    toadd = 'STATEINF(' + str(x) + ')%FIRST_ATOM=' + holder + ', '
    line = addOn(line, toadd)
 

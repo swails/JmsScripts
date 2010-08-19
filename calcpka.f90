@@ -1,0 +1,280 @@
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!                                                                              :
+!      This program will calculate the pKa of each residue based on the        :
+!      given cpin and cpout files.                                             :
+!                                                                              :
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+program calcpka
+
+   implicit none
+
+!  Variables:
+
+!     STATEINF_FLD_C     : How many fields are in the type const_ph_info
+!     TITR_RES_C         : How many residues may be titrated
+!     TITR_STATES_C      : How many states may exist
+!     ATOM_CHRG_C        : How many charges may exist
+!     const_ph_info      : Type for constant pH info
+
+!     cpin               : Name of cpin specified on command line (CL)
+!     cpout(:)           : Array holding all cpout file names specified on CL
+!     output_file        : File where final statistics are printed
+!     alternative_output : Output file for dumping of chunks or running sum
+!     arg_holder         : holds a command-line argument
+!     line_holder        : holds a parsed line from the cpout
+
+!     cpin_unit          : Fortran file unit for the cpin file
+!     cpout_unit         : Fortran file unit for the cpout file
+!     output_unit        : Fortran file unit for the output file
+!     alternative_unit   : Fortran file unit for the time-dumped output file
+!     ios                : stat for opening file -- catch errors
+
+!     narg               : Number of CL arguments
+!     num_cpout          : Number of cpout files to parse
+!     dump_interval      : How frequently to dump pKa chunks or cumulative sums
+!     i, j               : Counters in do loops
+!     cpout_done         : Logical to see if we're done finding cpout files on the CL
+
+!     solvph             : Solvent pH in cpout file
+!     step_size          : Monte carlo step size
+
+!     stateinf           : Holds info for each titrating residue
+!     resstate           : Array for the state of each residue
+!     protcnt            : Array for number of protons in each state
+!     statene            : State energy array for each state
+!     chrgdat            : Array with all partial atomic charges
+!     trescnt            : Number of titratable residues
+!     resname            : Array holding all residue names
+
+!     protonations       : Array holding populations of every protonation state
+!     protonations_chunk : same as above, but reset every interval steps
+!     updating           : Logical to see if we are still updating protonations
+!     res_holder         : Holder variable for which residue was selected
+!     state_holder       : Holder for which state was selected for the above residue
+!     onstep             : Which step we are currently on
+!     pkas               : array to hold all of the pkas
+
+   ! From dynph.h
+   integer, parameter :: STATEINF_FLD_C = 5
+   integer, parameter :: TITR_RES_C     = 50
+   integer, parameter :: TITR_STATES_C  = 200
+   integer, parameter :: ATOM_CHRG_C    = 1000
+   integer, parameter :: MAX_NSTATE     = 10 ! not in dynph.h -- update if any residue has more than 10 states!
+
+   type :: const_ph_info
+      sequence
+      integer :: num_states, first_atom, num_atoms, first_state, first_charge
+   end type const_ph_info
+   ! end dynph.h
+
+   character (len=128)              :: cpin
+   character (len=128), allocatable :: cpout(:)
+   character (len=128)              :: output_file = 'none'
+   character (len=128)              :: alternative_output
+   character (len=128)              :: arg_holder
+   character (len=80)               :: line_holder
+
+   integer :: narg
+   integer :: num_cpout = 1
+   integer :: dump_interval
+   integer :: i, j
+   integer :: ios
+   logical :: cpout_done = .false.
+
+   real    :: solvph
+   integer :: step_size
+
+   integer, parameter :: cpin_unit = 10
+   integer, parameter :: cpout_unit = 20
+   integer, parameter :: output_unit = 6
+   integer, parameter :: alternative_unit = 30
+
+   type (const_ph_info) :: stateinf(0:TITR_RES_C-1)
+   integer              :: resstate(0:TITR_RES_C-1)
+   integer              :: protcnt(0:TITR_STATES_C-1)
+   real                 :: statene(0:TITR_STATES_C-1)
+   real                 :: chrgdat(0:ATOM_CHRG_C-1)
+   integer              :: trescnt
+   character (len=40)   :: resname(0:TITR_RES_C)
+
+   integer, allocatable :: protonations(:,:), protonations_chunk(:,:)
+   logical                              :: updating
+   integer                              :: res_holder, state_holder
+
+   namelist /cnstph/                              stateinf, &
+                                                  resstate, &
+                                                  protcnt,  &
+                                                  statene,  &
+                                                  chrgdat,  &
+                                                  trescnt,  &
+                                                  resname
+
+            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! END VARIABLE DECLARATIONS !
+            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+   narg = iargc() ! load number of arguments into narg
+
+   ! Make sure that enough arguments are given
+   if (narg .lt. 2) then
+      call usage()
+      call exit(1)
+   end if
+
+   ! get the cpin
+   call getarg(1, cpin) 
+
+   ! answer cries for help
+   if (cpin .eq. "-h" .or. cpin .eq. "--help") then
+      call usage()
+      call exit(0)
+   end if
+
+   ! get the rest of the CL arguments
+   i = 3
+   do while (i .le. narg)
+      call getarg(i, arg_holder)
+
+      if (arg_holder .eq. '-o') then
+         cpout_done = .true.
+         i = i + 1
+         call getarg(i, output_file)
+      else if (arg_holder .eq. '-t') then
+         cpout_done = .true.
+         i = i + 1
+         call getarg(i, arg_holder)
+         read (arg_holder,FMT='(I10)') dump_interval
+      else if (arg_holder .eq. '-ao') then
+         cpout_done = .true.
+         i = i + 1
+         call getarg(i, alternative_output)
+      else if (cpout_done) then
+         call usage()
+         call exit(1)
+      else
+         num_cpout = num_cpout + 1
+      end if
+
+      i = i + 1
+   end do
+
+   ! allocate cpout name array and fill it
+   allocate(cpout(num_cpout))
+   do i = 1, num_cpout
+      call getarg(i+1,cpout(i))
+   end do
+
+   ! open the cpin file and parse it
+   open(unit=cpin_unit, file=cpin, status='OLD', iostat=ios)
+   if (ios .ne. 0) then
+      write(0,*) 'Error: CPIN file cannot be opened!'
+      call usage()
+      call exit(1)
+   end if
+   read(cpin_unit, nml=cnstph)
+   close(cpin_unit)
+
+   ! open output_file to stdout if it's specified
+   if (output_file .ne. 'none') then
+      open(unit=output_unit, file=output_file, status='REPLACE')
+   end if
+
+   ! open up the first cpout file and get the necessary information
+   open(unit=cpout_unit, file=cpout(1), status='OLD',iostat=ios)
+   if (ios .ne. 0) then
+      write(0,fmt="(a,a,a)"), "Error: CPOUT ", cpout(1), "does not exist!"
+      call usage()
+      call exit(1)
+   end if
+
+   read(cpout_unit,fmt='(80a)'), line_holder
+   read(line_holder(13:),'(f8.5)'), solvph
+
+   read(cpout_unit,fmt='(80a)'), line_holder
+   read(line_holder(24:),fmt='(i8)'), step_size
+   close(cpout_unit)
+
+   ! allocate storage for all of the protonations and zero it out
+   allocate(protonations(trescnt, MAX_NSTATE)) 
+   allocate(protonations_chunk(trescnt, MAX_NSTATE))
+   call empty_protonation(protonations, trescnt, MAX_NSTATE)
+   call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
+
+   ! Now loop through every cpout file to calculate the pKas.
+   i = 1
+   do while (i <= num_cpout)
+
+      ! open up the i-th cpout file, but go to the next if it's not valid
+      open(unit=cpout_unit, file=cpout(i), status='OLD', iostat=ios)
+      if (ios .ne. 0) then
+         goto 10
+      end if
+
+      ! read the cpout file
+      do while(.true.)
+         read(unit=cpout_unit,fmt='(80a)',end=9), line_holder
+
+         ! if we reach a full record, skip over it
+         if (line_holder(1:10) .eq. "Solvent pH") then
+            do j = 1, 5 + trescnt
+               read(unit=cpout_unit,fmt='(80a)',end=9), line_holder
+            end do
+         end if ! line_holder(1:10) .eq. "Solvent pH"
+
+         ! Now update the protonations
+         if (line_holder(1:8) .eq. "Residue ") then
+!           write(*,*) "Good sign"
+            updating = .true.
+            do while(updating)
+!              write(*,*) "Good sign 2 "
+               read(line_holder(9:12),'(i4)'), res_holder
+               read(line_holder(21:22),'(i2)'), state_holder
+!              write(*,*) res_holder, state_holder
+               resstate(res_holder) = state_holder
+               read(cpout_unit,fmt='(80a)',end=9), line_holder
+               if (line_holder(1:8) .ne. "Residue ") then 
+                  updating = .false.
+!                 write (*,*) "Good sign 3"
+               end if
+            end do !while(updating)
+
+            do j = 1, trescnt
+               protonations(j,resstate(j)+1) = protonations(j, resstate(j)+1 ) + 1
+            end do ! j = 1, trescnt
+         end if
+
+      end do ! while(.true.)
+      
+
+9  close(cpout_unit)
+10 i = i + 1
+   end do
+
+end program calcpka
+
+subroutine usage()
+
+   implicit none
+
+   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} \'
+   write(0,*) '               {-o output} {-t interval} {-ao interval_output}'
+
+end subroutine usage
+
+subroutine empty_protonation(array, index1, index2)
+
+   integer, intent (in)    :: index1, index2
+   integer, intent (inout) :: array(index1, index2)
+   integer :: i, j
+
+   do i = 1, index1
+      do j = 1, index2
+         array(i,j) = 0
+      end do
+   end do
+
+end subroutine empty_protonation
+
+!subroutine calculate_pKas

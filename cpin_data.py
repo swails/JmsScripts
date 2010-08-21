@@ -36,11 +36,11 @@ def getData(residue, igb):
                    0.7994,      # CG
                   -0.8014,      # OD1
                   -0.8014,      # OD2
-                   0.0000,      # HD21
+                   0.00,        # HD21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HD22
-                   0.0000,      # HD11
+                   0.00,        # HD22
+                   0.00,        # HD11
                    0.0000 ],    # HD12
 
                  [ relene,      # Relative energy  STATE 1 Protonated syn O2
@@ -58,8 +58,8 @@ def getData(residue, igb):
                    0.4747,      # HD21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HD22
-                   0.0000,      # HD11
+                   0.00,        # HD22
+                   0.00,        # HD11
                    0.0000 ],    # HD12
 
                  [ relene,      # Relative energy  STATE 2 Protonated anti O2
@@ -74,11 +74,11 @@ def getData(residue, igb):
                    0.6462,      # CG
                   -0.5554,      # OD1
                   -0.6376,      # OD2
-                   0.0000,      # HD21
+                   0.00,        # HD21
                    0.5973,      # C
                   -0.5679,      # O
                    0.4747,      # HD22
-                   0.0000,      # HD11
+                   0.00,        # HD11
                    0.0000 ],    # HD12
 
                  [ relene,      # Relative energy  STATE 3 Protonated syn O1
@@ -93,10 +93,10 @@ def getData(residue, igb):
                    0.6462,      # CG
                   -0.6376,      # OD1
                   -0.5554,      # OD2
-                   0.0000,      # HD21
+                   0.00,        # HD21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HD22
+                   0.00,        # HD22
                    0.4747,      # HD11
                    0.0000 ],    # HD12
 
@@ -112,11 +112,11 @@ def getData(residue, igb):
                    0.6462,      # CG
                   -0.6376,      # OD1
                   -0.5554,      # OD2
-                   0.0000,      # HD21
+                   0.00,        # HD21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HD22
-                   0.0000,      # HD11
+                   0.00,        # HD22
+                   0.00,        # HD11
                    0.4747 ] ]   # HD12
 
    if residue == "GL4":
@@ -144,11 +144,11 @@ def getData(residue, igb):
                    0.8054,      # CD
                   -0.8188,      # OE1
                   -0.8188,      # OE2
-                   0.0000,      # HE21
+                   0.00,        # HE21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HE22
-                   0.0000,      # HE11
+                   0.00,        # HE22
+                   0.00,        # HE11
                    0.0000 ],    # HE12
    
                  [ relene,      # Relative energy  STATE 1 Protonated syn O2
@@ -169,8 +169,8 @@ def getData(residue, igb):
                    0.4641,      # HE21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HE22
-                   0.0000,      # HE11
+                   0.00,        # HE22
+                   0.00,        # HE11
                    0.0000 ],    # HE12
 
                  [ relene,      # Relative energy  STATE 2 Protonated anti O2
@@ -188,11 +188,11 @@ def getData(residue, igb):
                    0.6801,      # CD
                   -0.5838,      # OE1
                   -0.6511,      # OE2
-                   0.0000,      # HE21
+                   0.00,        # HE21
                    0.5973,      # C
                   -0.5679,      # O
                    0.4641,      # HE22
-                   0.0000,      # HE11
+                   0.00,        # HE11
                    0.0000 ],    # HE12
 
                  [ relene,      # Relative energy  STATE 3 Protonated syn O1
@@ -210,10 +210,10 @@ def getData(residue, igb):
                    0.6801,      # CD
                   -0.6511,      # OE1
                   -0.5838,      # OE2
-                   0.0000,      # HE21
+                   0.00,        # HE21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HE22
+                   0.00,        # HE22
                    0.4641,      # HE11
                    0.0000 ],    # HE12
 
@@ -232,11 +232,11 @@ def getData(residue, igb):
                    0.6801,      # CD
                   -0.6511,      # OE1
                   -0.5838,      # OE2
-                   0.0000,      # HE21
+                   0.00,        # HE21
                    0.5973,      # C
                   -0.5679,      # O
-                   0.0000,      # HE22
-                   0.0000,      # HE11
+                   0.00,        # HE22
+                   0.00,        # HE11
                    0.4641 ] ]   # HE12
 
    if residue == "TYR":
@@ -289,7 +289,7 @@ def getData(residue, igb):
                    0.1320,      # HE1
                    0.7770,      # CZ
                   -0.8140,      # OH
-                   0.0000,      # HH
+                   0.00,        # HH
                   -0.4980,      # CE2
                    0.1320,      # HE2
                   -0.1030,      # CD2
@@ -347,7 +347,7 @@ def getData(residue, igb):
                    0.2057,      # CE1
                    0.1392,      # HE1
                   -0.5727,      # NE2
-                   0.0000,      # HE2
+                   0.00,        # HE2
                    0.1292,      # CD2
                    0.1147,      # HD2
                    0.7341,      # C
@@ -364,7 +364,7 @@ def getData(residue, igb):
                    0.0367,      # HB3
                    0.1868,      # CG
                   -0.5432,      # ND1
-                   0.0000,      # HD1
+                   0.00,        # HD1
                    0.1635,      # CE1
                    0.1435,      # HE1
                   -0.2795,      # NE2
@@ -388,7 +388,7 @@ def getData(residue, igb):
                    3,           # Relative protonation
                   -0.3479,      # N
                    0.2747,      # H
-                  -0.2400,      # CA
+                  -0.24,        # CA
                    0.1426,      # HA
                   -0.0094,      # CB
                    0.0362,      # HB2
@@ -403,9 +403,9 @@ def getData(residue, igb):
                    0.1135,      # HE2
                    0.1135,      # HE3
                   -0.3854,      # NZ
-                   0.3400,      # HZ1
-                   0.3400,      # HZ2
-                   0.3400,      # HZ3
+                   0.34,        # HZ1
+                   0.34,        # HZ2
+                   0.34,        # HZ3
                    0.7341,      # C
                   -0.5894 ],    # O
 
@@ -413,7 +413,7 @@ def getData(residue, igb):
                    2,           # Relative protonation
                   -0.3479,      # N
                    0.2747,      # H
-                  -0.2400,      # CA
+                  -0.24,        # CA
                    0.1426,      # HA
                   -0.10961,     # CB
                    0.0340,      # HB2
@@ -428,7 +428,7 @@ def getData(residue, igb):
                   -0.03358,     # HE2
                   -0.03358,     # HE3
                   -1.03581,     # NZ
-                   0.0000,      # HZ1
+                   0.00,        # HZ1
                    0.38604,     # HZ2
                    0.38604,     # HZ3
                    0.7341,      # C
@@ -468,8 +468,91 @@ def getData(residue, igb):
                    0.1122,      # HB2
                    0.1122,      # HB3
                   -0.8844,      # SG
-                   0.0000,      # HG
+                   0.00,        # HG
                    0.5973,      # C
                   -0.5679 ] ]   # O
+      
+   if residue == "PDA":
+      pKa = 4.2
+
+      if igb == 2:
+         relene = 36.5912 #- KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 5:
+         relene = 36.5912 #- KB * TEMP * LN_TO_LOG * pKa
+      else:
+         relene = 0.0
+
+      return   [ [ 0,           # Relative energy  STATE 1 PDA
+                   1,           # Relative protonation
+                   1.1659,      # P
+                  -0.7761,      # O1P
+                  -0.7761,      # O2P
+                  -0.4954,      # O5'
+                  -0.0069,      # C5'
+                   0.0754,      # H5'1
+                   0.0754,      # H5'2
+                   0.1629,      # C4'
+                   0.1176,      # H4'
+                  -0.3691,      # O4'
+                   0.2680,      # C1'
+                   0.1104,      # H1'
+                  -0.1035,      # N9 
+                   0.2234,      # C8 
+                   0.1948,      # H8
+                  -0.5676,      # N7 
+                   0.1712,      # C5 
+                   0.4302,      # C6 
+                  -0.8094,      # N6 
+                   0.4418,      # H61
+                   0.4418,      # H62
+                  -0.3477,      # N1 
+                   0.2742,      # C2 
+                   0.1717,      # H2 
+                  -0.5181,      # N3
+                   0.3820,      # C4
+                   0.0713,      # C3'
+                   0.0985,      # H3'
+                  -0.0854,      # C2'
+                   0.0718,      # H2'1
+                   0.0718,      # H2'2
+                  -0.5232,      # O3'
+                   0.3584 ],    # H1
+
+                 [ relene,      # Relative energy  STATE 1 CYM
+                   0,           # Relative protonation
+                   1.1659,      # P
+                  -0.7761,      # O1P
+                  -0.7761,      # O2P
+                  -0.4954,      # O5'
+                  -0.0069,      # C5'
+                   0.0754,      # H5'1
+                   0.0754,      # H5'2
+                   0.1629,      # C4'
+                   0.1176,      # H4'
+                  -0.3691,      # O4'
+                   0.0431,      # C1'
+                   0.1838,      # H1'
+                  -0.0268,      # N9 
+                   0.1607,      # C8 
+                   0.1877,      # H8
+                  -0.6175,      # N7 
+                   0.0725,      # C5 
+                   0.6897,      # C6 
+                  -0.9123,      # N6 
+                   0.4167,      # H61
+                   0.4167,      # H62
+                  -0.7624,      # N1 
+                   0.5716,      # C2 
+                   0.0598,      # H2 
+                  -0.7417,      # N3
+                   0.3800,      # C4
+                   0.0713,      # C3'
+                   0.0985,      # H3'
+                  -0.0854,      # C2'
+                   0.0718,      # H2'1
+                   0.0718,      # H2'2
+                  -0.5232,      # O3'
+                   0.3584 ] ]   # H1
+
       
    return -1

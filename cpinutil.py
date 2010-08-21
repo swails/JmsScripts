@@ -32,8 +32,8 @@ if sys.argv[1].startswith('-h') or sys.argv[1].startswith('--h'):
    printusage()
 
 # list all of the residues that can currently be titrated:
-titratable = "AS4 GL4 HIP TYR LYS CYS"
-exp_pkas   = "4.0 4.4 6.5 9.6 10.4 8.55"
+titratable = "AS4 GL4 HIP TYR LYS CYS PDA"
+exp_pkas   = "4.0 4.4 6.5 9.6 10.4 8.55 4.2"
 
 # set some default variables
 titrate_residues = titratable

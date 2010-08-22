@@ -86,9 +86,18 @@ beta     = 1 / (kboltz * temp) # 1 / k T
 zero     = 1e-8
 
 # The text for the leap script to make the files
-leap_script = """source leaprc.constph
+if amino_acid:
+   leap_script = """source leaprc.constph
 
 l = sequence {ACE """ + residuename + " NME}" + """
+
+saveamberparm l {0}.prmtop {0}.inpcrd
+quit
+""".format(system_prefix)
+else:
+   leap_script = """source leaprc.constph
+
+l = sequence {MOC """ + residuename + " CH3}" + """
 
 saveamberparm l {0}.prmtop {0}.inpcrd
 quit
@@ -208,8 +217,8 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
          ' -r _TITR_.restrt')
 
       # calculate the pKa to get the ratio of protonated to unprotonated
-      print 'Running calcpka.pl...'
-      os.system("calcpka.pl {0} _TITR_.cpout | head -n 1 |".format(cpinname) + \
+      print 'Running calcpka...'
+      os.system("calcpka {0} _TITR_.cpout | head -n 2 | tail -n 1 |".format(cpinname) + \
                 " awk '{print $9}' > _TITR_pka.dat")
 
       # get the new ratio from that file

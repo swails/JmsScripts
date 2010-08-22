@@ -16,6 +16,9 @@ from math import fsum
 from time import time
 import sys, os
 
+sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
+sys.stderr = os.fdopen(sys.stderr.fileno(),'w',0)
+
 tstart = time()
 
 # usage instructions

@@ -198,7 +198,7 @@ program calcpka
       call exit(1)
    end if
 
-   read(cpout_unit,fmt='(80a)'), line_holder
+   read(cpout_unit,fmt='(1a80)'), line_holder
    if (line_holder(1:11) .ne. "Solvent pH:") then
       write(0,'(a,a,a)') 'Error: ', cpout(1), ' is an invalid CPOUT file!'
       call usage()
@@ -206,7 +206,7 @@ program calcpka
    end if
    read(line_holder(13:),'(f8.5)'), solvph
 
-   read(cpout_unit,fmt='(80a)'), line_holder
+   read(cpout_unit,fmt='(1a80)'), line_holder
    read(line_holder(24:),fmt='(i8)'), step_size
    close(cpout_unit)
 
@@ -241,7 +241,7 @@ program calcpka
 
       ! read the cpout file
       do while(.true.)
-         read(unit=cpout_unit,fmt='(80a)',end=9), line_holder
+         read(unit=cpout_unit,fmt='(1a80)',end=9), line_holder
 
          ! Now update the protonations
          if (line_holder(1:8) .eq. "Residue ") then
@@ -254,7 +254,7 @@ program calcpka
                   transitions(res_holder + 1) = transitions(res_holder + 1) + 1
                end if
                resstate(res_holder) = state_holder
-               read(cpout_unit,fmt='(80a)',end=9), line_holder
+               read(cpout_unit,fmt='(1a80)',end=9), line_holder
                if (line_holder(1:8) .ne. "Residue ") then 
                   updating = .false.
                end if

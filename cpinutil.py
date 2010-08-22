@@ -32,8 +32,8 @@ if sys.argv[1].startswith('-h') or sys.argv[1].startswith('--h'):
    printusage()
 
 # list all of the residues that can currently be titrated:
-titratable = "AS4 GL4 HIP TYR LYS CYS PDA"
-exp_pkas   = "4.0 4.4 6.5 9.6 10.4 8.55 4.2"
+titratable = cpin_data.TITRATABLE
+exp_pkas   = cpin_data.EXP_PKAS
 
 # set some default variables
 titrate_residues = titratable
@@ -101,8 +101,9 @@ try:
          while x < len(sys.argv) and not sys.argv[x].startswith("-"):
             dataholder = sys.argv[x].split(",")
             for y in range(len(dataholder)):
+               titrate_residues = " %s " % titrate_residues # add space in so we match only whole residue names
                if len(dataholder[y].strip()) != 0:
-                  titrate_residues = string.replace(titrate_residues, dataholder[y].strip(), '')
+                  titrate_residues = string.replace(titrate_residues, " %s " % dataholder[y].strip(), ' ')
             x += 1
          # while loop may have been triggered by a flag; rewind to read flag
          x -= 1
@@ -214,11 +215,16 @@ for x in range(len(titrate_name_holder)):
    titrate_name_holder[x] = titrate_name_holder[x].strip()
    titrate_pka_holder[x] = float(titrate_pka_holder[x].strip())
 
+   # Now tack a space onto the beginning and end of titrate_residues so we can match whole residue names
+   titrate_residues = " %s " % titrate_residues.strip()
+
    if titrate_pka_holder[x] < minpKa or titrate_pka_holder[x] > maxpKa:
-      if titrate_pka_holder[x] in titrate_residues:
-         titrate_residues = string.replace(titrate_residues, titrate_pka_holder[x], '').strip()
+      if " %s " % titrate_name_holder[x] in titrate_residues:
+         titrate_residues = string.replace(titrate_residues, titrate_name_holder[x], '').strip()
 
 
+# Now tack a space onto the beginning and end of titrate_residues so we can match whole residue names
+titrate_residues = " %s " % titrate_residues.strip()
 
 # Start compiling the list of titrated_residues
 # First start by only pulling residue numbers if specified. If not, look for all
@@ -233,7 +239,7 @@ if len(resnums) != 0:
          print >> sys.stderr, '       residues in the topology file ' + prmtop
          sys.exit()
 
-      if not prmtop_residues[resnums[x]-1] in titrate_residues:
+      if not (" %s " % prmtop_residues[resnums[x]-1]) in titrate_residues:
          print >> sys.stderr, 'Error: Residue ' + str(resnums[x]) + ' is a ' + prmtop_residues[resnums[x]-1] + \
                '. This is not in the list of titratable residues!'
          sys.exit()
@@ -244,7 +250,7 @@ if len(resnums) != 0:
 
 else:
    for x in range(len(prmtop_residues)):
-      if prmtop_residues[x] in titrate_residues:
+      if " %s " % prmtop_residues[x] in titrate_residues:
          titrated_residue_nums.append(x+1)
 
 # Check to make sure that at least one residue is going to be titrated

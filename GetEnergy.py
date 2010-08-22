@@ -26,7 +26,8 @@ def fileexists(filename): # returns logical True if file exists, False if not
 
 def printusage():
    print 'Usage: GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \\'
-   print '                    -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>'
+   print '                    -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions> \\'
+   print '                    {-aa | -na}'
    sys.exit()
 
 ###############################################################################
@@ -47,6 +48,7 @@ tolerance     = 0.008   # how tolerant we should be before we call it a success
 maxcycles     = 10      # how many times to iterate through to find the statene
 ns            = 2       # how many ns each titration is
 cpinname      = "cpin"  # the name of the cpin file
+amino_acid    = True
 
 for x in range(1,len(sys.argv)):
    if sys.argv[x] == '-igb':
@@ -63,6 +65,10 @@ for x in range(1,len(sys.argv)):
       cpinname = sys.argv[x+1]
    elif sys.argv[x] == '-reps':
       repetitions = int(sys.argv[x+1])
+   elif sys.argv[x] == '-na':
+      amino_acid = False
+   elif sys.argv[x] == '-aa':
+      amino_acid = True
    elif sys.argv[x].startswith('-'):
       print 'Unknown command-line argument ' + sys.argv[x]
       printusage()

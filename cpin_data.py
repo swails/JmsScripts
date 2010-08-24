@@ -1,7 +1,7 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
-TITRATABLE = " AS4 GL4 HIP TYR LYS CYS PDA PDC PDG PDG DT "
-EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.55 3.9 4.3 1.6 9.2 9.7"
+TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS PDA PDC PDG PDG DT  PRA PRC PRG PRG RU"
+EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.6 3.9 4.3 2.1 9.2 9.7 3.9 4.3 2.1 9.2 9.3"
 
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
@@ -443,9 +443,9 @@ def getData(residue, igb):
       pKa = 8.55
 
       if igb == 2:
-         relene = 77.53571 - KB * TEMP * LN_TO_LOG * pKa
+         relene = 77.53571 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 76.28363 - KB * TEMP * LN_TO_LOG * pKa
+         relene = 76.28363 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -481,9 +481,9 @@ def getData(residue, igb):
       pKa = 3.9
 
       if igb == 2:
-         relene = 36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -36.6696 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -36.5912 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -563,9 +563,9 @@ def getData(residue, igb):
       pKa = 4.3
 
       if igb == 2:
-         relene = 36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -69.3910 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -69.3910 #- KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -638,23 +638,23 @@ def getData(residue, igb):
                    0.3267 ] ]   # H3
 
    if residue == "PDG":
-      pKa1 = 1.6
+      pKa1 = 2.1
       pKa2 = 9.2
 
       if igb == 2:
-         relene1 = 0.00
-         relene2 = 0.00
-         relene3 = 0.00
+         relene1 = -115.296
+         relene2 = -43.3367 + KB * TEMP * LN_TO_LOG * pKa2
+         relene3 = -81.6459 - KB * TEMP * LN_TO_LOG * pKa1
       elif igb == 5:
          relene1 = 0.00
-         relene2 = 0.00
-         relene3 = 0.00
+         relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa2
+         relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa1
       else:
          relene1 = 0.00
          relene2 = 0.00
          relene3 = 0.00
 
-      return   [ [ relene1,     # Relative energy  STATE 0 DG
+      return   [ [ 0,           # Relative energy  STATE 0 DG
                    1,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -691,7 +691,7 @@ def getData(residue, igb):
                   -0.5232,      # O3'
                    0.0000 ] ,   # H7
 
-                 [ relene2,     # Relative energy  STATE 1 DG'
+                 [ relene1,     # Relative energy  STATE 1 DG'
                    1,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -728,7 +728,7 @@ def getData(residue, igb):
                   -0.5232,      # O3'
                    0.3895 ] ,   # H7
 
-                 [ relene3,     # Relative energy  STATE 2 PDG
+                 [ relene2,     # Relative energy  STATE 2 PDG
                    2,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -765,7 +765,7 @@ def getData(residue, igb):
                   -0.5232,      # O3'
                    0.4102 ] ,   # H7
 
-                 [ 0,           # Relative energy  STATE 3 PDG
+                 [ relene3,     # Relative energy  STATE 3 DDG
                    0,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -806,9 +806,9 @@ def getData(residue, igb):
       pKa = 9.7
 
       if igb == 5:
-         relene = 0.00
+         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = 0.00
+         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -881,5 +881,414 @@ def getData(residue, igb):
                    0.0718,      # H2'
                    0.0718,      # H2'
                   -0.5232 ] ]   # O3'
+
+   if residue == "PRA":
+      pKa = 3.9
+
+      if igb == 5:
+         relene = 0.00
+      elif igb == 2:
+         relene = 0.00
+      else:
+         relene = 0.
+
+      return   [ [ 0,           # Relative energy STATE 0 RA
+                   0,           # Relative protonation
+                   1.1662,      # P 
+                  -0.7760,      # O1P
+                  -0.7760,      # O2P
+                  -0.4989,      # O5'
+                   0.0558,      # C5'
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4'
+                   0.1174,      # H4'
+                  -0.3548,      # O4'
+                   0.0394,      # C1' 
+                   0.2007,      # H1' 
+                  -0.0251,      # N9
+                   0.2006,      # C8
+                   0.1553,      # H8
+                  -0.6073,      # N7
+                   0.0515,      # C5
+                   0.7009,      # C6
+                  -0.9019,      # N6
+                   0.4115,      # H61 
+                   0.4115,      # H62 
+                  -0.7615,      # N1
+                   0.5875,      # C2
+                   0.0473,      # H2
+                  -0.6997,      # N3
+                   0.3053,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.0000 ] ,   # H1
+
+                 [ 0,           # Relative energy  STATE 1 PRA
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.1348,      # C1' 
+                   0.1715,      # H1' 
+                  -0.0168,      # N9
+                   0.1724,      # C8
+                   0.2119,      # H8
+                  -0.5546,      # N7
+                   0.1609,      # C5
+                   0.4241,      # C6
+                  -0.8040,      # N6
+                   0.4401,      # H61 
+                   0.4401,      # H62 
+                  -0.3322,      # N1
+                   0.2442,      # C2
+                   0.1792,      # H2
+                  -0.4921,      # N3
+                   0.3811,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.3554 ] ]   # H1
+
+   if residue == "PRC":
+      pKa = 3.9
+
+      if igb == 5:
+         relene = 0.00
+      elif igb == 2:
+         relene = 0.00
+      else:
+         relene = 0.
+
+      return   [ [ 0,           # Relative energy STATE 0 RA
+                   0,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0066,      # C1' 
+                   0.2029,      # H1' 
+                  -0.0484,      # N1
+                   0.0053,      # C6
+                   0.1958,      # H6
+                  -0.5215,      # C5
+                   0.1928,      # H5
+                   0.8185,      # C4
+                  -0.9530,      # N4
+                   0.4234,      # H41 
+                   0.4234,      # H42 
+                  -0.7584,      # N3
+                   0.7538,      # C2
+                  -0.6252,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.0000 ] ,   # H3
+
+                 [ relene,      # Relative energy STATE 0 PRA
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.2637,      # C1' 
+                   0.1075,      # H1' 
+                   0.0676,      # N1
+                  -0.0924,      # C6
+                   0.2894,      # H6
+                  -0.3239,      # C5
+                   0.2096,      # H5
+                   0.4888,      # C4
+                  -0.8518,      # N4
+                   0.4584,      # H41 
+                   0.4584,      # H42 
+                  -0.2408,      # N3
+                   0.4507,      # C2
+                  -0.5003,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.3311 ] ]   # H3
+
+   if residue == "PRG":
+      pKa1 = 2.1
+      pKa2 = 9.2
+
+      if igb == 5:
+         relene1 = 0.00
+         relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa2
+         relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa1
+      elif igb == 2:
+         relene = 0.00
+         relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa2
+         relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa1
+      else:
+         relene = 0.00
+         relene2 = 0.00
+         relene3 = 0.00
+
+      return   [ [ 0,           # Relative energy STATE 0 RG
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0191,      # C1' 
+                   0.2006,      # H1' 
+                   0.0492,      # N9
+                   0.1374,      # C8
+                   0.1640,      # H8
+                  -0.5709,      # N7
+                   0.1744,      # C5
+                   0.4770,      # C6
+                  -0.5597,      # O6
+                  -0.4787,      # N1
+                   0.3424,      # H1
+                   0.7657,      # C2
+                  -0.9672,      # N2
+                   0.4364,      # H21 
+                   0.4364,      # H22 
+                  -0.6323,      # N3
+                   0.1222,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.0000 ] ,   # H7
+
+                 [ relene1,     # Relative energy STATE 1 RG'
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0116,      # C1' 
+                   0.1784,      # H1' 
+                   0.0919,      # N9
+                   0.0623,      # C8
+                   0.2250,      # H8
+                  -0.3772,      # N7
+                  -0.0738,      # C5
+                   0.7616,      # C6
+                  -0.6575,      # O6
+                  -0.7848,      # N1
+                   0.0000,      # H1
+                   0.8684,      # C2
+                  -0.9776,      # N2
+                   0.4068,      # H21 
+                   0.4068,      # H22 
+                  -0.6261,      # N3
+                   0.1959,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.4043 ] ,   # H7
+
+                 [ relene2,     # Relative energy STATE 2 PRG
+                   2,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P
+                  -0.7760,      # O2P
+                  -0.4989,      # O5'
+                   0.0558,      # C5'
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4'
+                   0.1174,      # H4'
+                  -0.3548,      # O4'
+                   0.2574,      # C1'
+                   0.1120,      # H1'
+                   0.0524,      # N9
+                   0.0169,      # C8
+                   0.2812,      # H8
+                  -0.3098,      # N7
+                   0.0253,      # C5
+                   0.4689,      # C6
+                  -0.4801,      # O6
+                  -0.3683,      # N1
+                   0.3389,      # H1
+                   0.6529,      # C2
+                  -0.9020,      # N2
+                   0.4465,      # H21 
+                   0.4465,      # H22 
+                  -0.5339,      # N3
+                   0.2005,      # C4
+                   0.2022,      # C3'
+                   0.0615,      # H3'
+                   0.0670,      # C2'
+                   0.0972,      # H2'1
+                  -0.6139,      # O2'
+                   0.4186,      # HO'2
+                  -0.5246,      # O3'
+                   0.4107 ] ,   # H7
+
+                 [ relene3,     # Relative energy STATE 3 DRG
+                   0,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                  -0.2296,      # C1' 
+                   0.2269,      # H1' 
+                   0.0467,      # N9
+                   0.1604,      # C8
+                   0.1079,      # H8
+                  -0.6073,      # N7
+                   0.0834,      # C5
+                   0.7356,      # C6
+                  -0.6833,      # O6
+                  -0.8027,      # N1
+                   0.0000,      # H1
+                   0.7903,      # C2
+                  -0.9414,      # N2
+                   0.3628,      # H21 
+                   0.3628,      # H22 
+                  -0.6429,      # N3
+                   0.1464,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.0000 ] ]   # H7
+
+   if residue == "RU":
+      pKa = 9.3
+
+      if igb == 2:
+         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 5:
+         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+      else:
+         relene = 0.00
+
+      return   [ [ 0,           # Relative energy STATE 0 RU
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0674,      # C1' 
+                   0.1824,      # H1' 
+                   0.0418,      # N1
+                  -0.1126,      # C6
+                   0.2188,      # H6
+                  -0.3635,      # C5
+                   0.1811,      # H5
+                   0.5952,      # C4
+                  -0.5761,      # O4
+                  -0.3549,      # N3
+                   0.3154,      # H3
+                   0.4687,      # C2
+                  -0.5477,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2'
+                   0.4186,      # HO'2
+                  -0.5246 ] ,   # O3' 
+
+                 [ relene,      # Relative energy STATE 1 DRU
+                   0,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                  -0.1497,      # C1' 
+                   0.1724,      # H1' 
+                  -0.0092,      # N1
+                  -0.0919,      # C6
+                   0.1707,      # H6
+                  -0.5518,      # C5
+                   0.1711,      # H5
+                   0.9793,      # C4
+                  -0.7365,      # O4
+                  -0.9169,      # N3
+                   0.0000,      # H3
+                   0.8510,      # C2
+                  -0.7725,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2'
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246 ] ]   # O3' 
 
    return -1

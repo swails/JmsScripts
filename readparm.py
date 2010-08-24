@@ -261,16 +261,152 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
    def totMass(self):
+      """Returns total mass of the system"""
       return fsum(self.parm_data["MASS"])
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+   def totCharge(self):
+      """Returns total charge of the system"""
+      return fsum(self.parm_data["CHARGE"])
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def totCharge(self):
-      return fsum(self.parm_data["CHARGE"])
+   def Frcmod(self, frcmod="frcmod"):
+      """Prints an Frcmod file that contains every parameter found in prmtop"""
+      from math import pi
+
+      file = open(frcmod, 'w')
+
+      found_atomtypes = [] # store all of the atom types that have been used for masses
+      found_bondtypes = [] # store all of the bond types that have been found
+      found_angletypes = [] # store all of the angle types that have been found
+      found_dihedtypes = [] # store all of the dihedral types that have been found
+      found_impropers = [] # store all of the improper dihedral types that have been found
+      stored_impropers = [] # storage for all unique improper dihedral parameters
+
+      # write the title
+      file.write("Force field created from parameters in %s\n" % self.prm_name)
+
+      # First we have to write the mass 
+      file.write("MASS\n")
+      for i in range(self.pointers["NATOM"]):
+         # make sure we haven't found this atom type yet
+         is_found = False
+         for j in range(len(found_atomtypes)):
+            if self.parm_data["AMBER_ATOM_TYPE"][i] == found_atomtypes[j]:
+               is_found = True
+
+         if is_found:
+            continue
+
+         # not found: now print out information and consider it found
+         found_atomtypes.append(self.parm_data["AMBER_ATOM_TYPE"][i])
+         file.write("%s%6.3f\n" % (self.parm_data["AMBER_ATOM_TYPE"][i].ljust(6), self.parm_data["MASS"][i]))
+
+      found_atomtypes = [] # free up this memory now that we're done with the masses
+
+      file.write("\n")
+
+      # Now we write the bonds
+      file.write("BOND\n")
+      # We need to collect terms from 2 different blocks -- BONDS_INC_HYDROGEN and BONDS_WITHOUT_HYDROGEN
+      # See http://ambermd.org/formats.html to get the details of how to parse this. The pointers for each
+      # of these are NBONH and MBONA. Do not-including H first, then do H-included.
+      for i in range(self.pointers["MBONA"]):
+         start_index = i * 3
+         # This is the bond... see if it's been found before
+         bond = "%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["BONDS_WITHOUT_HYDROGEN"][start_index]/3].ljust(2), 
+                           self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["BONDS_WITHOUT_HYDROGEN"][start_index+1]/3].ljust(2))
+         is_found = False
+         for j in range(len(found_bondtypes)):
+            if bond == found_bondtypes[j]:
+               is_found = True
+               break
+
+         if is_found:
+            continue
+
+         # not found: now print out information and consider it found
+         found_bondtypes.append(bond)
+         file.write("%s   %8.3f  %6.3f\n" % (bond, 
+                  self.parm_data["BOND_FORCE_CONSTANT"][self.parm_data["BONDS_WITHOUT_HYDROGEN"][start_index+2]-1],
+                  self.parm_data["BOND_EQUIL_VALUE"][self.parm_data["BONDS_WITHOUT_HYDROGEN"][start_index+2]-1]     ))
+
+      found_bondtypes = []  # free up this memory now that we're done with bonds without hydrogen
+
+      for i in range(self.pointers["NBONH"]):
+         start_index = i * 3
+         # This is the bond... see if it's been found before
+         bond = "%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["BONDS_INC_HYDROGEN"][start_index]/3].ljust(2),
+                           self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["BONDS_INC_HYDROGEN"][start_index+1]/3].ljust(2))
+         is_found = False
+         for j in range(len(found_bondtypes)):
+            if bond == found_bondtypes[j]:
+               is_found = True
+               break
+
+         if is_found:
+            continue
+
+         # not found: now print out information and consider it found
+         found_bondtypes.append(bond)
+         file.write("%s   %8.3f  %6.3f\n" % (bond, 
+                     self.parm_data["BOND_FORCE_CONSTANT"][self.parm_data["BONDS_INC_HYDROGEN"][start_index+2]-1],
+                     self.parm_data["BOND_EQUIL_VALUE"][self.parm_data["BONDS_INC_HYDROGEN"][start_index+2]-1]     ))
+
+      del found_bondtypes  # free up this memory now that we're done with all bonds
+
+      file.write('\n')
+
+      # Now we write the angles: same kind of deal as the bonds, but now we have 3 atoms instead of 2 to find
+      file.write('ANGLE\n')
+      for i in range(self.pointers["MTHETA"]):
+         start_index = i * 4
+         # This is the angle... see if it's been found before
+         angle = "%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index]/3].ljust(2),
+                             self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index+1]/3].ljust(2),
+                             self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index+2]/3].ljust(2) )
+         is_found = False
+         for j in range(len(found_angletypes)):
+            if angle == found_angletypes[j]:
+               is_found = True
+               break
+
+         if is_found:
+            continue
+
+         # not found: now print out information and consider it found
+         found_angletypes.append(angle)
+         file.write("%s   %8.3f  %6.3f\n" % (angle,
+               self.parm_data["ANGLE_FORCE_CONSTANT"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index+3]-1],
+               self.parm_data["ANGLE_EQUIL_VALUE"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index+3]-1] * 180 / pi ))
+
+      for i in range(self.pointers["NTHETH"]):
+         start_index = i * 4
+         # This is the angle... see if it's been found before
+         angle = "%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_INC_HYDROGEN"][start_index]/3].ljust(2),
+                             self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_INC_HYDROGEN"][start_index+1]/3].ljust(2),
+                             self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_INC_HYDROGEN"][start_index+2]/3].ljust(2) )
+         is_found = False
+         for j in range(len(found_angletypes)):
+            if angle == found_angletypes[j]:
+               is_found = True
+               break
+
+         if is_found:
+            continue
+
+         # not found: now print out information and consider it found
+         found_angletypes.append(angle)
+         file.write("%s   %8.3f  %6.3f\n" % (angle,
+               self.parm_data["ANGLE_FORCE_CONSTANT"][self.parm_data["ANGLES_INC_HYDROGEN"][start_index+3]-1],
+               self.parm_data["ANGLE_EQUIL_VALUE"][self.parm_data["ANGLES_INC_HYDROGEN"][start_index+3]-1] * 180 / pi ))
+
+      del found_angletypes # done with this, clear the memory
+
+      file.close()
+      return 0
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

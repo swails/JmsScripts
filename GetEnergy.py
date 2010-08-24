@@ -290,7 +290,6 @@ output.close()
 tend = time.time()
 
 print '\n'
-print enehist
 print ratiohist
 print statenestring + 'Final Ratio: {0}'.format(ratio)
 

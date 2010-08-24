@@ -1,7 +1,7 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
 TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS PDA PDC PDG PDG DT  PRA PRC PRG PRG RU"
-EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.6 3.9 4.3 2.1 9.2 9.7 3.9 4.3 2.1 9.2 9.3"
+EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.2 9.7 3.9 4.3 2.1 9.2 9.3"
 
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
@@ -440,7 +440,7 @@ def getData(residue, igb):
                   -0.5894 ] ]   # O
 
    if residue == "CYS":
-      pKa = 8.55
+      pKa = 8.5
 
       if igb == 2:
          relene = 77.53571 + KB * TEMP * LN_TO_LOG * pKa
@@ -565,7 +565,7 @@ def getData(residue, igb):
       if igb == 2:
          relene = -69.3910 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -69.3910 #- KB * TEMP * LN_TO_LOG * pKa
+         relene = -69.5117 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -806,9 +806,9 @@ def getData(residue, igb):
       pKa = 9.7
 
       if igb == 5:
-         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -9.71931 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -11.0095 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -847,7 +847,7 @@ def getData(residue, igb):
                    0.0718,      # H2'
                   -0.5232 ] ,   # O3'
 
-                 [ 0,           # Relative energy  STATE 1 DDT
+                 [ relene,      # Relative energy  STATE 1 DDT
                    0,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -888,7 +888,7 @@ def getData(residue, igb):
       if igb == 5:
          relene = 0.00
       elif igb == 2:
-         relene = 0.00
+         relene = 55.4028 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -929,7 +929,7 @@ def getData(residue, igb):
                   -0.5246,      # O3' 
                    0.0000 ] ,   # H1
 
-                 [ 0,           # Relative energy  STATE 1 PRA
+                 [ relene,      # Relative energy  STATE 1 PRA
                    1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 

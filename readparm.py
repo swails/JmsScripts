@@ -275,16 +275,29 @@ class amberParm:
 
    def Frcmod(self, frcmod="frcmod"):
       """Prints an Frcmod file that contains every parameter found in prmtop"""
-      from math import pi
+      from math import pi, pow
+
+      print >> stderr, "Warning: amberParm.Frcmod() does not work for 10-12 non-" \
+            + "bonded interactions or variable 1-4 scaling prmtops yet."
+
+      def getMatches(entry, array):
+         counter = 0
+         for i in range(len(array)):
+            if array[i][0:11] == entry:
+               counter += 1
+         return counter
 
       file = open(frcmod, 'w')
 
       found_atomtypes = [] # store all of the atom types that have been used for masses
+      atom_type_nums = [] # store the index of which atom type it is
       found_bondtypes = [] # store all of the bond types that have been found
       found_angletypes = [] # store all of the angle types that have been found
-      found_dihedtypes = [] # store all of the dihedral types that have been found
-      found_impropers = [] # store all of the improper dihedral types that have been found
-      stored_impropers = [] # storage for all unique improper dihedral parameters
+      stored_dihedtypes = [] # store all of the dihedral types that have been found
+      stored_impropers = [] # storage for all improper dihedral parameters
+      unique_diheds = [] # storage for all of the unique dihedral parameters
+      lj_dist = [] # holder for all of the L-J 12-6 distance parameters
+      lj_well = [] # holder for all of the L-J 12-6 well-depth parameters
 
       # write the title
       file.write("Force field created from parameters in %s\n" % self.prm_name)
@@ -303,9 +316,8 @@ class amberParm:
 
          # not found: now print out information and consider it found
          found_atomtypes.append(self.parm_data["AMBER_ATOM_TYPE"][i])
+         atom_type_nums.append(self.parm_data["ATOM_TYPE_INDEX"][i])
          file.write("%s%6.3f\n" % (self.parm_data["AMBER_ATOM_TYPE"][i].ljust(6), self.parm_data["MASS"][i]))
-
-      found_atomtypes = [] # free up this memory now that we're done with the masses
 
       file.write("\n")
 
@@ -314,7 +326,7 @@ class amberParm:
       # We need to collect terms from 2 different blocks -- BONDS_INC_HYDROGEN and BONDS_WITHOUT_HYDROGEN
       # See http://ambermd.org/formats.html to get the details of how to parse this. The pointers for each
       # of these are NBONH and MBONA. Do not-including H first, then do H-included.
-      for i in range(self.pointers["MBONA"]):
+      for i in range(self.pointers["NBONA"]):
          start_index = i * 3
          # This is the bond... see if it's been found before
          bond = "%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["BONDS_WITHOUT_HYDROGEN"][start_index]/3].ljust(2), 
@@ -362,7 +374,7 @@ class amberParm:
 
       # Now we write the angles: same kind of deal as the bonds, but now we have 3 atoms instead of 2 to find
       file.write('ANGLE\n')
-      for i in range(self.pointers["MTHETA"]):
+      for i in range(self.pointers["NTHETA"]):
          start_index = i * 4
          # This is the angle... see if it's been found before
          angle = "%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][self.parm_data["ANGLES_WITHOUT_HYDROGEN"][start_index]/3].ljust(2),
@@ -406,6 +418,182 @@ class amberParm:
 
       del found_angletypes # done with this, clear the memory
 
+      file.write('\n')
+      # now it's time to find the dihedrals
+
+      for i in range(self.pointers["NPHIA"]):
+         start_index = i * 5
+         # atom1 - atom4 are actually atom# - 1. I only need to check for negative values in atom3 and atom4
+         # negative in atom3 means it's multiterm, negative atom4 means it's an improper, so store it
+         atom1 = self.parm_data["DIHEDRALS_WITHOUT_HYDROGEN"][start_index]/3
+         atom2 = self.parm_data["DIHEDRALS_WITHOUT_HYDROGEN"][start_index+1]/3
+         atom3 = self.parm_data["DIHEDRALS_WITHOUT_HYDROGEN"][start_index+2]/3
+         atom4 = self.parm_data["DIHEDRALS_WITHOUT_HYDROGEN"][start_index+3]/3
+         term  = self.parm_data["DIHEDRALS_WITHOUT_HYDROGEN"][start_index+4]
+         dihedral = "%s-%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][atom1].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][atom2].ljust(2), 
+                      self.parm_data["AMBER_ATOM_TYPE"][abs(atom3)].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][abs(atom4)].ljust(3))
+
+         if atom4 < 0:
+            dihedral = "%s %8.3f %8.3f %5.1f" % (dihedral, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+         elif atom3 < 0: # if there's another term in the series
+            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+         else:
+            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+         if atom4 < 0: # if it's a *new* improper, store it if necessary
+            is_found = False
+            for j in range(len(stored_impropers)):
+               if stored_impropers[j] == dihedral:
+                  is_found = True
+                  break
+            if is_found:
+               continue
+            else:
+               stored_impropers.append(dihedral)
+         else:
+            is_found = False
+            for j in range(len(stored_dihedtypes)):
+               if stored_dihedtypes[j] == dihedral:
+                  is_found = True
+                  break
+            if is_found:
+               continue
+            else:
+               stored_dihedtypes.append(dihedral)
+
+      for i in range(self.pointers["NPHIH"]):
+         start_index = i * 5
+         # atom1 - atom4 are actually atom# - 1. I only need to check for negative values in atom3 and atom4
+         # negative in atom3 means it's multiterm, negative atom4 means it's an improper, so store it
+         atom1 = self.parm_data["DIHEDRALS_INC_HYDROGEN"][start_index]/3
+         atom2 = self.parm_data["DIHEDRALS_INC_HYDROGEN"][start_index+1]/3
+         atom3 = self.parm_data["DIHEDRALS_INC_HYDROGEN"][start_index+2]/3
+         atom4 = self.parm_data["DIHEDRALS_INC_HYDROGEN"][start_index+3]/3
+         term  = self.parm_data["DIHEDRALS_INC_HYDROGEN"][start_index+4]
+         dihedral = "%s-%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][atom1].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][atom2].ljust(2), 
+                      self.parm_data["AMBER_ATOM_TYPE"][abs(atom3)].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][abs(atom4)].ljust(3))
+
+         if atom4 < 0:
+            dihedral = "%s %8.3f %8.3f %5.1f" % (dihedral, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+         elif atom3 < 0: # if there's another term in the series
+            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+         else:
+            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+
+         if atom4 < 0: # if it's a *new* improper, store it if necessary
+            is_found = False
+            for j in range(len(stored_impropers)):
+               if stored_impropers[j] == dihedral:
+                  is_found = True
+                  break
+            if is_found:
+               continue
+            else:
+               stored_impropers.append(dihedral)
+         else:
+            is_found = False
+            for j in range(len(stored_dihedtypes)):
+               if stored_dihedtypes[j] == dihedral:
+                  is_found = True
+                  break
+            if is_found:
+               continue
+            else:
+               stored_dihedtypes.append(dihedral)
+
+      # Find unique dihedrals -- this part is necessary because of multiterm dihedrals and the fact
+      # that the ordering is not necessarily what one would expect
+      for i in range(len(stored_dihedtypes)):
+         is_found = False
+         for j in range(len(unique_diheds)):
+            if stored_dihedtypes[i][0:11] == unique_diheds[j]:
+               is_found = True
+               break
+         if is_found:
+            continue
+         else:
+            unique_diheds.append(stored_dihedtypes[i][0:11])
+         
+      file.write("DIHE\n")
+      for i in range(len(unique_diheds)): # now that we have all the unique dihedrals, 
+         num_left = getMatches(unique_diheds[i], stored_dihedtypes)
+         while num_left > 0:
+            if num_left > 1:
+               for j in range(len(stored_dihedtypes)):
+                  if float(stored_dihedtypes[j][len(stored_dihedtypes[j])-6:]) < 0 and  \
+                                          stored_dihedtypes[j][0:11] == unique_diheds[i]:
+                     file.write(stored_dihedtypes.pop(j) + '\n')
+                     num_left -= 1
+                     break
+            else:
+               for j in range(len(stored_dihedtypes)):
+                  if stored_dihedtypes[j][0:11] == unique_diheds[i]:
+                     file.write(stored_dihedtypes.pop(j) + '\n')
+                     num_left -= 1
+                     break
+
+      unique_diheds = []
+      del stored_dihedtypes
+      # now write impropers
+
+      for i in range(len(stored_impropers)):
+         is_found = False
+         for j in range(len(unique_diheds)):
+            if stored_impropers[i][0:11] == unique_diheds[j]:
+               is_found = True
+               break
+         if is_found:
+            continue
+         else:
+            unique_diheds.append(stored_impropers[i][0:11])
+
+      file.write("\nIMPROPER\n")
+
+      for i in range(len(unique_diheds)): # now that we have all the unique dihedrals, 
+         num_left = getMatches(unique_diheds[i], stored_impropers)
+         while num_left > 0:
+            if num_left > 1:
+               for j in range(len(stored_impropers)):
+                  if float(stored_impropers[j][len(stored_impropers[j])-6:]) < 0 and  \
+                                        stored_impropers[j][0:11] == unique_diheds[i]:
+                     file.write(stored_impropers.pop(j) + '\n')
+                     num_left -= 1
+                     break
+            else:
+               for j in range(len(stored_impropers)):
+                  if stored_impropers[j][0:11] == unique_diheds[i]:
+                     file.write(stored_impropers.pop(j) + '\n')
+                     num_left -= 1
+                     break
+
+      del unique_diheds, stored_impropers
+      file.write('\n') # done with dihedrals and improper dihedrals
+
+      # now it's time for the non-bonded terms. We will calculate these by considering the type-type VDW
+      # parameters. These are found as the n(n+1)/2 -st references in the ACOEF and BCOEF arrays.
+ 
+      # First we have to construct the list of unique atom types
+      one_sixth = 1.0/6.0
+      for i in range(self.pointers["NTYPES"]):
+         lj_index = (i + 1) * (i + 2) / 2 - 1  # n(n+1)/2 adjusted for indexing from 0
+         # factor = (2*r)^6
+         factor = 2 * self.parm_data["LENNARD_JONES_ACOEF"][lj_index] / self.parm_data["LENNARD_JONES_BCOEF"][lj_index]
+         lj_dist.append(pow(factor,one_sixth)*0.5)
+         lj_well.append(self.parm_data["LENNARD_JONES_BCOEF"][lj_index] / 2 / factor)
+
+      # Now we've calculated all of the L-J terms.  Now just print them out
+      file.write("NONB\n")
+      for i in range(len(found_atomtypes)):
+         file.write("%s  %8.4f %8.4f \n" % (found_atomtypes[i].ljust(2), lj_dist[atom_type_nums[i]-1], lj_well[atom_type_nums[i]-1]))
+
+      del lj_dist, lj_well, found_atomtypes, atom_type_nums # done with these now.
+
+      print >> stdout, "Amber force field modification (%s) finished!" % frcmod
       file.close()
       return 0
 

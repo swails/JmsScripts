@@ -173,7 +173,7 @@ program calcpka
    ! open the cpin file and parse it
    open(unit=cpin_unit, file=cpin, status='OLD', iostat=ios)
    if (ios .ne. 0) then
-      write(0,*) 'Error: CPIN file cannot be opened!'
+      write(0,*) 'Error: CPIN file ', trim(cpin), ' cannot be opened!'
       call usage()
       call exit(1)
    end if
@@ -193,14 +193,14 @@ program calcpka
    ! open up the first cpout file and get the necessary information
    open(unit=cpout_unit, file=cpout(1), status='OLD',iostat=ios)
    if (ios .ne. 0) then
-      write(0,fmt="(a,a,a)"), "Error: CPOUT ", cpout(1), "does not exist!"
+      write(0,fmt="(a,a,a)"), "Error: CPOUT ", trim(cpout(1)), " does not exist!"
       call usage()
       call exit(1)
    end if
 
    read(cpout_unit,fmt='(1a80)'), line_holder
    if (line_holder(1:11) .ne. "Solvent pH:") then
-      write(0,'(a,a,a)') 'Error: ', cpout(1), ' is an invalid CPOUT file!'
+      write(0,'(a,a,a)') 'Error: ', trim(cpout(1)), ' is an invalid CPOUT file!'
       call usage()
       call exit(1)
    end if
@@ -235,7 +235,7 @@ program calcpka
       ! open up the i-th cpout file, but go to the next if it's not valid
       open(unit=cpout_unit, file=cpout(i), status='OLD', iostat=ios)
       if (ios .ne. 0) then
-         write(0,'(a,a,a)'), 'Error: CPOUT file ', cpout(i), ' does not exist!'
+         write(0,'(a,a,a)'), 'Error: CPOUT file ', trim(cpout(i)), ' does not exist!'
          call exit(1)
       end if
 

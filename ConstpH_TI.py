@@ -81,7 +81,24 @@ TI_mdin = """TI calculation
    ntc=2, ntf=2, saltcon=0.1,
    ntwr = 10000, ntwx=1000, 
    icfe=1, clambda={3},
-/"""
+/
+"""
+
+Min_mdin = """Minimization to relax initial bad contacts, implicit solvent constant pH
+&cntrl
+   imin=1,
+   ncyc=1000,
+   maxcyc=5000,
+   ntpr=50,
+   ntb=0,
+   cut=1000,
+   icnstph=1,
+   solvph=7.5,
+   ntcnstph=10000,
+   igb={0},
+/
+""".format(igb)
+
 
 # Groupfiles -- 1 is for the first run, 2 is for each one after
 TI_groupfile1 = """-O -i mdin -p {0}0.prmtop -c {0}0.inpcrd -o 0_0.mdout -r 0_0.restrt -x 0_0.mdcrd
@@ -94,6 +111,7 @@ TI_groupfile2 = """-O -i mdin -p {0}0.prmtop -c {1}_0.restrt -o {2}_0.mdout -r {
 
 # Find sander and tleap or quit
 sander = which("sander.MPI")
+sandermin = which("sander")
 tleap = which("tleap")
 
 if sander == "none" or tleap == "none":
@@ -161,6 +179,16 @@ for i in range(len(charges[state2])-2):
    prm.parm_data["CHARGE"][start_res+i] = charges[state2][2+i]
 
 prm.writeParm("%s1.prmtop" % resname.lower())
+# Now it's time to minimize
+file = open('min.mdin','w')
+file.write(Min_mdin)
+file.close()
+
+print >> sys.stdout, "Minimizing structure..."
+os.system('%s -i min.mdin -o _rm.mdout -inf _rm.mdinfo -r min.restrt' % sandermin)
+print >> sys.stdout, "Done minimizing. Starting TI..."
+os.system('rm _rm.*')
+os.system('mv min.restrt {0}0.inpcrd'.format(resname.lower()))
 os.system('cp {0}0.inpcrd {0}1.inpcrd'.format(resname.lower()))
 
 del prm

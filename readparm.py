@@ -62,21 +62,26 @@ def parseFormat(format_string):  # parse a format statement and send back detail
 class amberParm:
 
    # variables used in amberParm
-   formats = {}
-   parm_data = {}
-   flag_list = []
-   version = ''
-   prm_name = ''
-   overwrite = False
-   exists = False
-   pointers = {}
+   formats = {}      # dictionary of Fortran formats corresponding to each %FLAG
+   parm_data = {}    # dictionary of all prmtop data referenced by %FLAG *NAME*
+   flag_list = []    # list of all %FLAGs in prmtop in order they appear (ordered keys of parm_data)
+   version = ''      # version string found by %VERSION
+   prm_name = ''     # name of the prmtop file associated with amberParm instance
+   overwrite = False # whether writeParm will overwrite filename prm_name
+   exists = False    # Logical set to true if the prmtop exists
+   valid = False     # Logical set to false if any errors are encountered
+   pointers = {}     # dictionary of POINTERS accessed by pointer name.
+   LJ_types = {}     # dictionary in which each atom name pairs with its LJ atom type
+   LJ_radius = []    # ordered array of L-J radii in Angstroms
+   LJ_depth = []     # ordered array of L-J well depths in kcal/mol
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def __init__(self, prm_name): # set up necessary variables
+   def __init__(self, prm_name='prmtop'): # set up necessary variables
 
       self.prm_name = prm_name # name of the prmtop file
       self.rdparm()
+      self.valid = self.exists
       if self.exists:
          try: # try to load all of the pointers into the 
             self.pointers["NATOM"] = self.parm_data["POINTERS"][0]
@@ -109,11 +114,19 @@ class amberParm:
             self.pointers["IFBOX"] = self.parm_data["POINTERS"][27]
             self.pointers["NMXRS"] = self.parm_data["POINTERS"][28]
             self.pointers["IFCAP"] = self.parm_data["POINTERS"][29]
+            self.valid = True
          except KeyError:
             print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
+            self.valid = False
          except IndexError:
             print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
+            self.valid = False
 
+      if self.valid:
+         try:
+            self.fill_LJ() # fill LJ arrays with LJ data for easy manipulations
+         except:
+            print >> stderr, 'Warning: Problem parsing L-J 6-12 parameters.'
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -146,6 +159,8 @@ class amberParm:
          prmtop = open(self.prm_name, 'r')
       except IOError:
          print >> stderr, 'Error: %s does not exist!' % self.prm_name
+         self.exists = False
+         self.valid = False
          return
 
       self.exists = True
@@ -240,7 +255,7 @@ class amberParm:
             continue
          for j in range(len(self.parm_data[flag])): # write data in new_prm
             if dat_type == 'dec':
-               line += '{0:{1}.{2}e}'.format(self.parm_data[flag][j],size_item,decnum)
+               line += '{0:{1}.{2}E}'.format(self.parm_data[flag][j],size_item,decnum)
             elif dat_type == 'int':
                line += '{0:{1}d}'.format(self.parm_data[flag][j],size_item)
             else:
@@ -251,7 +266,8 @@ class amberParm:
                new_prm.write(line + '\n')
                line = ''
                num_items = 0
-         new_prm.write(line + '\n') # flush what's left to the prmtop
+         if len(line.strip()) > 0:
+            new_prm.write(line + '\n') # flush what's left to the prmtop
 
       new_prm.close() # close new prmtop
 
@@ -273,7 +289,7 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def Frcmod(self, frcmod="frcmod"):
+   def frcmod(self, frcmod="frcmod"):
       """Prints an Frcmod file that contains every parameter found in prmtop"""
       from math import pi, pow
 
@@ -296,8 +312,6 @@ class amberParm:
       stored_dihedtypes = [] # store all of the dihedral types that have been found
       stored_impropers = [] # storage for all improper dihedral parameters
       unique_diheds = [] # storage for all of the unique dihedral parameters
-      lj_dist = [] # holder for all of the L-J 12-6 distance parameters
-      lj_well = [] # holder for all of the L-J 12-6 well-depth parameters
 
       # write the title
       file.write("Force field created from parameters in %s\n" % self.prm_name)
@@ -574,32 +588,52 @@ class amberParm:
       del unique_diheds, stored_impropers
       file.write('\n') # done with dihedrals and improper dihedrals
 
-      # now it's time for the non-bonded terms. We will calculate these by considering the type-type VDW
-      # parameters. These are found as the n(n+1)/2 -st references in the ACOEF and BCOEF arrays.
- 
-      # First we have to construct the list of unique atom types
-      one_sixth = 1.0/6.0
-      for i in range(self.pointers["NTYPES"]):
-         lj_index = (i + 1) * (i + 2) / 2 - 1  # n(n+1)/2 adjusted for indexing from 0
-         # Any atom with 0 VDW radii will cause a divide by zero error if not caught first
-         if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] == 0:
-            lj_dist.append(0.0)
-            lj_well.append(0.0)
-            continue
-         # factor = (2*r)^6
-         factor = 2 * self.parm_data["LENNARD_JONES_ACOEF"][lj_index] / self.parm_data["LENNARD_JONES_BCOEF"][lj_index]
-         lj_dist.append(pow(factor,one_sixth)*0.5)
-         lj_well.append(self.parm_data["LENNARD_JONES_BCOEF"][lj_index] / 2 / factor)
-
-      # Now we've calculated all of the L-J terms.  Now just print them out
+      # now it's time for the non-bonded terms. 
       file.write("NONB\n")
       for i in range(len(found_atomtypes)):
-         file.write("%s  %8.4f %8.4f \n" % (found_atomtypes[i].ljust(2), lj_dist[atom_type_nums[i]-1], lj_well[atom_type_nums[i]-1]))
+         file.write("%s  %8.4f %8.4f \n" % (found_atomtypes[i].ljust(2), self.LJ_radius[self.LJ_types[found_atomtypes[i]]-1],
+                     self.LJ_depth[self.LJ_types[found_atomtypes[i]]-1]))
 
-      del lj_dist, lj_well, found_atomtypes, atom_type_nums # done with these now.
+      del found_atomtypes # done with these now.
 
       print >> stdout, "Amber force field modification (%s) finished!" % frcmod
       file.close()
       return 0
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def fill_LJ(self):
+      self.LJ_radius = []  # empty LJ_radii so it can be re-filled
+      self.LJ_depth = []   # empty LJ_depths so it can be re-filled
+      self.LJ_types = {}   # empty LJ_types so it can be re-filled
+      one_sixth = 1.0 / 6.0 # we need to raise some numbers to the 1/6th power
+
+      for i in range(self.pointers["NATOM"]): # fill the LJ_types array
+         self.LJ_types[self.parm_data["AMBER_ATOM_TYPE"][i]] = self.parm_data["ATOM_TYPE_INDEX"][i]
+         
+      for i in range(self.pointers["NTYPES"]):
+         lj_index = (i + 1) * (i + 2) / 2 - 1 # n(n+1)/2 th position adjusted for indexing from 0
+         if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
+            self.LJ_radius.append(0)
+            self.LJ_depth.append(0)
+         else:
+            factor = 2 * self.parm_data["LENNARD_JONES_ACOEF"][lj_index] / self.parm_data["LENNARD_JONES_BCOEF"][lj_index]
+            self.LJ_radius.append(pow(factor, one_sixth) * 0.5)
+            self.LJ_depth.append(self.parm_data["LENNARD_JONES_BCOEF"][lj_index] / 2 / factor)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def recalculate_LJ(self):
+      from math import sqrt
+
+      index = 0
+
+      for i in range(self.pointers["NTYPES"]):
+         for j in range(i+1):
+            rij = self.LJ_radius[i] + self.LJ_radius[j]
+            wdij = sqrt(self.LJ_depth[i] * self.LJ_depth[j])
+            self.parm_data["LENNARD_JONES_ACOEF"][index] = wdij * pow(rij, 12)
+            self.parm_data["LENNARD_JONES_BCOEF"][index] = 2 * wdij * pow(rij, 6)
+            index += 1
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

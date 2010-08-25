@@ -24,7 +24,8 @@ Functions:
       obj.func(arg)
 
    o  __init__(prm_name) [amberParm]: The initialization routine called automatically
-      when an amberParm object is instantiated.  You should never actually call this.
+      when an amberParm object is instantiated.  You should never actually call this. The
+      default name for prm_name is "prmtop".
 
    o  ptr(pointer) [amberParm]: Returns the value of the passed pointer.  Example pointers
       are "natom" and "nres".  Passing an incorrect pointer to this functions returns a
@@ -47,10 +48,17 @@ Functions:
    o  totCharge() [amberParm]: Calculates the net charge of the whole prmtop as a sum of all
       charges in the "CHARGE" section.
 
-   o  Frcmod({frcmod}) [amberParm]: frcmod default name is "frcmod". This function will take
+   o  frcmod({frcmod}) [amberParm]: frcmod default name is "frcmod". This function will take
       the prmtop object and extract all of the parameters in it, dumping it in an "frcmod"-
       format file to the file passed to the function. If no file is passed, it will write to
       the file "frcmod".
+
+   o  fill_LJ() [amberParm]: This will take the Lennard Jones ACOEFF and BCOEFF and calculate
+      the well depth and VDW radii (i.e. that's found in amber parameter files). This is called
+      automatically in __init__ if there were no errors in rdparm() and assigning pointers.
+
+   o  recalculate_LJ() [amberParm]: This function will take the VDW well depths and radii and
+      fill in the LENNARD_JONES_(A/B)COEF arrays using the normal combining rules.
 
 Variables:
    ** Each instance of the object has its own set of the variables listed below.  The class

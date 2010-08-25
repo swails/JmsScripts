@@ -92,9 +92,6 @@ Min_mdin = """Minimization to relax initial bad contacts, implicit solvent const
    ntpr=50,
    ntb=0,
    cut=1000,
-   icnstph=1,
-   solvph=7.5,
-   ntcnstph=10000,
    igb={0},
 /
 """.format(igb)
@@ -185,7 +182,8 @@ file.write(Min_mdin)
 file.close()
 
 print >> sys.stdout, "Minimizing structure..."
-os.system('%s -i min.mdin -o _rm.mdout -inf _rm.mdinfo -r min.restrt' % sandermin)
+os.system('%s -i min.mdin -o _rm.mdout -inf _rm.mdinfo -r min.restrt -p %s0.prmtop -c %s0.inpcrd' % 
+               (sandermin, resname.lower(), resname.lower()))
 print >> sys.stdout, "Done minimizing. Starting TI..."
 os.system('rm _rm.*')
 os.system('mv min.restrt {0}0.inpcrd'.format(resname.lower()))
@@ -211,7 +209,7 @@ for i in range(11):
       file.write(TI_groupfile2.format(resname.lower(),i-1,i))
       file.close()
 
-   os.system('{0} sander.MPI -ng 2 -groupfile groupfile'.format(mpi_cmd))
+   os.system('{0} {1} -ng 2 -groupfile groupfile'.format(mpi_cmd, sander))
 
 # Now it's time to construct the final data file. This is hacked together from what
 # I used to do with simple bash commands

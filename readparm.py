@@ -581,6 +581,11 @@ class amberParm:
       one_sixth = 1.0/6.0
       for i in range(self.pointers["NTYPES"]):
          lj_index = (i + 1) * (i + 2) / 2 - 1  # n(n+1)/2 adjusted for indexing from 0
+         # Any atom with 0 VDW radii will cause a divide by zero error if not caught first
+         if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] == 0:
+            lj_dist.append(0.0)
+            lj_well.append(0.0)
+            continue
          # factor = (2*r)^6
          factor = 2 * self.parm_data["LENNARD_JONES_ACOEF"][lj_index] / self.parm_data["LENNARD_JONES_BCOEF"][lj_index]
          lj_dist.append(pow(factor,one_sixth)*0.5)

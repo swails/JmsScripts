@@ -123,6 +123,22 @@ titrate_mdin = """Implicit solvent constant pH molecular dynamics
 /
 """.format(nstlim,igb)
 
+relax_mdin = """Minimization to relax initial bad contacts, implicit solvent constant pH
+&cntrl
+   imin=1,
+   ncyc=1000,
+   maxcyc=2000,
+   ntpr=50,
+   ntb=0,
+   cut=1000,
+   igb={0},
+/
+""".format(igb)
+
+file = open("_TITR_min.mdin",'w')
+file.write(relax_mdin)
+file.close()
+
 # Run leap really quick and create the mdin file
 
 leapin = open('_TITR_leap.in','w')
@@ -136,6 +152,12 @@ if not fileexists('{0}.prmtop'.format(system_prefix)) and \
 mdin = open('_TITR_.mdin','w')
 mdin.write(titrate_mdin)
 mdin.close()
+
+print 'Minimizing...'
+os.system('sander -p {0}.prmtop -c {0}.inpcrd -o _TITR_min.mdout -r _tmp.restrt -inf _TITR_min.mdinfo'.format(
+          system_prefix) + ' -i _TITR_min.mdin')
+os.system('mv _tmp.restrt {0}.inpcrd'.format(system_prefix))
+print 'Done minimizing. Now on to the real thing.'
 
 # create the cpin file
 
@@ -225,7 +247,7 @@ while (step < maxcycles and abs(ratio - 0.5) > tolerance):
       # calculate the pKa to get the ratio of protonated to unprotonated
       print 'Running calcpka...'
       os.system("calcpka {0} _TITR_.cpout | head -n 2 | tail -n 1 |".format(cpinname) + \
-                " awk '{print $9}' > _TITR_pka.dat")
+                " awk '{print $10}' > _TITR_pka.dat")
 
       # get the new ratio from that file
       get_ratio = open('_TITR_pka.dat','r')

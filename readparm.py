@@ -1,3 +1,7 @@
+# *Insert GNU GPL here*  <-- pretend this is official
+# By Jason Swails, 08/25/2010
+
+
 from sys import stderr, stdout
 from datetime import datetime
 from math import fsum

@@ -32,3 +32,8 @@ class mdin:
          self.ewald_defaults = ewald_obj_defaults.pmemd
       else:
          print >> stderr, 'Error: program (%s) unrecognized!' % program
+   
+   def write(self, filename = 'mdin'):
+   
+   
+   def read(self, filename = 'mdin'):

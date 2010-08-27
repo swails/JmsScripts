@@ -1,12 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import signal
 import sys
 import os
 from optparse import OptionParser
+from mdin import mdin
 
-global script
-global mdin
+files = {}
 
 # General strategy for dealing with a situation where a later
 # option forces a revision of an earlier one: Go back to the
@@ -45,11 +45,11 @@ def get_filenames():
       
    if (not cl_options.scriptname):
       sys.stdout.write("Script file name: ")
-      cl_options.scriptname = sys.stdin.readline().rstrip('\r\n')
+      cl_options.scriptname = sys.stdin.readline().strip()
    
    if (not cl_options.mdin_name):
       sys.stdout.write("Amber mdin file name: ")
-      cl_options.mdin_name = sys.stdin.readline().rstrip('\r\n')
+      cl_options.mdin_name = sys.stdin.readline().strip()
    
    return (cl_options.scriptname, cl_options.mdin_name)
 #======================================================================
@@ -225,7 +225,7 @@ while 1:
       scriptname = sys.stdin.readline().rstrip('\r\n')
 
 # Print out the shebang.
-script.write("#!/bin/bash\n\n")
+script.write("#!/bin/sh\n\n")
 
 # Do the same for the mdin file.
 while 1:
@@ -240,6 +240,14 @@ while 1:
 query_parallel()
 
 get_title()
+
+
+mdin_contents = mdin("sander")
+
+
+
+mdin_contents.write(mdin_name)
+
 
 close_files(scriptname)
 

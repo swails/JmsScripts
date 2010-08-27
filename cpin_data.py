@@ -972,7 +972,7 @@ def getData(residue, igb):
       if igb == 5:
          relene = 0.00
       elif igb == 2:
-         relene = 0.00
+         relene = 80.7889 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 

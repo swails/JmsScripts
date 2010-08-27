@@ -888,7 +888,7 @@ def getData(residue, igb):
       if igb == 5:
          relene = 0.00
       elif igb == 2:
-         relene = 55.1918 #+ KB * TEMP * LN_TO_LOG * pKa
+         relene = 55.1918 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -1055,11 +1055,11 @@ def getData(residue, igb):
          relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa2
          relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa1
       elif igb == 2:
-         relene = 0.00
+         relene1 = 0.00
          relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa2
          relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa1
       else:
-         relene = 0.00
+         relene1 = 0.00
          relene2 = 0.00
          relene3 = 0.00
 
@@ -1218,10 +1218,10 @@ def getData(residue, igb):
    if residue == "RU":
       pKa = 9.3
 
-      if igb == 2:
+      if igb == 5:
          relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
-      elif igb == 5:
-         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 2:
+         relene = -68.4318 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.00
 

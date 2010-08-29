@@ -175,3 +175,79 @@ class mdin:
       return True
 
 # =====================================================================================
+
+   def SHAKE(self):
+      self.change('cntrl','ntf', 2)
+      self.change('cntrl','ntc', 2)
+      self.change('cntrl','dt', 0.002)
+
+# =====================================================================================
+
+   def constPressure(self, press=1.0, taup=1.0):
+      self.change('cntrl','ntb', 2)
+      self.change('cntrl','ntp', 1)
+      self.change('cntrl','pres0', press)
+      self.change('cntrl','taup', taup)
+
+# =====================================================================================
+
+   def constVolume(self):
+      self.change('cntrl','ntb', 1)
+      self.change('cntrl','ntp', 0)
+
+# =====================================================================================
+
+   def constTemp(self, ntt=3, temp=300.0, gamma_ln=1.0, ig=-1):
+      self.change('cntrl','ntt', ntt)
+      self.change('cntrl','temp0', temp)
+      self.change('cntrl','tempi', temp)
+      self.change('cntrl','gamma_ln', gamma_ln)
+      self.change('cntrl','ig', ig)
+
+# =====================================================================================
+
+   def constpH(self, solvph=7.0, igb=2, ntcnstph=10):
+      self.change('cntrl','icnstph', 1)
+      self.change('cntrl','solvph', solvph)
+      self.change('cntrl','ntcnstph', ntcnstph)
+      self.change('cntrl','igb', igb)
+      self.change('cntrl','ntb', 0)
+      self.change('cntrl','saltcon', 0.1)
+
+# =====================================================================================
+
+   def restrainHeavyAtoms(self, restraint_wt=0.0):
+      self.change('cntrl','ntr', 1)
+      self.change('cntrl','restraint_wt', restraint_wt)
+      self.change('cntrl','restraintmask', '!@H=')
+
+# =====================================================================================
+
+   def restrainBackbone(self, restraint_wt=0.0):
+      self.change('cntrl','ntr', 1)
+      self.change('cntrl','restraint_wt', restraint_wt)
+      self.change('cntrl','restraintmask', '@N,CA,C')
+
+# =====================================================================================
+
+   def genBorn(self, igb=5, rgbmax=25.0):
+      self.change('cntrl','igb', igb)
+      self.change('cntrl','ntb', 0)
+      self.change('cntrl','ntp', 0)
+      self.change('cntrl','rgbmax', rgbmax)
+
+# =====================================================================================
+
+   def time(self, time=1000.0, dt=-1): # time in ps
+      if dt == -1:
+         if self.cntrl_nml['ntc'] == 2 and self.cntrl_nml['ntf'] == 2:
+            dt = 0.002
+         else:
+            dt = 0.001
+      time = int(time / dt)
+
+      self.change('cntrl','dt', dt)
+      self.change('cntrl','nstlim', time)
+      self.change('cntrl','imin', 0)
+
+# =====================================================================================

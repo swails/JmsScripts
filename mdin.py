@@ -197,12 +197,13 @@ class mdin:
 
 # =====================================================================================
 
-   def constTemp(self, ntt=3, temp=300.0, gamma_ln=1.0, ig=-1):
+   def constTemp(self, ntt=3, temp=300.0, gamma_ln=2.0, ig=-1, tautp=1.0):
       self.change('cntrl','ntt', ntt)
       self.change('cntrl','temp0', temp)
       self.change('cntrl','tempi', temp)
       self.change('cntrl','gamma_ln', gamma_ln)
       self.change('cntrl','ig', ig)
+      self.change('cntrl','tautp', tautp)
 
 # =====================================================================================
 
@@ -249,5 +250,16 @@ class mdin:
       self.change('cntrl','dt', dt)
       self.change('cntrl','nstlim', time)
       self.change('cntrl','imin', 0)
+
+# =====================================================================================
+
+   def heat(self, tempi=0.0, temp0=300.0, ntt=3, tautp=5.0, ig=-1, gamma_ln=5.0):
+      self.constVolume()
+      self.change('cntrl','tempi', tempi)
+      self.change('cntrl','temp0', temp0)
+      self.change('cntrl','ntt', ntt)
+      self.change('cntrl','tautp', tautp)
+      self.change('cntrl','ig', ig)
+      self.change('cntrl','gamma_ln', gamma_ln)
 
 # =====================================================================================

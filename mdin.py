@@ -113,7 +113,7 @@ class mdin:
             continue
          elif not inblock and lines[i].startswith('&'):
             inblock = True
-            block = lines[i].strip()[1:]
+            block = lines[i].strip()[1:].lower()
             blocks.append(block)    # add the name of the namelist to "blocks"
             block_fields.append([]) # add empty array to be filled with entries for given namelist
             if not block in self.valid_namelists:
@@ -156,6 +156,9 @@ class mdin:
 # =====================================================================================
 
    def change(self, namelist, variable, value): # change the value of a variable without adding new key-pair
+      
+      variable = variable.lower()
+      
       if namelist == "cntrl":
          if variable in self.cntrl_nml.keys():
             self.cntrl_nml[variable] = value

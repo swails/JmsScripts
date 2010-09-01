@@ -4,7 +4,18 @@
 
 from sys import stderr, stdout
 from datetime import datetime
-from math import fsum
+
+try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
+   from math import fsum
+except ImportError:
+   def fsum(array):
+      sum = 0
+      try:
+         for element in range(len(array)):
+            sum += float(array[element])
+         return sum
+      except ValueError:
+         return -1
 
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223

@@ -22,7 +22,7 @@ if len(sys.argv) == 1 or sys.argv[1].startswith('-h') or sys.argv[1].startswith(
 # set variables with default values
 bins = 0                       # number of bins in both dimensions
 binrange = [0,0]               # range for each set of bins
-data_file = 'dihedrals.dat'        # file with the initial data, must be 2 columns
+data_file = 'none'             # file with the initial data, must be 1 column
 output_file = 'binned_output.dat'  # output file to contain the binned data plottable by gnuplot
 phipsibins = []                    # the list of all bins in both directions (dimension bins)
 data = []                         # array of 2-element arrays that contains every pair of points
@@ -58,11 +58,14 @@ except ValueError:
    printusage()
 
 # read in data, check for existing file
-try:
-   input_data = open(data_file,'r')
-except IOError:
-   print 'Error: data file ' + data_file + ' not found!'
-   printusage()
+if data_file == 'none':
+   input_data = sys.stdin
+else:
+   try:
+      input_data = open(data_file,'r')
+   except IOError:
+      print 'Error: data file ' + data_file + ' not found!'
+      printusage()
 
 # load data into file
 for line in input_data:
@@ -77,7 +80,7 @@ for line in input_data:
 input_data.close()
 
 # Set up default ranges
-if (binrange[0] == 0 and binrange[1] == 0) or (binrange[2] == 0 and binrange[3] == 0):
+if (binrange[0] == 0 and binrange[1] == 0):
    xmaxminholder = utilities.minmax(data)
    binrange[0] = math.floor(xmaxminholder[0])
    binrange[1] = math.ceil(xmaxminholder[1])

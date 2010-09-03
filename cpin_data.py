@@ -1,12 +1,12 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
-TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS PDA PDC PDG PDG DT  PRA PRC PRG PRG RU"
+TITRATABLE = "AS4 GL4 HIP TYR LYS CYS PDA PDC PDG PDG DT PRA PRC PRG PRG RU"
 EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.2 9.7 3.9 4.3 2.1 9.2 9.3"
 
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
 
-def getData(residue, igb):
+def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
    import sys, math
 
 # Factors to adjust TI energies
@@ -646,9 +646,9 @@ def getData(residue, igb):
          relene2 = -43.3367 + KB * TEMP * LN_TO_LOG * pKa1
          relene3 = -81.6459 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 5:
-         relene1 = 0.00
-         relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa1
-         relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa2
+         relene1 = -115.252 + KB * TEMP * LN_TO_LOG * (pKa1 - pKa2)
+         relene2 = -43.4785 + KB * TEMP * LN_TO_LOG * pKa1
+         relene3 = -80.6124 - KB * TEMP * LN_TO_LOG * pKa2
       else:
          relene1 = 0.00
          relene2 = 0.00
@@ -886,7 +886,7 @@ def getData(residue, igb):
       pKa = 3.9
 
       if igb == 5:
-         relene = 0.00
+         relene = 55.2867 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
          relene = 55.1918 + KB * TEMP * LN_TO_LOG * pKa
       else:
@@ -970,7 +970,7 @@ def getData(residue, igb):
       pKa = 3.9
 
       if igb == 5:
-         relene = 0.00
+         relene = 80.9798 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
          relene = 80.7889 + KB * TEMP * LN_TO_LOG * pKa
       else:
@@ -1051,9 +1051,9 @@ def getData(residue, igb):
       pKa2 = 9.2
 
       if igb == 5:
-         relene1 = 0.00 + KB * TEMP * LN_TO_LOG * (pKa1 - pKa2)
-         relene2 = 0.00 + KB * TEMP * LN_TO_LOG * pKa1
-         relene3 = 0.00 - KB * TEMP * LN_TO_LOG * pKa2
+         relene1 = -53.4505 + KB * TEMP * LN_TO_LOG * (pKa1 - pKa2)
+         relene2 =  0.39589 + KB * TEMP * LN_TO_LOG * pKa1
+         relene3 = -26.1969 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 2:
          relene1 = -53.5572 + KB * TEMP * LN_TO_LOG * (pKa1 - pKa2)
          relene2 = 0.436125 + KB * TEMP * LN_TO_LOG * pKa1
@@ -1219,7 +1219,7 @@ def getData(residue, igb):
       pKa = 9.3
 
       if igb == 5:
-         relene = 0.00 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -67.2222 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
          relene = -68.4318 - KB * TEMP * LN_TO_LOG * pKa
       else:

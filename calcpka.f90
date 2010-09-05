@@ -328,9 +328,8 @@ subroutine usage()
 
    implicit none
 
-   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} \'
-   write(0,*) '               {-o output} {-t dump_interval} {-ao dump_output} \'
-   write(0,*) '               {-po population_output}'
+   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} {-o output} \'
+   write(0,*) '               {-t dump_interval} {-ao dump_output} {-po population_output}'
 
 end subroutine usage
 

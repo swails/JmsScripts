@@ -266,3 +266,25 @@ class mdin:
       self.change('cntrl','gamma_ln', gamma_ln)
 
 # =====================================================================================
+
+   def restart(self,ntx=5):
+      self.change('cntrl','irest',1)
+      self.change('cntrl','ntx',ntx)
+
+# =====================================================================================
+
+   def TI(self, clambda=0.0):
+      self.change('cntrl','clambda', clambda)
+      self.change('cntrl','icfe',1)
+
+# =====================================================================================
+
+   def softcore_TI(self, scalpha=0.5, scmask='', crgmask='', logdvdl=0):
+      self.change('cntrl','icfe',1)
+      self.change('cntrl','ifsc',1)
+      self.change('cntrl','scalpha',scalpha)
+      self.change('cntrl','scmask',scmask)
+      self.change('cntrl','crgmask',crgmask)
+      self.change('cntrl','logdvdl',logdvdl)
+
+# =====================================================================================

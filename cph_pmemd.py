@@ -29,11 +29,11 @@ def usage():
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # evaluate metropolis monte carlo critera -- returns true to accept or false to reject
-def monteCarlo(dvdl, refene, res1, res2, protcnt):
+def monteCarlo(dvdl, refene, state1, state2):
    from random import random
 
-   return (math.exp((dvdl - refene + FACTOR * (protcnt[res2-1]-protcnt[res1-1]))/(KB * TEMP)) < random() or \
-         dvdl - refene + FACTOR * (protcnt[res2-1]-protcnt[res1-1]) < 0)
+   return (math.exp((dvdl - refene + FACTOR * (state2-state1))/(KB * TEMP)) < random() or \
+         dvdl - refene + FACTOR * (state2-state1) < 0)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -98,8 +98,37 @@ def updateParm(prmtop, first_charge, chrgdat, state, num_atoms, first_atom):
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+def mdEnergy(mden):
+   file = open(mden,'r')
+   lines = file.readlines()
+   file.close()
+
+   return float(lines[16].split()[2])
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def minEnergy(mdout):
+   file = open(mdout,'r')
+   lines = file.readlines()
+   file.close()
+
+   energy = 0
+   for i in range(len(lines)):
+      if lines[i].strip().startswith("BOND"):
+         words = lines[i].split()
+         energy += float(words[2]) + float(words[5]) + float(words[8])
+         words = lines[i+1].split()
+         energy += float(words[2]) + float(words[5]) + float(words[8])
+         words = lines[i+2].split()
+         energy += float(words[3]) + float(words[7]) + float(words[10])
+         return energy
+
+   return -1
+         
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 # load default values
-total_time = 1000
+total_time = 10
 dt         = 10
 pH         = 7
 cpin       = 'cpin'
@@ -226,17 +255,16 @@ pmemd_input.constPressure()
 pmemd_input.restart()
 pmemd_input.SHAKE()
 pmemd_input.change('cntrl','dt',0.002)
-pmemd_input.change('cntrl','nstlim',10)
+pmemd_input.change('cntrl','nstlim',dt)
 pmemd_input.change('cntrl','ioutfm',1)
-pmemd_input.change('cntrl','ntwx',10)
-pmemd_input.change('cntrl','ntpr',10)
-pmemd_input.change('cntrl','ntwe',10)
+pmemd_input.change('cntrl','ntwx',dt)
+pmemd_input.change('cntrl','ntpr',dt)
+pmemd_input.change('cntrl','ntwe',dt)
 
 pmemd_input.write('pmemd_pH.mdin')
 
 pmemd_energy.minimization(maxcyc=1)
 pmemd_energy.change('cntrl','ntpr',1)
-pmemd_energy.change('cntrl','ntwe',1)
 pmemd_energy.write('pmemd_min.mdin')
 
 # Now it's time to enter the actual MD loop
@@ -254,16 +282,44 @@ else:
    pmemd = which('pmemd.MPI')
    exe = '%s %s' % (mpi_cmd, pmemd)
 
+if pmemd == 'none':
+   print >> sys.stderr, 'Error: PMEMD cannot be found! It must be in your PATH for cph_pmemd.py to work.'
+   sys.exit()
 
-#for i in range(numsteps):
-for i in range(1):   
+cpout_file = open(cpout, 'w')
+cpout_file.write("""Solvent pH: %8.5f
+Monte Carlo step size: %8i
+Time step: %8i
+Time: %10.3f
+""" % (pH, dt, 0, 0))
+
+for i in range(trescnt):
+   cpout_file.write('Residue %4i State: %2i\n\n' % (i, resstates[i]))
+
+for i in range(numsteps):
    if os.system('%s -i pmemd_pH.mdin -p %s -c %s -o %s -r %s -e mden' %  (exe, 'current.'+prmtop, inpcrd, mdout, restrt)) != 0:
       print >> sys.stderr, 'Error: %s did not exit cleanly!' % exe
       sys.exit()
    os.system('mv %s %s' % (restrt, inpcrd))
 
-   if os.system('%s -O -i pmemd_min.mdin -p %s -c %s -r %s -o _min.mdout -e mden.min' % (exe, 'proposed.'+prmtop, inpcrd, restrt)) != 0:
+   if os.system('%s -O -i pmemd_min.mdin -p %s -c %s -r %s -o _min.mdout' % (exe, 'proposed.'+prmtop, inpcrd, restrt)) != 0:
       print >> sys.stderr, 'Error: %s did not exit cleanly!' % exe
       sys.exit()
 
-#  e_cur = getEnergy
+   e_cur = mdEnergy('mden')
+   e_pro = minEnergy('_min.mdout')
+
+   print 'Energies : %12.5f, %12.5f' % (e_cur, e_pro)
+
+   if monteCarlo(e_pro - e_cur, statene[first_state[randres]+resstates[randres]]-statene[first_state[randres]+randstate],
+                 protcnt[first_state[randres]+resstates[randres]], protcnt[first_state[randres]+randstate]): # accept change
+      cpout_file.write('Residue %4i State: %2i\n\n' % (randres, randstate))
+      resstates[randres] = randstate
+      os.system('mv proposed.%s current.%s' % (prmtop, prmtop))
+      print 'Accepted!'
+   else: # reject the change
+      cpout_file.write('Residue %4i State: %2i\n\n' % (randres, resstates[randres]))
+      updateParm(parm, first_charge[randres], chrgdat, resstates[randres], num_atoms[randres], first_atom[randres])
+      print 'Rejected!'
+
+

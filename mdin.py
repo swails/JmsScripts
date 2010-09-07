@@ -288,3 +288,11 @@ class mdin:
       self.change('cntrl','logdvdl',logdvdl)
 
 # =====================================================================================
+
+   def minimization(self, imin=1, maxcyc=1, ncyc=10, ntmin=1):
+      self.change('cntrl','imin', imin)
+      self.change('cntrl','maxcyc', maxcyc)
+      self.change('cntrl','ncyc', ncyc)
+      self.change('cntrl','ntmin', ntmin)
+
+# =====================================================================================

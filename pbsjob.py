@@ -146,7 +146,7 @@ class PBSjob:
             continue
          self.command.append(line)
       if len(self.command[len(self.command)-1].strip()) != 0:
-         command.append('\n')
+         self.command.append('\n')
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

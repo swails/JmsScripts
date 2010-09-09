@@ -39,10 +39,10 @@ PBS_nproc = ["nproc", "size"]
 # Make a dictionary of names
 names = {"FF2":["Frionel", "Maria", "Guy", "Minh", "Gordon", "Layla", "Richard", "Lionheart"],
          "FF3":["Sara", "Cid", "Desh", "Elia", "Allus", "Dorga", "Unne"],
-         "FF4":["Cecil", "Kain", "Rosa", "Cid", "Rydia", "Tellah", "Edward", "Yang", "Palom", "Porom", "Edge", "Fusoya"],
-         "FF5":["Bartz", "Reina", "Galuf", "Faris", "Krile"],
+         "FF4":["Cecil", "Kain", "Rosa", "Cid", "Rydia", "Tellah", "Edward", "Yang", "Palom", "Porom", "Edge", "Fusoya", "Golbez"],
+         "FF5":["Bartz", "Reina", "Galuf", "Faris", "Krile", "Ex-death", "Gilgamesh", "Cid"],
          "FF6":["Terra", "Locke", "Edgar", "Sabin", "Shadow", "Celes", "Cyan", "Gau", "Setzer", 
-                "Mog", "Umaro", "Gogo", "Leo", "Kefka", "Strago", "Relm"],
+                "Mog", "Umaro", "Gogo", "Leo", "Kefka", "Strago", "Relm", "Kefka"],
          "FF7":["Cloud", "Barret", "Tifa", "Aeris", "RedXIII", "Yuffie", "CaitSith", "Vincent", "Cid", "Sephiroth"],
          "FF8":["Squall", "Rinoa", "Seifer", "Quistis", "Zell", "Irvine", "Selphie"],
          "FF9":["Zidane", "Vivi", "Garnet", "Adelbert", "Freya", "Eiko", "Quina", "Amarant", "Beatrix", "Queen", "Kuja", "Tantalus"],

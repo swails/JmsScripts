@@ -110,9 +110,11 @@ TI_groupfile2 = """-O -i mdin -p {0}0.prmtop -c {1}_0.restrt -o {2}_0.mdout -r {
 sander = which("sander.MPI")
 sandermin = which("sander")
 tleap = which("tleap")
+if tleap == "none":
+   tleap = which("sleap")
 
 if sander == "none" or tleap == "none":
-   print >> sys.stderr, "Error: You need sander.MPI and tleap in your PATH to run this program!"
+   print >> sys.stderr, "Error: You need sander.MPI and tleap or sleap in your PATH to run this program!"
    sys.exit()
 
 # Make tleap script and build the residue

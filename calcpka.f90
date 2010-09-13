@@ -16,11 +16,13 @@ program calcpka
 !     TITR_STATES_C      : How many states may exist
 !     ATOM_CHRG_C        : How many charges may exist
 !     const_ph_info      : Type for constant pH info
+!     max_nstate         : Maximum number of states in titratable residues
 
 !     cpin               : Name of cpin specified on command line (CL)
 !     cpout(:)           : Array holding all cpout file names specified on CL
 !     output_file        : File where final statistics are printed
 !     alternative_output : Output file for dumping of chunks or running sum
+!     population_output  : Output file with detailed populations for each state
 !     arg_holder         : holds a command-line argument
 !     line_holder        : holds a parsed line from the cpout
 
@@ -28,6 +30,7 @@ program calcpka
 !     cpout_unit         : Fortran file unit for the cpout file
 !     output_unit        : Fortran file unit for the output file
 !     alternative_unit   : Fortran file unit for the time-dumped output file
+!     population_unit    : Fortran file unit for the population data file
 !     ios                : stat for opening file -- catch errors
 
 !     narg               : Number of CL arguments
@@ -61,7 +64,8 @@ program calcpka
    integer, parameter :: TITR_RES_C     = 50
    integer, parameter :: TITR_STATES_C  = 200
    integer, parameter :: ATOM_CHRG_C    = 1000
-   integer, parameter :: MAX_NSTATE     = 10 ! not in dynph.h -- update if any residue has more than 10 states!
+
+   integer :: max_nstate = 0
 
    type :: const_ph_info
       sequence
@@ -73,6 +77,7 @@ program calcpka
    character (len=128), allocatable :: cpout(:)
    character (len=128)              :: output_file = 'none'
    character (len=128)              :: alternative_output = "pKa_evolution.dat"
+   character (len=128)              :: population_output = "populations.dat"
    character (len=128)              :: arg_holder
    character (len=80)               :: line_holder
 
@@ -90,6 +95,7 @@ program calcpka
    integer, parameter :: cpout_unit = 20
    integer, parameter :: output_unit = 6
    integer, parameter :: alternative_unit = 30
+   integer, parameter :: population_unit = 40
 
    type (const_ph_info) :: stateinf(0:TITR_RES_C-1)
    integer              :: resstate(0:TITR_RES_C-1)
@@ -154,6 +160,9 @@ program calcpka
       else if (arg_holder .eq. '-ao') then
          i = i + 1
          call getarg(i, alternative_output)
+      else if (arg_holder .eq. '-po') then
+         i = i + 1
+         call getarg(i, population_output)
       else if (cpout_done) then
          call usage()
          call exit(1)
@@ -190,6 +199,9 @@ program calcpka
       open(unit=alternative_unit, file=alternative_output, status='REPLACE')
    end if
 
+   ! open the population output file
+   open(unit=population_unit, file=population_output, status='REPLACE')
+
    ! open up the first cpout file and get the necessary information
    open(unit=cpout_unit, file=cpout(1), status='OLD',iostat=ios)
    if (ios .ne. 0) then
@@ -223,10 +235,17 @@ program calcpka
       end do
    end do
 
-   allocate(protonations(trescnt, MAX_NSTATE)) 
-   allocate(protonations_chunk(trescnt, MAX_NSTATE))
-   call empty_protonation(protonations, trescnt, MAX_NSTATE)
-   call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
+   ! Find the maximum number of states
+   do i = 1, trescnt
+      if (stateinf(i-1)%num_states > max_nstate) then
+         max_nstate = stateinf(i-1)%num_states
+      end if
+   end do
+
+   allocate(protonations(trescnt, max_nstate)) 
+   allocate(protonations_chunk(trescnt, max_nstate))
+   call empty_protonation(protonations, trescnt, max_nstate)
+   call empty_protonation(protonations_chunk, trescnt, max_nstate)
 
    ! Now loop through every cpout file to calculate the pKas.
    i = 1
@@ -273,12 +292,12 @@ program calcpka
                end do
                if (mod(onstep, dump_interval) .eq. 0) then
                   write(unit=alternative_unit,fmt='(a)'), "========================== CUMULATIVE ========================"
-                  call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
+                  call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, max_nstate, alternative_unit, &
                                       protonated, resname, transitions)
                   write(unit=alternative_unit,fmt='(a)'), "============================ CHUNK ==========================="
-                  call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, alternative_unit, &
+                  call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, max_nstate, alternative_unit, &
                                       protonated, resname, transitions)
-                  call empty_protonation(protonations_chunk, trescnt, MAX_NSTATE)
+                  call empty_protonation(protonations_chunk, trescnt, max_nstate)
                end if ! mod(onstep
             end if ! dump_interval
          end if ! line_holder(1:8)
@@ -290,8 +309,18 @@ program calcpka
    i = i + 1
    end do
 
-   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, MAX_NSTATE, &
+   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, max_nstate, &
                        output_unit, protonated, resname, transitions)
+
+   write(population_unit,*) "Populations: "
+   write(population_unit,*)
+
+   call dump_protonations(protonations, stateinf, protcnt, trescnt, max_nstate, &
+                          population_unit, resname)
+
+   close(output_unit)
+   close(alternative_unit) 
+   close(population_unit)
 
 end program calcpka
 
@@ -299,8 +328,8 @@ subroutine usage()
 
    implicit none
 
-   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} \'
-   write(0,*) '               {-o output} {-t dump_interval} {-ao dump_output}'
+   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} {-o output} \'
+   write(0,*) '               {-t dump_interval} {-ao dump_output} {-po population_output}'
 
 end subroutine usage
 
@@ -319,15 +348,15 @@ subroutine empty_protonation(array, index1, index2)
 end subroutine empty_protonation
 
 subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
-                          MAX_NSTATE, fileno, protonated, resname, transitions)
+                          max_nstate, fileno, protonated, resname, transitions)
 
    type :: const_ph_info ! from dynph.h
       sequence
       integer :: num_states, first_atom, num_atoms, first_state, first_charge
    end type const_ph_info
 
-   integer, intent (in)             :: MAX_NSTATE, trescnt, fileno
-   integer, intent (in)             :: protonations(1:trescnt, 1:MAX_NSTATE)
+   integer, intent (in)             :: max_nstate, trescnt, fileno
+   integer, intent (in)             :: protonations(1:trescnt, 1:max_nstate)
    type (const_ph_info), intent(in) :: stateinf(0:*)
    integer, intent (in)             :: protcnt(0:*)
    integer, intent(in)              :: protonated(0:*)
@@ -363,3 +392,56 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
    end do
 
 end subroutine calculate_pKas
+
+subroutine dump_protonations(protonations, stateinf, protcnt, trescnt, max_nstate, &
+                             fileno, resname)
+
+   type :: const_ph_info ! from dynph.h
+      sequence
+      integer :: num_states, first_atom, num_atoms, first_state, first_charge
+   end type const_ph_info
+
+   integer, intent (in)             :: max_nstate, trescnt, fileno
+   integer, intent (in)             :: protonations(1:trescnt, 1:max_nstate)
+   type (const_ph_info), intent(in) :: stateinf(0:*)
+   integer, intent (in)             :: protcnt(0:*)
+   character (len=40), intent(in)   :: resname(0:*)
+
+   integer                          :: i, j, linelen ! counters
+   real                             :: totpts = 0
+   character (len=max_nstate*12+20) :: line
+   character (len=12)               :: holder
+
+   write(line,'(1a15)') "Residue Number"
+   linelen = 15
+
+   do i = 0, max_nstate - 1 ! write the header
+      write(holder, '(1a9,i3)') "    State", i
+
+      line = trim(line) // holder
+      linelen = linelen + 12
+   end do
+
+   write(fileno,*) line ! print the header to the screen
+   line = '---------------'
+   do i = 1, max_nstate
+      line = trim(line) // '------------'
+   end do
+   
+   write(fileno,*) line
+
+   do i = 0, trescnt - 1 ! write out all of the populations
+      line = ''
+      write(line, '(1a15)') trim(resname(i+1))
+      do j = 0, stateinf(i)%num_states - 1
+         totpts = totpts + protonations(i+1,j+1)
+      end do
+      do j = 0, stateinf(i)%num_states - 1
+         write(holder,'(f8.3,1a2,i1,1a1)') protonations(i+1,j+1)/totpts, ' (', &
+            protcnt(stateinf(i)%first_state+j), ')'
+         line = trim(line) // holder
+      end do
+      write(fileno,*) line
+   end do
+
+end subroutine dump_protonations

@@ -165,3 +165,17 @@ calcpka.f90 <cpin> <cpout1> <cpout2> ... <cpoutN> -o <output_file> -t <dump_inte
    cumulative and "chunk" pKa values for a given time interval.
    Written in Fortran90 by Jason
 
+mdin.py
+   This is a python object that calls objects for each of the input namelists.  It aids in the
+   setting of variables, checking of parameters, and writing of amber input files.
+   Written in Python by Jason and Ben
+
+cntrl.py
+   Object with dictionary of cntrl namelists for sander and pmemd pre-loaded with defaults. For use
+   with mdin.py.
+   Written in Python by Jason and Ben
+
+ewald.py
+   Object with dictionary of ewald namelist variables for sander and pmemd pre-loaded with defaults.
+   For use with mdin.py
+   Written in Python by Jason and Ben

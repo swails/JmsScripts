@@ -1,10 +1,21 @@
 # *Insert GNU GPL here*  <-- pretend this is official
-# By Jason Swails, 08/25/2010
+# By Jason Swails, 09/03/2010
 
 
 from sys import stderr, stdout
 from datetime import datetime
-from math import fsum
+
+try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
+   from math import fsum
+except ImportError:
+   def fsum(array):
+      sum = 0
+      try:
+         for element in range(len(array)):
+            sum += float(array[element])
+         return sum
+      except ValueError:
+         return -1
 
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223
@@ -58,7 +69,7 @@ def parseFormat(format_string):  # parse a format statement and send back detail
       return int(format_parts[0]), int(decimal_parts[0]), 'dec'
 
    else:
-      print >> stderr, 'Error: Unrecognized format "{0}"!'.format(format_string)
+      print >> stderr, 'Error: Unrecognized format "%s"!' % format_string
       return 1, 80, 'str'
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -139,7 +150,7 @@ class amberParm:
       try:
          return self.pointers[pointer.upper()]
       except KeyError:
-         print >> stderr, 'No pointer {0} in prmtop. Pointers are: '.format(pointer.upper()) + POINTER_VARIABLES
+         print >> stderr, 'No pointer %s in prmtop. Pointers are: ' % pointer.upper() + POINTER_VARIABLES
          return -1
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -230,8 +241,8 @@ class amberParm:
 
       # get current time to put into new prmtop file
       now = datetime.now()
-      datestring = "DATE = {0:02d}/{1:02d}/{2:02d}  {3:02d}:{4:02d}:{5:02d}".format(
-                  now.month, now.day, now.year % 100, now.hour, now.minute, now.second)
+      datestring = "DATE = %02d/%02d/%02d  %02d:%02d:%02d" % ( now.month, now.day, now.year % 100, 
+                                                               now.hour, now.minute, now.second)
       for i in range(len(self.version)): # replace the date in version string
          if self.version[i:i+2] == "DA":
             self.version = self.version[:i] + datestring
@@ -242,13 +253,13 @@ class amberParm:
          self.parm_data["CHARGE"][i] *= AMBER_ELECTROSTATIC
 
       # write version to top of prmtop file
-      new_prm.write('{0}\n'.format(self.version))
+      new_prm.write('%s\n' % self.version)
 
       # write data back to prmtop file, inserting blank line if it's an empty field
       for i in range(len(self.flag_list)):
          flag = self.flag_list[i]
-         new_prm.write('%FLAG {0}\n'.format(flag))
-         new_prm.write('%FORMAT({0})\n'.format(self.formats[flag]))
+         new_prm.write('%'+'FLAG %s\n' % flag)
+         new_prm.write('%'+'FORMAT(%s)\n' % self.formats[flag])
          number_items_perline, size_item, dat_type = parseFormat(self.formats[flag])
          if dat_type == 'dec':
             decnum = int(self.formats[flag].split('E')[1].split('.')[1])
@@ -259,11 +270,11 @@ class amberParm:
             continue
          for j in range(len(self.parm_data[flag])): # write data in new_prm
             if dat_type == 'dec':
-               line += '{0:{1}.{2}E}'.format(self.parm_data[flag][j],size_item,decnum)
+               line += ('%'+'%s.%sE' % (size_item, decnum)) % self.parm_data[flag][j] 
             elif dat_type == 'int':
-               line += '{0:{1}d}'.format(self.parm_data[flag][j],size_item)
+               line += ('%' + '%sd' % size_item) % self.parm_data[flag][j] 
             else:
-               line += '{0}'.format(self.parm_data[flag][j]).ljust(size_item)
+               line += ('%s' % self.parm_data[flag][j]).ljust(size_item)
 
             num_items += 1
             if num_items == number_items_perline: # flush line to prmtop

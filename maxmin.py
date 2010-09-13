@@ -32,8 +32,7 @@ except IOError:
    print >> sys.stderr, 'Input file not found!'
    printusage()
 
-max = -999999999
-min = 999999999
+unset = True
 for line in data:
    words = line.split()
    if len(words) < col:
@@ -44,6 +43,10 @@ for line in data:
    except ValueError:
       continue
 
+   if unset:
+      max = val
+      min = val
+      unset = False
    if val > max:
       max = val
    if val < min:

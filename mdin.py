@@ -17,7 +17,7 @@ def addOn(line, string, file):
 # =====================================================================================
 
 class mdin:
-
+   
    cntrl_obj = cntrl() # object with cntrl namelist vars in a dictionary
    ewald_obj = ewald() # object with ewald namelist vars in a dictionary
 
@@ -36,6 +36,7 @@ class mdin:
 
    def __init__(self, program = 'sander', verbosity = 1):
       self.program = program
+      self.title = 'mdin prepared by mdin.py'   
       if self.program == "sander":
          self.cntrl_nml = self.cntrl_obj.sander
          self.ewald_nml = self.ewald_obj.sander
@@ -54,14 +55,14 @@ class mdin:
 # =====================================================================================
 
    def write(self, filename = 'mdin'):
-
+      
       if not self.check(): # check the validity of the parameters
-         print >> stderr, 'Mdin file not written!'
+         print >> stderr, 'mdin file not written!'
          return -1
 
       # open the file for writing and write the header and &cntrl namelist
-      file = open(filename,'w') 
-      file.write('Mdin prepared by mdin.py\n')
+      file = open(filename,'w')
+      file.write(self.title + '\n')
       file.write('&cntrl\n')
       # automatic indent of single space
       line = ' '
@@ -91,6 +92,8 @@ class mdin:
          file.write(line + '\n')
       if has_been_printed:
          file.write('/\n')
+      
+      file.close()
 
 # =====================================================================================
    

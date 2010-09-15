@@ -76,22 +76,6 @@ def interrupt_handler(signal, frame):
    exit(0)
 #======================================================================
 
-
-
-#======================================================================
-def close_files(exec_name):
-   
-   # Close the script and mdin files
-   script.close()
-   mdin.close()
-   
-   # Make the script executable (and, more generally, readable by everyone
-   # and writable by its owner).
-   os.chmod(exec_name, 0755)
-#======================================================================
-   
-
-
 #======================================================================
 def finished():
    
@@ -109,21 +93,6 @@ def finished():
    sys.stdout.write("\n")
    exit(0)
 #======================================================================
-
-
-
-#======================================================================
-def get_title():
-   
-   # get_title
-   # Get the simulation title for printing to the mdin file
-   
-   sys.stdout.write("Simulation title: ")
-   title = sys.stdin.readline()
-   mdin.write(title)
-#======================================================================
-
-
 
 #======================================================================
 def query_yes_no(question, default="yes"):
@@ -207,7 +176,7 @@ def setup_parallel():
 # First, we invoke the interrupt handler.
 signal.signal(signal.SIGINT, interrupt_handler)
 
-
+# Get the names of the run script and mdin file
 (scriptname, mdin_name) = get_filenames()
 
 # Attempt to open the script file. If the open process generates
@@ -227,28 +196,23 @@ while 1:
 # Print out the shebang.
 script.write("#!/bin/sh\n\n")
 
-# Do the same for the mdin file.
-while 1:
-   try:
-      mdin = open(mdin_name, 'w')
-      break
-   except IOError:
-      print "Could not open file", mdin_name, "for writing."
-      sys.stdout.write("Alternative mdin file name: ")
-      mdin_name = sys.stdin.readline().rstrip('\r\n')
-
 query_parallel()
 
-get_title()
+# Close the script file and give it rwxr-xr-x permissions
+script.close()
+os.chmod(scriptname, 0755)
 
-
+# Create a new mdin object appropriate for sander
 mdin_contents = mdin("sander")
 
+# Set the mdin simulation title
+sys.stdout.write("Simulation title: ")
+mdin_contents.title = sys.stdin.readline().rstrip('\r\n')
 
 
+
+# Write the mdin file
 mdin_contents.write(mdin_name)
 
-
-close_files(scriptname)
-
+# End the program
 finished()

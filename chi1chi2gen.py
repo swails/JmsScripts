@@ -192,13 +192,13 @@ for x in range(len(residues)):
    rsna = residue_names[rsnu-1]
 
    if chi_defines[rsna] == -1:
-      print >> sys.stderr, 'Residue {0} ({1}) omitted. No chi1-chi2 defined for this residue'.format(rsnu,rsna)
+      print >> sys.stderr, 'Residue %s (%s) omitted. No chi1-chi2 defined for this residue' % (rsnu,rsna)
    else:
-      ptrajin.write('dihedral phires{0} :{0}@{1} :{0}@{2} :{0}@{3} :{0}@{4} out _CHI1CHI2_phires{0}\n'.format(rsnu,chi_defines[rsna][0],
-                    chi_defines[rsna][1],chi_defines[rsna][2],chi_defines[rsna][3]))
+      ptrajin.write('dihedral phires%s :%s@%s :%s@%s :%s@%s :%s@%s out _CHI1CHI2_phires%s\n' % (rsnu,rsnu,chi_defines[rsna][0],rsnu,
+                    chi_defines[rsna][1],rsnu,chi_defines[rsna][2],rsnu,chi_defines[rsna][3],rsnu))
 
-      ptrajin.write('dihedral psires{0} :{0}@{1} :{0}@{2} :{0}@{3} :{0}@{4} out _CHI1CHI2_psires{0}\n'.format(rsnu,chi_defines[rsna][1],
-                     chi_defines[rsna][2],chi_defines[rsna][3],chi_defines[rsna][4]))
+      ptrajin.write('dihedral psires%s :%s@%s :%s@%s :%s@%s :%s@%s out _CHI1CHI2_psires%s\n' % (rsnu,rsnu,chi_defines[rsna][1],rsnu,
+                     chi_defines[rsna][2],rsnu,chi_defines[rsna][3],rsnu,chi_defines[rsna][4],rsnu))
 ptrajin.close()
 
 tptrajstart = time.time()
@@ -267,7 +267,7 @@ if binning:
             psiprintval = psistart
             if gnuformat:
                outputfile.write('\n')
-         outputfile.write('{0} {1} {2}\n'.format(phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
+         outputfile.write('%s %s %s\n' % (phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
          psiprintval = psiprintval + psiinterval
 
       outputfile.close()
@@ -288,7 +288,7 @@ if binning:
 tglobalend = time.time()
 
 print 'Timings: '
-print 'ptraj Dihedral Dump:' + '{0:.3f}'.format( -(tptrajstart-tptrajend)/60,3).rjust(6) + ' min.'
+print 'ptraj Dihedral Dump: %9.3f min.' % ((tptrajstart-tptrajend)/60)
 if binning:
-   print 'Binning:            ' + '{0:.3f}'.format( -(tbinstart-tbinend)/60,3).rjust(6) + ' min.'
-print 'Total time:         ' + '{0:.3f}'.format( -(tglobalstart-tglobalend)/60,3).rjust(6) + ' min.'
+   print 'Binning:             %9.3f min.' % ((tbinend-tbinstart)/60)
+print 'Total time:          %9.3f min.' % ((tglobalend-tglobalstart)/60)

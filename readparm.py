@@ -1,5 +1,5 @@
 # *Insert GNU GPL here*  <-- pretend this is official
-# By Jason Swails, 09/03/2010
+# By Jason Swails, 09/16/2010
 
 
 from sys import stderr, stdout

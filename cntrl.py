@@ -1,7 +1,8 @@
 # python class that has a dictionary of all &cntrl namelist objects with their default values
 class cntrl:
 
-   sander  = {'irest': 0, 'ibelly' : 0, 'ntx' : 1, 'ntxo' : 1, 'ntcx' : 0, 'ig' : 71277,
+   def __init__(self):
+      self.sander  = {'irest': 0, 'ibelly' : 0, 'ntx' : 1, 'ntxo' : 1, 'ntcx' : 0, 'ig' : 71277,
               'tempi' : 0.0, 'ntb' : 1, 'ntt' : 0, 'nchain' : 1, 'temp0' : 300.0, 'tautp' : 1.0,
               'ntp' : 0, 'pres0' : 1.0, 'comp' : 44.6, 'taup' : 1.0, 'nscm' : 1000, 'nstlim' : 1, 
               'dt' : 0.001, 'ntc' : 1, 'ntcc' : 0, 'nconp' : 0, 'tol' : 0.00001, 'ntf' : 1, 
@@ -38,7 +39,7 @@ class cntrl:
               'bar_l_min' : 0.1, 'bar_l_max' : 0.9, 'bar_l_incr' : 0.1, 'idssp' : 0, 'irism' : 0, 
               'restart_cmd' : '.false.', 'eq_cmd' : '.false.', 'adiab_param' : 1.0 }
 
-   pmemd  = {'imin' : 0, 'nmropt' : 0, 'ntx' : 1, 'irest' : 0, 'ntrx' : 1, 'ntxo' : 1,
+      self.pmemd  = {'imin' : 0, 'nmropt' : 0, 'ntx' : 1, 'irest' : 0, 'ntrx' : 1, 'ntxo' : 1,
              'ntpr' : 50, 'ntave' : 0, 'ntwr' : 500, 'iwrap' : 0, 'ntwx' : 0, 'ntwv' : 0,
              'ntwe' : 0, 'ioutfm' : 0, 'ntwprt' : 0, 'ntf' : 1, 'ntb' : 1,
              'dielc' : 1.0, 'cut' : 0., 'nsnb' : 25, 'ipol' : 0, 'igb' : 0,

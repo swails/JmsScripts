@@ -1,6 +1,8 @@
 # All of the variables in the &ewald namelist
 class ewald:
-   sander = {'dsum_tol' : 1.0e-5,'ew_coeff' : 0.0,
+
+   def __init__(self):
+      self.sander = {'dsum_tol' : 1.0e-5,'ew_coeff' : 0.0,
          'skinnb' : 0.0,'diptol' : 1.0e-4,'dipmass' : 0.33,'diptau' : 11.0,
          'nfft1' : 0,'nfft2' : 0,'nfft3' : 0,'order' : 4,'opt_infl' : 1,
          'verbose' : 0,'nbflag' : 0,'nbtell' : 0,'netfrc' : 12344321,
@@ -10,7 +12,7 @@ class ewald:
          'frameon' : 1,'chngmask' : 1,'scaldip' : 1,
          'gridpointers' : 1,'column_fft' : 1 }
 
-   pmemd = {'nfft1' : 0, 'nfft2' : 0, 'nfft3' : 0, 'order' : 4, 'verbose' : 0, 'ew_type' : 0,
+      self.pmemd = {'nfft1' : 0, 'nfft2' : 0, 'nfft3' : 0, 'order' : 4, 'verbose' : 0, 'ew_type' : 0,
             'dsum_tol' : 1.0e-5, 'rsum_tol' : 5.0e-5, 'mlimit' : "0,0,0", 'ew_coeff' : 0.0, 'nbflag' : 1,
             'skinnb' : 2, 'nbtell' : 0, 'netfrc' : -1, 'use_pme' : 1, 'vdwmeth' : 1,
             'eedmeth' : 1, 'eedtbdns' : 5000.0, 'ee_type' : 0, 'frameon' : 1,

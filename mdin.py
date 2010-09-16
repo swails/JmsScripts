@@ -18,25 +18,25 @@ def addOn(line, string, file):
 
 class mdin:
    
-   cntrl_obj = cntrl() # object with cntrl namelist vars in a dictionary
-   ewald_obj = ewald() # object with ewald namelist vars in a dictionary
-
-   verbosity = 0 # verbosity level: 0 -- print nothing
-                 #                  1 -- print errors
-                 #                  2 -- print errors and warnings
-                 #                  3 -- print errors, warnings, and notes
-   
-   cntrl_nml = {}          # dictionary with cntrl namelist vars
-   cntrl_nml_defaults = {} # dictionary with default cntrl namelist vars
-   ewald_nml = {}          # dictionary with ewald namelist vars
-   ewald_nml_defaults = {} # dictionary with default ewald namelist vars
-   valid_namelists = []    # array with valid namelists for each program
-
 # =====================================================================================
 
    def __init__(self, program = 'sander', verbosity = 1):
-      self.program = program
-      self.title = 'mdin prepared by mdin.py'   
+      # define instance data
+      self.program = program        # which program we're creating the input file for
+      self.cntrl_obj = cntrl()      # object with cntrl namelist vars in a dictionary
+      self.ewald_obj = ewald()      # object with ewald namelist vars in a dictionary
+      self.verbosity = 0            # verbosity level: 0 -- print nothing
+                                    #                  1 -- print errors
+                                    #                  2 -- print errors and warnings
+                                    #                  3 -- print errors, warnings, and notes
+      self.cntrl_nml = {}           # dictionary with cntrl namelist vars
+      self.cntrl_nml_defaults = {}  # dictionary with default cntrl namelist vars
+      self.ewald_nml = {}           # dictionary with ewald namelist vars
+      self.ewald_nml_defaults = {}  # dictionary with default ewald namelist vars
+      self.valid_namelists = []     # array with valid namelists for each program
+      self.title = 'mdin prepared by mdin.py'   # title for the mdin file
+
+
       if self.program == "sander":
          self.cntrl_nml = self.cntrl_obj.sander
          self.ewald_nml = self.ewald_obj.sander
@@ -49,8 +49,8 @@ class mdin:
          print >> stderr, 'Error: program (%s) unrecognized!' % self.program
          return
 
-      self.ewald_nml_defaults = self.ewald_nml.copy()
       self.cntrl_nml_defaults = self.cntrl_nml.copy()
+      self.ewald_nml_defaults = self.ewald_nml.copy()
 
 # =====================================================================================
 

@@ -14,6 +14,6 @@ if len(sys.argv) < 2:
 string = 'vmd '
 
 for x in range(1,len(sys.argv)):
-   string += '-f %s' % (sys.argv[x])
+   string += '-f %s ' % (sys.argv[x])
 
 print '%s\n' % (string)

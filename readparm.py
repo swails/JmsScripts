@@ -257,8 +257,8 @@ class amberParm:
       # write data back to prmtop file, inserting blank line if it's an empty field
       for i in range(len(self.flag_list)):
          flag = self.flag_list[i]
-         new_prm.write('%'+'FLAG %s\n' % flag)
-         new_prm.write('%'+'FORMAT(%s)\n' % self.formats[flag])
+         new_prm.write('%%FLAG %s\n' % flag)
+         new_prm.write('%%FORMAT(%s)\n' % self.formats[flag])
          number_items_perline, size_item, dat_type = parseFormat(self.formats[flag])
          if dat_type == 'dec':
             decnum = int(self.formats[flag].split('E')[1].split('.')[1])
@@ -269,9 +269,9 @@ class amberParm:
             continue
          for j in range(len(self.parm_data[flag])): # write data in new_prm
             if dat_type == 'dec':
-               line += ('%'+'%s.%sE' % (size_item, decnum)) % self.parm_data[flag][j] 
+               line += ('%%%s.%sE' % (size_item, decnum)) % self.parm_data[flag][j] 
             elif dat_type == 'int':
-               line += ('%' + '%sd' % size_item) % self.parm_data[flag][j] 
+               line += ('%%%sd' % size_item) % self.parm_data[flag][j] 
             else:
                line += ('%s' % self.parm_data[flag][j]).ljust(size_item)
 

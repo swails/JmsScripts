@@ -179,3 +179,10 @@ ewald.py
    Object with dictionary of ewald namelist variables for sander and pmemd pre-loaded with defaults.
    For use with mdin.py
    Written in Python by Jason and Ben
+
+splitNMR_PDB.py <PDB>
+   This script will split an NMR structure that has many models into separate, numbered PDBs with the
+   same name in the same directory.  One PDB for each model.  I don't know how general it is, but it
+   worked well for the one file I threw it at (and designed it for).
+   Written in Python by Jason
+

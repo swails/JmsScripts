@@ -76,27 +76,26 @@ def parseFormat(format_string):  # parse a format statement and send back detail
 
 class amberParm:
 
-   # variables used in amberParm
-   formats = {}      # dictionary of Fortran formats corresponding to each %FLAG
-   parm_data = {}    # dictionary of all prmtop data referenced by %FLAG *NAME*
-   flag_list = []    # list of all %FLAGs in prmtop in order they appear (ordered keys of parm_data)
-   version = ''      # version string found by %VERSION
-   prm_name = ''     # name of the prmtop file associated with amberParm instance
-   overwrite = False # whether writeParm will overwrite filename prm_name
-   exists = False    # Logical set to true if the prmtop exists
-   valid = False     # Logical set to false if any errors are encountered
-   pointers = {}     # dictionary of POINTERS accessed by pointer name.
-   LJ_types = {}     # dictionary in which each atom name pairs with its LJ atom type
-   LJ_radius = []    # ordered array of L-J radii in Angstroms
-   LJ_depth = []     # ordered array of L-J well depths in kcal/mol
-
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def __init__(self, prm_name='prmtop'): # set up necessary variables
 
+      # instance variables:
       self.prm_name = prm_name # name of the prmtop file
-      self.rdparm()
-      self.valid = self.exists
+      self.formats = {}        # dictionary of Fortran formats corresponding to each %FLAG
+      self.parm_data = {}      # dictionary of all prmtop data referenced by %FLAG *NAME*
+      self.flag_list = []      # ordered array of all %FLAGs in prmtop
+      self.version = ''        # version string
+      self.overwrite = False   # whether writeParm will overwrite filename prm_name
+      self.exists = False      # Logical set to true if the prmtop exists
+      self.valid = False       # Logical set to true if the prmtop is valid
+      self.pointers = {}       # list of all the pointers in the prmtop
+      LJ_types = {}            # dictionary in which each atom name pairs with its LJ atom type number
+      LJ_radius = []           # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
+      LJ_depth = []            # ordered array of L-J depths in kcal/mol analagous to LJ_radius
+
+      self.rdparm() # read the prmtop
+      self.valid = self.exists # if it exists, fill the pointers
       if self.exists:
          try: # try to load all of the pointers into the 
             self.pointers["NATOM"] = self.parm_data["POINTERS"][0]

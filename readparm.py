@@ -172,7 +172,6 @@ class amberParm:
       try: # open up the prmtop file, catching if it doesn't exist
          prmtop = open(self.prm_name, 'r')
       except IOError:
-         print >> stderr, 'Error: %s does not exist!' % self.prm_name
          self.exists = False
          self.valid = False
          return
@@ -185,7 +184,7 @@ class amberParm:
 
          if prmlines[i][0:8] == '%VERSION':
             if self.version != '':
-               print >> stderr, 'Warning: %VERSION string defined multiple times.'
+               print >> stderr, 'Warning: %VERSION string defined multiple times in %s.' % self.prm_name
             self.version = prmlines[i].strip()
 
          elif prmlines[i][0:5] == '%FLAG':

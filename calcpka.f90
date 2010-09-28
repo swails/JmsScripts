@@ -432,6 +432,7 @@ subroutine dump_protonations(protonations, stateinf, protcnt, trescnt, max_nstat
 
    do i = 0, trescnt - 1 ! write out all of the populations
       line = ''
+      totpts = 0
       write(line, '(1a15)') trim(resname(i+1))
       do j = 0, stateinf(i)%num_states - 1
          totpts = totpts + protonations(i+1,j+1)

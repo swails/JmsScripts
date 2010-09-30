@@ -571,8 +571,7 @@ class amberParm:
          while num_left > 0:
             if num_left > 1:
                for j in range(len(stored_dihedtypes)):
-                  if float(stored_dihedtypes[j][stored_dihedtypes[j].find('SCEE')-6:stored_dihedtypes[j].find('SCEE')].strip()) < 0 and \
-                                          stored_dihedtypes[j][0:11] == unique_diheds[i]:
+                  if float(stored_dihedtypes[j][11:].split()[3]) < 0 and stored_dihedtypes[j][0:11] == unique_diheds[i]:
                      file.write(stored_dihedtypes.pop(j) + '\n')
                      num_left -= 1
                      break

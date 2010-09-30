@@ -36,6 +36,7 @@ titratable = cpin_data.TITRATABLE
 exp_pkas   = cpin_data.EXP_PKAS
 
 # set some default variables
+solvent_ions = ['WAT','Na+','Br-','Cl-','Cs+','F-','I-','K+','Li+','Mg+','Rb+','CIO','IB','MG2']
 titrate_residues = titratable
 igb = ' '
 ignore_warn = False
@@ -180,10 +181,8 @@ except KeyError:
 
 if not ignore_warn:
    if radius_set != 'H(N)-modified Bondi radii (mbondi2)':
-      print >> sys.stderr, 'Error: mbondi2 radius set should be used for constant ' + \
-            'pH simulations. All reference energies were calculated'
-      print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore ' + \
-            'this warning.'
+      print >> sys.stderr, 'Error: mbondi2 radius set should be used for constant pH simulations. All reference energies were calculated'
+      print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore this warning.'
       sys.exit()
 
 # Turn resnum and notresnum into integers. Turn igb into integer. Turn maxpKa and
@@ -415,6 +414,18 @@ print >> sys.stdout, line
 # Next print out TRESCNT
 
 line = ' TRESCNT=' + str(len(titrated_residue_nums)) + ','
+
+# Determine if we need to print out information for hybrid implicit/explicit CpHMD
+for i in range(len(prmtop_residues)):
+   if prmtop_residues[i] in solvent_ions:
+      toadd = 'STARTWATER=%s, CNSTPH_IGB=%s, RELAX_TIME=%s' % (prmtop_object.parm_data['RESIDUE_POINTER'][i],igb,100)
+      if not ignore_warnings:
+         for j in range(i,len(prmtop_residues)):
+            if not prmtop_residues[j] in solvent_ions:
+               print >> sys.stderr, 'Warning: Residue (%s) found where water or ion was expected!' % prmtop_residues[j]
+               sys.exit()
+      line = addOn(line, toadd)
+      break
 
 print >> sys.stdout, line
 

@@ -1,6 +1,7 @@
 # This module will create a sander/pmemd input
 from cntrl import cntrl
 from ewald import ewald
+from pb import pb
 from sys import stderr, stdout
 
 # =====================================================================================
@@ -25,14 +26,18 @@ class mdin:
       self.program = program        # which program we're creating the input file for
       self.cntrl_obj = cntrl()      # object with cntrl namelist vars in a dictionary
       self.ewald_obj = ewald()      # object with ewald namelist vars in a dictionary
+      self.pb_obj = pb()            # object with pb namelist vars in a dictionary
       self.verbosity = 0            # verbosity level: 0 -- print nothing
                                     #                  1 -- print errors
                                     #                  2 -- print errors and warnings
                                     #                  3 -- print errors, warnings, and notes
+      self.cards = []               # array that has all of the input cards that come after namelists
       self.cntrl_nml = {}           # dictionary with cntrl namelist vars
       self.cntrl_nml_defaults = {}  # dictionary with default cntrl namelist vars
       self.ewald_nml = {}           # dictionary with ewald namelist vars
       self.ewald_nml_defaults = {}  # dictionary with default ewald namelist vars
+      self.pb_nml = {}              # dictionary with pb namelist vars
+      self.pb_nml_defaults = {}     # dictionary with default pb namelist vars
       self.valid_namelists = []     # array with valid namelists for each program
       self.title = 'mdin prepared by mdin.py'   # title for the mdin file
 
@@ -40,7 +45,8 @@ class mdin:
       if self.program == "sander":
          self.cntrl_nml = self.cntrl_obj.sander
          self.ewald_nml = self.ewald_obj.sander
-         self.valid_namelists = ['cntrl','ewald','qmmm']
+         self.pb_nml = self.pb_obj.sander
+         self.valid_namelists = ['cntrl','ewald','qmmm','pb']
       elif self.program == "pmemd":
          self.cntrl_nml = self.cntrl_obj.pmemd
          self.ewald_nml = self.ewald_obj.pmemd
@@ -51,6 +57,7 @@ class mdin:
 
       self.cntrl_nml_defaults = self.cntrl_nml.copy()
       self.ewald_nml_defaults = self.ewald_nml.copy()
+      self.pb_nml_defaults = self.pb_nml.copy()
 
 # =====================================================================================
 
@@ -88,10 +95,37 @@ class mdin:
                has_been_printed = True
             line = addOn(line, "%s=%s," % (var, self.ewald_nml[var]), file)
 
+      # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:
          file.write(line + '\n')
+
+      # end the namelist
       if has_been_printed:
          file.write('/\n')
+
+      # print the pb namelist if any variables differ from the original
+      line = ' '
+      has_been_printed = False # keep track if this namelist has been printed
+      for var in self.pb_nml.keys():
+         if self.pb_nml[var] != self.pb_nml_defaults[var]:
+            if (not has_been_printed):
+               file.write('&pb\n')
+               has_been_printed = True
+            line = addOn(line,'%s=%s' % (var, self.pb_nml[var]), file)
+
+      # flush any remaining items that haven't been printed to the mdin file
+      if len(line.strip()) != 0:
+         file.write(line + '\n')
+
+      # end the namelist
+      if has_been_printed:
+         file.write('/\n')
+
+      # Write the cards to the input file
+      for i in range(len(self.cards)):
+         file.write(self.cards[i].strip() + '\n')
+      if len(self.cards) != 0:
+         file.write('END\n')
       
       file.close()
 
@@ -172,6 +206,11 @@ class mdin:
             self.ewald_nml[variable] = value
          else:
             print >> stderr, 'Unknown variable (%s) in &ewald!' % variable
+      elif namelist == 'pb':
+         if variable in self.pb_nml.keys():
+            self.pb_nml[variable] = value
+         else:
+            print >> stderr, 'Unknown variable (%s) in &pb!' % variable
       else:
          print >> stderr, 'Unknown namelist (%s)!' % namelist
 
@@ -297,5 +336,10 @@ class mdin:
       self.change('cntrl','maxcyc', maxcyc)
       self.change('cntrl','ncyc', ncyc)
       self.change('cntrl','ntmin', ntmin)
+
+# =====================================================================================
+
+   def AddCard(self, title='Residues in card', cardString='RES 1'):
+      self.cards.append('%s\n%s\nEND' % (title, cardString))
 
 # =====================================================================================

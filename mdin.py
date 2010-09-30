@@ -47,6 +47,10 @@ class mdin:
          self.ewald_nml = self.ewald_obj.sander
          self.pb_nml = self.pb_obj.sander
          self.valid_namelists = ['cntrl','ewald','qmmm','pb']
+      if self.program == "sander.APBS":
+         self.cntrl_nml = self.cntrl_obj.sander
+         self.pb_nml = self.pb_obj.sanderAPBS
+         self.valid_namelists = ['cntrl','apbs']
       elif self.program == "pmemd":
          self.cntrl_nml = self.cntrl_obj.pmemd
          self.ewald_nml = self.ewald_obj.pmemd
@@ -109,7 +113,10 @@ class mdin:
       for var in self.pb_nml.keys():
          if self.pb_nml[var] != self.pb_nml_defaults[var]:
             if (not has_been_printed):
-               file.write('&pb\n')
+               if self.program == 'sander.APBS':
+                  file.write('&apbs\n')
+               else:
+                  file.write('&pb\n')
                has_been_printed = True
             line = addOn(line,'%s=%s' % (var, self.pb_nml[var]), file)
 

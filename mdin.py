@@ -155,7 +155,7 @@ class mdin:
       for i in range(len(lines)):
          if not inblock and not lines[i].strip().startswith('&'):
             continue
-         elif not inblock and lines[i].startswith('&'):
+         elif not inblock and lines[i].strip().startswith('&'):
             inblock = True
             block = lines[i].strip()[1:].lower()
             blocks.append(block)    # add the name of the namelist to "blocks"

@@ -47,7 +47,7 @@ class mdin:
          self.ewald_nml = self.ewald_obj.sander
          self.pb_nml = self.pb_obj.sander
          self.valid_namelists = ['cntrl','ewald','qmmm','pb']
-      if self.program == "sander.APBS":
+      elif self.program == "sander.APBS":
          self.cntrl_nml = self.cntrl_obj.sander
          self.pb_nml = self.pb_obj.sanderAPBS
          self.valid_namelists = ['cntrl','apbs']
@@ -152,10 +152,19 @@ class mdin:
       blocks = []  # namelists in the order they appear
       block_fields = [] # array of arrays that correspond to entries in namelists found in "blocks" above
       inblock = False
+      lead_comment = True
       for i in range(len(lines)):
-         if not inblock and not lines[i].strip().startswith('&'):
+         if not inblock and not lines[i].strip().startswith('&') and lead_comment:
             continue
+         elif not inblock and not lines[i].strip().startswith('&') and not lead_comment:
+            final_ended = True
+            for j in range(i,len(lines)):
+               if lines[j].strip().startswith('&'):
+                  final_ended = False
+            if final_ended:
+               self.cards.append(lines[i])
          elif not inblock and lines[i].strip().startswith('&'):
+            lead_comment = False
             inblock = True
             block = lines[i].strip()[1:].lower()
             blocks.append(block)    # add the name of the namelist to "blocks"
@@ -170,10 +179,18 @@ class mdin:
             return -1
          elif inblock:
             items = lines[i].strip().split(',')
-            for j in range(len(items)):
+            j = 0
+            while j < len(items):
+               items[j] = items[j].strip()
                if len(items[j]) == 0:
                   items.pop(j)
+               else:
+                  j += 1
             block_fields[len(block_fields)-1].extend(items)
+
+      # take out the last END in the cards if it's there
+      if self.cards[len(self.cards)].strip().upper() == 'END':
+         self.cards.pop()
 
       # combine any multi-element fields: e.g. rstwt=1,2,3,
       begin_field = -1

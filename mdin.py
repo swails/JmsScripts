@@ -128,6 +128,27 @@ class mdin:
       if has_been_printed:
          file.write('/\n')
 
+      # print the pb namelist if any variables differ from the original
+      line = ' '
+      has_been_printed = False # keep track if this namelist has been printed
+      for var in self.pb_nml.keys():
+         if self.pb_nml[var] != self.pb_nml_defaults[var]:
+            if (not has_been_printed):
+               if self.program == 'sander.APBS':
+                  file.write('&apbs\n')
+               else:
+                  file.write('&pb\n')
+               has_been_printed = True
+            line = addOn(line,'%s=%s, ' % (var, self.pb_nml[var]), file)
+
+      # flush any remaining items that haven't been printed to the mdin file
+      if len(line.strip()) != 0:
+         file.write(line + '\n')
+
+      # end the namelist
+      if has_been_printed:
+         file.write('/\n')
+
       # Write the cards to the input file
       for i in range(len(self.cards)):
          file.write(self.cards[i].strip() + '\n')

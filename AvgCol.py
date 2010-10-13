@@ -7,9 +7,14 @@ import sys, math
 if len(sys.argv) < 3:
    print 'This utility computes the average and standard deviation of a given'
    print 'column of data in given data files.\n'
-   print 'Usage: AvgCol.py file1 file2 ... filen column'
+   print 'Usage: AvgCol.py file1 file2 ... filen column {-V0}'
    sys.exit()
 
+if sys.argv[len(sys.argv)-1] == "-V0":
+   verbose = False
+   sys.argv.pop()
+else:
+   verbose = True
    
 try:
    column = int(sys.argv[len(sys.argv)-1])
@@ -49,5 +54,8 @@ ave = sum / number_entries
 ave2 = sumsquared / number_entries
 std = math.sqrt(ave2 - ave * ave)
    
-print 'The average of column ' + str(column) + ' is: ' + str(ave)
-print 'The standard deviation of column ' + str(column) + ' is: ' + str(std)
+if verbose:
+   print 'The average of column ' + str(column) + ' is: ' + str(ave)
+   print 'The standard deviation of column ' + str(column) + ' is: ' + str(std)
+else:
+   print ave

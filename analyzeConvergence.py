@@ -105,57 +105,57 @@ for x in range(len(mdoutlines)):
          sys.exit()
 
 if mdcrd != '':
-   print >> sys.stdout, "Gathering RMS data with {0}...".format(ptraj)
+   print >> sys.stdout, "Gathering RMS data with %s..." % ptraj
    trajin = open('__ptraj.in','w')
-   trajin.write("""trajin {0}
-strip :WAT
+   trajin.write("""trajin %s
+strip :WAT:Na+:Cl-:Br-:Cs+:F-:I-:K+:Li+:Mg+:MG2:Rb+:IB:CIO
 rms first mass out __RMS.dat
-""".format(mdcrd))
+""" % mdcrd)
    trajin.close()
-   os.system("{0} {1} __ptraj.in 2>>__ptraj.out 1>>__ptraj.out".format(ptraj,prmtop))
+   os.system("%s %s __ptraj.in 2>>__ptraj.out 1>>__ptraj.out" % (ptraj,prmtop))
 
 print >> sys.stdout, "Printing data files..."
 
 feamber = open('__EAMBER.dat','w')
 for x in range(len(eamber)):
-   feamber.write("{0} {1}\n".format(step[x],eamber[x]))
+   feamber.write("%s %s\n" % (step[x],eamber[x]))
 feamber.close()
 
 ftemp = open('__TEMP.dat','w')
 for x in range(len(temp)):
-   ftemp.write("{0} {1}\n".format(step[x],temp[x]))
+   ftemp.write("%s %s\n" % (step[x],temp[x]))
 ftemp.close()
 
 if constp:
    fpres = open('__PRESSURE.dat','w')
    for x in range(len(pres)):
-      fpres.write('{0} {1}\n'.format(step[x],pres[x]))
+      fpres.write('%s %s\n' % (step[x],pres[x]))
    fpres.close()
 
 fektot = open('__EKTOT.dat','w')
 for x in range(len(ektot)):
-   fektot.write("{0} {1}\n".format(step[x],ektot[x]))
+   fektot.write("%s %s\n" % (step[x],ektot[x]))
 fektot.close()
 
 feptot = open('__EPTOT.dat','w')
 for x in range(len(eptot)):
-   feptot.write("{0} {1}\n".format(step[x],eptot[x]))
+   feptot.write("%s %s\n" % (step[x],eptot[x]))
 feptot.close()
 
 fetot = open('__ETOT.dat','w')
 for x in range(len(etot)):
-   fetot.write("{0} {1}\n".format(step[x],etot[x]))
+   fetot.write("%s %s\n" % (step[x],etot[x]))
 fetot.close()
 
 if constp:
    fdens = open('__DENSITY.dat','w')
    for x in range(len(density)):
-      fdens.write("{0} {1}\n".format(step[x],density[x]))
+      fdens.write("%s %s\n" % (step[x],density[x]))
    fdens.close()
 
 print >> sys.stdout, "Printing gnuplot scripts..."
 
-gnu = open("{0}.energy".format(prefix),'w')
+gnu = open("%s.energy" % (prefix),'w')
 gnu.write("""set font 'calibri,20'
 set title 'Energy equilibration'
 plot '__ETOT.dat' w l lw 2 ti 'ETOT','__EKTOT.dat' w l lw 2 ti 'EKTOT', \
@@ -163,7 +163,7 @@ plot '__ETOT.dat' w l lw 2 ti 'ETOT','__EKTOT.dat' w l lw 2 ti 'EKTOT', \
 """)
 gnu.close()
 
-gnu = open('{0}.temp'.format(prefix),'w')
+gnu = open('%s.temp' % (prefix),'w')
 gnu.write("""set font 'calibri,20'
 set title 'Temperature equilibration'
 plot '__TEMP.dat' w l lw 2 lt -1 ti 'TEMP'
@@ -171,13 +171,13 @@ plot '__TEMP.dat' w l lw 2 lt -1 ti 'TEMP'
 gnu.close()
 
 if constp:
-   gnu = open('{0}.pressure'.format(prefix),'w')
+   gnu = open('%s.pressure' % (prefix),'w')
    gnu.write("""set font 'calibri,20'
 set title 'Pressure equilibration'
 plot '__PRESSURE.dat' w l lw 2 lt -1 ti 'Pressure'
 """)
    gnu.close()
-   gnu = open('{0}.density'.format(prefix),'w')
+   gnu = open('%s.density' % (prefix),'w')
    gnu.write("""set font 'calibri,20'
 set title 'Density equilibration'
 plot '__DENSITY.dat' w l lw 2 lt -1 ti 'Density'
@@ -185,7 +185,7 @@ plot '__DENSITY.dat' w l lw 2 lt -1 ti 'Density'
    gnu.close()
 
 if mdcrd != '':
-   gnu = open('{0}.rms'.format(prefix),'w')
+   gnu = open('%s.rms' % (prefix),'w')
    gnu.write("""set font 'calibri,20'
 set title 'RMS equilibration'
 plot '__RMS.dat' w l lt -1 lw 2 ti 'RMS'

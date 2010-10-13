@@ -97,7 +97,7 @@ class mdin:
             if (not has_been_printed):
                file.write('&ewald\n')
                has_been_printed = True
-            line = addOn(line, "%s=%s," % (var, self.ewald_nml[var]), file)
+            line = addOn(line, "%s=%s, " % (var, self.ewald_nml[var]), file)
 
       # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:
@@ -118,7 +118,7 @@ class mdin:
                else:
                   file.write('&pb\n')
                has_been_printed = True
-            line = addOn(line,'%s=%s' % (var, self.pb_nml[var]), file)
+            line = addOn(line,'%s=%s, ' % (var, self.pb_nml[var]), file)
 
       # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:

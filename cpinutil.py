@@ -419,7 +419,7 @@ line = ' TRESCNT=' + str(len(titrated_residue_nums)) + ','
 for i in range(len(prmtop_residues)):
    if prmtop_residues[i] in solvent_ions:
       toadd = 'CPHFIRST_SOL=%s, CPH_IGB=%s, ' % (prmtop_object.parm_data['RESIDUE_POINTER'][i],igb)
-      if not ignore_warnings:
+      if not ignore_warn:
          for j in range(i,len(prmtop_residues)):
             if not prmtop_residues[j] in solvent_ions:
                print >> sys.stderr, 'Warning: Residue (%s) found where water or ion was expected!' % prmtop_residues[j]

@@ -418,8 +418,8 @@ line = ' TRESCNT=' + str(len(titrated_residue_nums)) + ','
 # Determine if we need to print out information for hybrid implicit/explicit CpHMD
 for i in range(len(prmtop_residues)):
    if prmtop_residues[i] in solvent_ions:
-      toadd = 'STARTWATER=%s, CNSTPH_IGB=%s, RELAX_TIME=%s' % (prmtop_object.parm_data['RESIDUE_POINTER'][i],igb,100)
-      if not ignore_warnings:
+      toadd = 'CPHFIRST_SOL=%s, CPH_IGB=%s, ' % (prmtop_object.parm_data['RESIDUE_POINTER'][i],igb)
+      if not ignore_warn:
          for j in range(i,len(prmtop_residues)):
             if not prmtop_residues[j] in solvent_ions:
                print >> sys.stderr, 'Warning: Residue (%s) found where water or ion was expected!' % prmtop_residues[j]

@@ -4,7 +4,7 @@
 
 import sys
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 2:
    print 'This utility computes the sum a given column of data in given data files.\n'
    print 'Usage: sum.py file1 file2 ... filen column'
    sys.exit()
@@ -42,7 +42,7 @@ if len(sys.argv) >= 2:
       
       file.close()
 else:
-   for line in sys.stdin
+   for line in sys.stdin:
       try:
          sum += float(line.split()[column - 1])
       except:

@@ -161,7 +161,7 @@ class mdin:
             for j in range(i,len(lines)):
                if lines[j].strip().startswith('&'):
                   final_ended = False
-            if final_ended:
+            if final_ended and len(lines[i].strip()) != 0:
                self.cards.append(lines[i])
          elif not inblock and lines[i].strip().startswith('&'):
             lead_comment = False
@@ -189,7 +189,7 @@ class mdin:
             block_fields[len(block_fields)-1].extend(items)
 
       # take out the last END in the cards if it's there
-      if self.cards[len(self.cards)].strip().upper() == 'END':
+      if len(self.cards) != 0 and self.cards[len(self.cards)-1].strip().upper() == 'END':
          self.cards.pop()
 
       # combine any multi-element fields: e.g. rstwt=1,2,3,

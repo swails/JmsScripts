@@ -186,3 +186,10 @@ splitNMR_PDB.py <PDB>
    worked well for the one file I threw it at (and designed it for).
    Written in Python by Jason
 
+_sasa_res.tcl
+   This script will, when loaded into VMD, calculate SASAs for each residue in a protein. The usage is
+   explained inside the script itself. usage: getAllResSASA "selection" probe_radius <startframe <endframe>>
+   First, source it in the VMD tclsh, then use the command above where "selection" is a VMD selection
+   you would otherwise choose.
+   Written in tcl by Lubos Vrbka (Taken from VMD mailing list archives)
+

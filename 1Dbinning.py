@@ -111,7 +111,10 @@ for x in range(len(data)):
 
    binnum = int(math.floor(xval/interval))
 
-   phipsibins[binnum] += pointweight
+   try:
+      phipsibins[binnum] += pointweight
+   except:
+      phipsibins[binnum-1] += pointweight
 
 xprintval = binrange[0]
 outputfile = open(output_file,'w')

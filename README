@@ -193,3 +193,6 @@ _sasa_res.tcl
    you would otherwise choose.
    Written in tcl by Lubos Vrbka (Taken from VMD mailing list archives)
 
+getResidue.py <prmtop> <atom #>
+   Returns which residue the given atom number is in in a given prmtop file.
+   Written in Python by Jason.

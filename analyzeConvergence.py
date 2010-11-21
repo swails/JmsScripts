@@ -118,39 +118,39 @@ print >> sys.stdout, "Printing data files..."
 
 feamber = open('__EAMBER.dat','w')
 for x in range(len(eamber)):
-   feamber.write("%s %s\n" % (step[x],eamber[x]))
+   feamber.write("%s %s\n" % (x,eamber[x]))
 feamber.close()
 
 ftemp = open('__TEMP.dat','w')
 for x in range(len(temp)):
-   ftemp.write("%s %s\n" % (step[x],temp[x]))
+   ftemp.write("%s %s\n" % (x,temp[x]))
 ftemp.close()
 
 if constp:
    fpres = open('__PRESSURE.dat','w')
    for x in range(len(pres)):
-      fpres.write('%s %s\n' % (step[x],pres[x]))
+      fpres.write('%s %s\n' % (x,pres[x]))
    fpres.close()
 
 fektot = open('__EKTOT.dat','w')
 for x in range(len(ektot)):
-   fektot.write("%s %s\n" % (step[x],ektot[x]))
+   fektot.write("%s %s\n" % (x,ektot[x]))
 fektot.close()
 
 feptot = open('__EPTOT.dat','w')
 for x in range(len(eptot)):
-   feptot.write("%s %s\n" % (step[x],eptot[x]))
+   feptot.write("%s %s\n" % (x,eptot[x]))
 feptot.close()
 
 fetot = open('__ETOT.dat','w')
 for x in range(len(etot)):
-   fetot.write("%s %s\n" % (step[x],etot[x]))
+   fetot.write("%s %s\n" % (x,etot[x]))
 fetot.close()
 
 if constp:
    fdens = open('__DENSITY.dat','w')
    for x in range(len(density)):
-      fdens.write("%s %s\n" % (step[x],density[x]))
+      fdens.write("%s %s\n" % (x,density[x]))
    fdens.close()
 
 print >> sys.stdout, "Printing gnuplot scripts..."

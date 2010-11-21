@@ -1,18 +1,5 @@
 This is my directory for python/bash script development:
 
-Do all development on scripts in this folder! That way
-the most recent version of every script will be in this
-folder. This is especially important for utilities.py, as
-this will be a module included in just about every script
-as I believe it improves efficiency, and also makes less
-work for me since I can continually reuse the same common
-utilities. NOTE: MMPBSA.py and its related files are NOT in
-this directory as it is independently maintained.
-
-
-
-
-
 Inventory with description (Almost guaranteed to be out of date)
 
 AvgCol.py <file1> <file2> <file3> ... <file n> <column>

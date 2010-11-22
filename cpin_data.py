@@ -784,7 +784,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.0817,      # C8
                    0.2013,      # H8
                   -0.5676,      # N7
-                  -0.1637,      # C5
+                   0.1637,      # C5
                    0.5750,      # C6
                   -0.6088,      # O6
                   -0.7771,      # N1
@@ -1174,7 +1174,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.0066,      # C1' 
                    0.2029,      # H1' 
                    0.1954,      # N1
-                  -0.0028,      # C6
+                   0.0028,      # C6
                    0.2366,      # H6
                   -0.4218,      # C5
                    0.2253,      # H5

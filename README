@@ -183,3 +183,12 @@ _sasa_res.tcl
 getResidue.py <prmtop> <atom #>
    Returns which residue the given atom number is in in a given prmtop file.
    Written in Python by Jason.
+
+validateCpinData.py
+   This utility imports cpin_data.py and checks through all of the defined residues for consistency.
+   It checks, among other things, that each state for each residue has integral charge (the residual charge
+   can't be greater than or equal to 0.0001, which is the full precision that is set in cpin_data),
+   and that the difference between the charge and the proton count is constant for each state in a
+   given residue (i.e., adding a proton increases the net charge by 1).  It alerts the user to any
+   problem it finds.  It takes no arguments.
+   Written in Python by Jason

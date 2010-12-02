@@ -9,7 +9,7 @@ CONTAINS:
 
 Classes:
    ** To create an instance of a class, assign it to a variable with 
-      "variable = className(arguments)
+      "variable = className(arguments)"
 
    o  amberParm(prm_name): This creates an amberParm object.  For example,
       to create an amberParm object in the variable "parm" using the "prmtop"

@@ -23,7 +23,7 @@ atom = int(sys.argv[2])
 for i in range(parm.ptr('nres')):
    if parm.parm_data['RESIDUE_POINTER'][i] > atom:
       print 'Atom %d (%s) in prmtop %s is in residue %s-%s' % (atom, 
-           parm.parm_data['ATOM_NAME'][atom-1], str(parm), i, parm.parm_data['RESIDUE_LABEL'][i])
+           parm.parm_data['ATOM_NAME'][atom-1], str(parm), i, parm.parm_data['RESIDUE_LABEL'][i-1])
       break
 
 

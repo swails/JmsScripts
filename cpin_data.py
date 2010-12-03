@@ -1,7 +1,7 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
-TITRATABLE = "AS4 GL4 HIP TYR LYS CYS PDA PDC PDG PDG DT PRA PRC PRG PRG RU"
-EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.2 9.7 3.9 4.3 2.1 9.2 9.3"
+TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS DAP DCP DGE DTE AP  CP  GE  UE "
+EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3"
 
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
@@ -254,7 +254,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       else:
          relene = 0.0
 
-      return   [ [ 0,           # Relative energy  STATE 0 Protonated
+      return   [ [ 0,           # Relative energy  STATE 0 TYR (prot)
                    1,           # Relative protonation
                   -0.4157,      # N
                    0.2719,      # H
@@ -278,7 +278,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.5973,      # C
                   -0.5679 ],    # O 
 
-                 [ relene,      # Relative energy  STATE 1 Deprotonated
+                 [ relene,      # Relative energy  STATE 1 TYM (deprot)
                    0,           # Relative protonation
                   -0.4157,      # N
                    0.2719,      # H
@@ -477,18 +477,21 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.5973,      # C
                   -0.5679 ] ]   # O
       
-   if residue == "PDA":
+   if residue == "DAP":
       pKa = 3.9
 
       if igb == 2:
          relene = -36.6696 - KB * TEMP * LN_TO_LOG * pKa
+         relene2 = 0
       elif igb == 5:
          relene = -36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene2 = 0
       else:
          relene = 0.0
+         relene2 = 0
 
       return   [ [ relene,      # Relative energy  STATE 0 DA
-                   0,           # Relative protonation
+                   1,           # Relative protonation
                    1.1659,      # P
                   -0.7761,      # O1P
                   -0.7761,      # O2P
@@ -523,7 +526,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.5232,      # O3'
                    0.0000 ] ,   # H1
 
-                 [ 0,           # Relative energy  STATE 1 PDA
+                 [ relene2,     # Relative energy  STATE 1 DAE
                    1,           # Relative protonation
                    1.1659,      # P
                   -0.7761,      # O1P
@@ -535,42 +538,80 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1629,      # C4'
                    0.1176,      # H4'
                   -0.3691,      # O4'
-                   0.2680,      # C1'
-                   0.1104,      # H1'
-                  -0.1035,      # N9 
-                   0.2234,      # C8 
-                   0.1948,      # H8
-                  -0.5676,      # N7 
-                   0.1712,      # C5 
-                   0.4302,      # C6 
-                  -0.8094,      # N6 
-                   0.4418,      # H61
-                   0.4418,      # H62
-                  -0.3477,      # N1 
-                   0.2742,      # C2 
-                   0.1717,      # H2 
-                  -0.5181,      # N3
-                   0.3820,      # C4
+                   0.0431,      # C1'
+                   0.1838,      # H1'
+                  -0.0025,      # N9 
+                   0.0814,      # C8 
+                   0.2022,      # H8
+                  -0.5669,      # N7 
+                   0.1911,      # C5 
+                   0.5315,      # C6 
+                  -0.7574,      # N6 
+                   0.3391,      # H61
+                   0.0000,      # H62
+                  -0.6686,      # N1 
+                   0.4601,      # C2 
+                   0.0955,      # H2 
+                  -0.6665,      # N3
+                   0.3028,      # C4
                    0.0713,      # C3'
                    0.0985,      # H3'
                   -0.0854,      # C2'
                    0.0718,      # H2'1
                    0.0718,      # H2'2
                   -0.5232,      # O3'
-                   0.3584 ] ]   # H1
+                   0.3529 ] ,   # H1
 
-   if residue == "PDC":
+                 [ 0,           # Relative energy  STATE 2 DAP
+                   2,           # Relative protonation
+                   1.1659,      # P
+                  -0.7761,      # O1P
+                  -0.7761,      # O2P
+                  -0.4954,      # O5'
+                  -0.0069,      # C5'
+                   0.0754,      # H5'1
+                   0.0754,      # H5'2
+                   0.1629,      # C4'
+                   0.1176,      # H4'
+                  -0.3691,      # O4'
+                   0.0431,      # C1'
+                   0.1838,      # H1'
+                   0.0944,      # N9 
+                   0.1617,      # C8 
+                   0.2281,      # H8
+                  -0.5674,      # N7 
+                   0.1358,      # C5 
+                   0.5711,      # C6 
+                  -0.8251,      # N6 
+                   0.4456,      # H61
+                   0.4456,      # H62
+                  -0.5750,      # N1 
+                   0.4251,      # C2 
+                   0.1437,      # H2 
+                  -0.5611,      # N3
+                   0.3421,      # C4
+                   0.0713,      # C3'
+                   0.0985,      # H3'
+                  -0.0854,      # C2'
+                   0.0718,      # H2'1
+                   0.0718,      # H2'2
+                  -0.5232,      # O3'
+                   0.4301 ] ]   # H1
+
+   if residue == "DCP":
       pKa = 4.3
 
       if igb == 2:
          relene = -69.3910 - KB * TEMP * LN_TO_LOG * pKa
+         relene2 = -69.3910 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          relene = -69.5117 - KB * TEMP * LN_TO_LOG * pKa
+         relene2 = -69.5117 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
       return   [ [ relene,      # Relative energy  STATE 0 DC
-                   0,           # Relative protonation
+                   1,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
                   -0.7761,      # O2P
@@ -603,7 +644,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.5232,      # O3'
                    0.0000 ] ,   # H3
 
-                 [ 0,           # Relative energy  STATE 1 PDC
+                 [ 0,           # Relative energy  STATE 1 DCE
                    1,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -615,29 +656,63 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1629,      # C4'
                    0.1176,      # H4'
                   -0.3691,      # O4'
-                   0.2010,      # C1'
-                   0.1551,      # H1'
-                   0.0920,      # N1
-                  -0.0035,      # C6
-                   0.2270,      # H6
-                  -0.3471,      # C5
-                   0.2102,      # H5
-                   0.4660,      # C4
-                  -0.8412,      # N4
-                   0.4561,      # H41
-                   0.4561,      # H42
-                  -0.2233,      # N3
-                   0.4366,      # C2
-                  -0.4901,      # O2
+                  -0.0116,      # C1'
+                   0.1963,      # H1'
+                   0.0746,      # N1
+                  -0.2021,      # C6
+                   0.2430,      # H6
+                  -0.2747,      # C5
+                   0.1680,      # H5
+                   0.6184,      # C4
+                  -0.7783,      # N4
+                   0.3564,      # H41
+                   0.0000,      # H42
+                  -0.6266,      # N3
+                   0.6474,      # C2
+                  -0.6269,      # O2
                    0.0713,      # C3'
                    0.0985,      # H3'
                   -0.0854,      # C2'
                    0.0718,      # H2'
                    0.0718,      # H2'
                   -0.5232,      # O3'
-                   0.3267 ] ]   # H3
+                   0.3377 ] ,   # H3
 
-   if residue == "PDG":
+                 [ 0,           # Relative energy  STATE 2 DCP
+                   2,           # Relative protonation
+                   1.1659,      # P 
+                  -0.7761,      # O1P
+                  -0.7761,      # O2P
+                  -0.4954,      # O5'
+                  -0.0069,      # C5'
+                   0.0754,      # H5'
+                   0.0754,      # H5'
+                   0.1629,      # C4'
+                   0.1176,      # H4'
+                  -0.3691,      # O4'
+                  -0.0116,      # C1'
+                   0.1963,      # H1'
+                   0.2167,      # N1
+                  -0.0282,      # C6
+                   0.2713,      # H6
+                  -0.4162,      # C5
+                   0.2179,      # H5
+                   0.6653,      # C4
+                  -0.8590,      # N4
+                   0.4598,      # H41
+                   0.4598,      # H42
+                  -0.4956,      # N3
+                   0.5371,      # C2
+                  -0.5028,      # O2
+                   0.0713,      # C3'
+                   0.0985,      # H3'
+                  -0.0854,      # C2'
+                   0.0718,      # H2'
+                   0.0718,      # H2'
+                  -0.5232,      # O3'
+                   0.4108 ] ]   # H3
+
+   if residue == "DGE":
       pKa1 = 2.1
       pKa2 = 9.2
 
@@ -689,9 +764,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.0718,      # H2'
                    0.0718,      # H2'
                   -0.5232,      # O3'
-                   0.0000 ] ,   # H7
+                   0.0000 ] ,   # H6
 
-                 [ relene1,     # Relative energy  STATE 1 DG'
+                 [ relene1,     # Relative energy  STATE 1 DGE
                    1,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -703,69 +778,32 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1629,      # C4'
                    0.1176,      # H4'
                   -0.3691,      # O4'
-                   0.1958,      # C1'
-                   0.1261,      # H1'
-                   0.0493,      # N9
-                   0.0220,      # C8
-                   0.2235,      # H8
-                  -0.3229,      # N7
-                  -0.1270,      # C5
-                   0.7360,      # C6
-                  -0.6505,      # 06
-                  -0.8281,      # N1
+                   0.0358,      # C1'
+                   0.1746,      # H1'
+                   0.0553,      # N9
+                   0.0817,      # C8
+                   0.2013,      # H8
+                  -0.5676,      # N7
+                   0.1637,      # C5
+                   0.5750,      # C6
+                  -0.6088,      # O6
+                  -0.7771,      # N1
                    0.0000,      # H1
-                   1.0003,      # C2
-                  -0.9620,      # N2
-                   0.3881,      # H21
-                   0.3881,      # H22
-                  -0.8188,      # N3
-                   0.3122,      # C4
+                   0.9629,      # C2
+                  -0.9730,      # N2
+                   0.4259,      # H21
+                   0.4259,      # H22
+                  -0.7486,      # N3
+                   0.2356,      # C4
                    0.0713,      # C3'
                    0.0985,      # H3'
                   -0.0854,      # C2'
                    0.0718,      # H2'
                    0.0718,      # H2'
                   -0.5232,      # O3'
-                   0.3895 ] ,   # H7
+                   0.4590 ] ,   # H6
 
-                 [ relene2,     # Relative energy  STATE 2 PDG
-                   2,           # Relative protonation
-                   1.1659,      # P 
-                  -0.7761,      # O1P
-                  -0.7761,      # O2P
-                  -0.4954,      # O5'
-                  -0.0069,      # C5'
-                   0.0754,      # H5'
-                   0.0754,      # H5'
-                   0.1629,      # C4'
-                   0.1176,      # H4'
-                  -0.3691,      # O4'
-                   0.3192,      # C1'
-                   0.1045,      # H1'
-                   0.0343,      # N9
-                   0.0628,      # C8
-                   0.2493,      # H8
-                  -0.3278,      # N7
-                   0.0170,      # C5
-                   0.4831,      # C6
-                  -0.4870,      # 06
-                  -0.4243,      # N1
-                   0.3482,      # H1
-                   0.7316,      # C2
-                  -0.9299,      # N2
-                   0.4527,      # H21
-                   0.4527,      # H22
-                  -0.6279,      # N3
-                   0.2529,      # C4
-                   0.0713,      # C3'
-                   0.0985,      # H3'
-                  -0.0854,      # C2'
-                   0.0718,      # H2'
-                   0.0718,      # H2'
-                  -0.5232,      # O3'
-                   0.4102 ] ,   # H7
-
-                 [ relene3,     # Relative energy  STATE 3 DDG
+                 [ relene3,     # Relative energy  STATE 2 DGD
                    0,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -777,32 +815,32 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1629,      # C4'
                    0.1176,      # H4'
                   -0.3691,      # O4'
-                  -0.1125,      # C1'
-                   0.2146,      # H1'
-                   0.0046,      # N9
-                   0.0330,      # C8
-                   0.1611,      # H8
-                  -0.5631,      # N7
-                   0.0216,      # C5
-                   0.7451,      # C6
-                  -0.6952,      # 06
-                  -0.8645,      # N1
+                   0.0358,      # C1'
+                   0.1746,      # H1'
+                  -0.0507,      # N9
+                   0.0779,      # C8
+                   0.1516,      # H8
+                  -0.6122,      # N7
+                   0.0806,      # C5
+                   0.7105,      # C6
+                  -0.7253,      # 06
+                  -0.8527,      # N1
                    0.0000,      # H1
-                   0.9199,      # C2
-                  -0.9469,      # N2
-                   0.3545,      # H21
-                   0.3545,      # H22
-                  -0.8348,      # N3
-                   0.3297,      # C4
+                   0.9561,      # C2
+                  -0.9903,      # N2
+                   0.3837,      # H21
+                   0.3837,      # H22
+                  -0.8545,      # N3
+                   0.2528,      # C4
                    0.0713,      # C3'
                    0.0985,      # H3'
                   -0.0854,      # C2'
                    0.0718,      # H2'
                    0.0718,      # H2'
                   -0.5232,      # O3'
-                   0.0000 ] ]   # H7
+                   0.0000 ] ]   # H6
 
-   if residue == "DT":
+   if residue == "DTE":
       pKa = 9.7
 
       if igb == 5:
@@ -845,9 +883,46 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.0854,      # C2'
                    0.0718,      # H2'
                    0.0718,      # H2'
-                  -0.5232 ] ,   # O3'
+                  -0.5232,      # O3'
+                   0.0000 ] ,   # H4
 
-                 [ relene,      # Relative energy  STATE 1 DDT
+                 [ relene,      # Relative energy  STATE 1 DTE
+                   1,           # Relative protonation
+                   1.1659,      # P 
+                  -0.7761,      # O1P
+                  -0.7761,      # O2P
+                  -0.4954,      # O5'
+                  -0.0069,      # C5'
+                   0.0754,      # H5'
+                   0.0754,      # H5'
+                   0.1629,      # C4'
+                   0.1176,      # H4'
+                  -0.3691,      # O4'
+                   0.0680,      # C1'
+                   0.1804,      # H1'
+                  -0.1617,      # N1
+                  -0.1239,      # C6
+                   0.2633,      # H6
+                  -0.1061,      # C5
+                  -0.2846,      # C7
+                   0.0962,      # H71
+                   0.0962,      # H72
+                   0.0962,      # H73
+                   0.7106,      # C4
+                  -0.6357,      # O4
+                  -0.7938,      # N3
+                   0.0000,      # H3
+                   0.8971,      # C2
+                  -0.6515,      # O2
+                   0.0713,      # C3'
+                   0.0985,      # H3'
+                  -0.0854,      # C2'
+                   0.0718,      # H2'
+                   0.0718,      # H2'
+                  -0.5232,      # O3'
+                   0.4709 ] ,   # H4
+
+                 [ relene,      # Relative energy  STATE 2 DTD
                    0,           # Relative protonation
                    1.1659,      # P 
                   -0.7761,      # O1P
@@ -859,30 +934,31 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1629,      # C4'
                    0.1176,      # H4'
                   -0.3691,      # O4'
-                  -0.0689,      # C1'
-                   0.1595,      # H1'
-                  -0.0523,      # N1
-                  -0.2190,      # C6
-                   0.1737,      # H6
-                  -0.0940,      # C5
-                  -0.2575,      # C7
-                   0.0706,      # H71
-                   0.0742,      # H72
-                   0.0476,      # H73
-                   0.8340,      # C4
-                  -0.7116,      # O4
-                  -0.9026,      # N3
+                   0.0680,      # C1'
+                   0.1804,      # H1'
+                  -0.2861,      # N1
+                  -0.1874,      # C6
+                   0.2251,      # H6
+                  -0.1092,      # C5
+                  -0.2602,      # C7
+                   0.0589,      # H71
+                   0.0589,      # H72
+                   0.0589,      # H73
+                   0.8263,      # C4
+                  -0.7396,      # O4
+                  -0.9169,      # N3
                    0.0000,      # H3
-                   0.7883,      # C2
-                  -0.7204,      # O2
+                   0.9167,      # C2
+                  -0.7722,      # O2
                    0.0713,      # C3'
                    0.0985,      # H3'
                   -0.0854,      # C2'
                    0.0718,      # H2'
                    0.0718,      # H2'
-                  -0.5232 ] ]   # O3'
+                  -0.5232,      # O3'
+                   0.0000 ] ]   # H4
 
-   if residue == "PRA":
+   if residue == "AP":
       pKa = 3.9
 
       if igb == 5:
@@ -892,8 +968,8 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       else:
          relene = 0.
 
-      return   [ [ 0,           # Relative energy STATE 0 RA
-                   0,           # Relative protonation
+      return   [ [ 0,           # Relative energy STATE 0 A
+                   1,           # Relative protonation
                    1.1662,      # P 
                   -0.7760,      # O1P
                   -0.7760,      # O2P
@@ -929,8 +1005,45 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.5246,      # O3' 
                    0.0000 ] ,   # H1
 
-                 [ relene,      # Relative energy  STATE 1 PRA
+                 [ 0,           # Relative energy STATE 1 AE
                    1,           # Relative protonation
+                   1.1662,      # P 
+                  -0.7760,      # O1P
+                  -0.7760,      # O2P
+                  -0.4989,      # O5'
+                   0.0558,      # C5'
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4'
+                   0.1174,      # H4'
+                  -0.3548,      # O4'
+                   0.0394,      # C1' 
+                   0.2007,      # H1' 
+                  -0.0008,      # N9
+                   0.1214,      # C8
+                   0.1704,      # H8
+                  -0.5566,      # N7
+                   0.1676,      # C5
+                   0.5473,      # C6
+                  -0.7498,      # N6
+                   0.3343,      # H61 
+                   0.0000,      # H62 
+                  -0.6718,      # N1
+                   0.4779,      # C2
+                   0.0827,      # H2
+                  -0.6251,      # N3
+                   0.2289,      # C4
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.3495 ] ,   # H1
+
+                 [ relene,      # Relative energy  STATE 2 AP
+                   2,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
                   -0.7760,      # O2P 
@@ -941,22 +1054,22 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1065,      # C4' 
                    0.1174,      # H4' 
                   -0.3548,      # O4' 
-                   0.1348,      # C1' 
-                   0.1715,      # H1' 
-                  -0.0168,      # N9
-                   0.1724,      # C8
-                   0.2119,      # H8
-                  -0.5546,      # N7
-                   0.1609,      # C5
-                   0.4241,      # C6
-                  -0.8040,      # N6
-                   0.4401,      # H61 
-                   0.4401,      # H62 
-                  -0.3322,      # N1
-                   0.2442,      # C2
-                   0.1792,      # H2
-                  -0.4921,      # N3
-                   0.3811,      # C4
+                   0.0394,      # C1' 
+                   0.2007,      # H1' 
+                   0.0961,      # N9
+                   0.2011,      # C8
+                   0.1965,      # H8
+                  -0.5569,      # N7
+                   0.1136,      # C5
+                   0.5845,      # C6
+                  -0.8152,      # N6
+                   0.4403,      # H61 
+                   0.4403,      # H62 
+                  -0.5776,      # N1
+                   0.4435,      # C2
+                   0.1307,      # H2
+                  -0.5201,      # N3
+                   0.2681,      # C4
                    0.2022,      # C3' 
                    0.0615,      # H3' 
                    0.0670,      # C2' 
@@ -964,9 +1077,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246,      # O3' 
-                   0.3554 ] ]   # H1
+                   0.4310 ] ]   # H1
 
-   if residue == "PRC":
+   if residue == "CP":
       pKa = 3.9
 
       if igb == 5:
@@ -976,8 +1089,8 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       else:
          relene = 0.
 
-      return   [ [ 0,           # Relative energy STATE 0 RA
-                   0,           # Relative protonation
+      return   [ [ 0,           # Relative energy STATE 0 C
+                   1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
                   -0.7760,      # O2P 
@@ -1011,7 +1124,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.5246,      # O3' 
                    0.0000 ] ,   # H3
 
-                 [ relene,      # Relative energy STATE 0 PRA
+                 [ 0,           # Relative energy STATE 1 CE
                    1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1023,20 +1136,20 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1065,      # C4' 
                    0.1174,      # H4' 
                   -0.3548,      # O4' 
-                   0.2637,      # C1' 
-                   0.1075,      # H1' 
-                   0.0676,      # N1
-                  -0.0924,      # C6
-                   0.2894,      # H6
-                  -0.3239,      # C5
-                   0.2096,      # H5
-                   0.4888,      # C4
-                  -0.8518,      # N4
-                   0.4584,      # H41 
-                   0.4584,      # H42 
-                  -0.2408,      # N3
-                   0.4507,      # C2
-                  -0.5003,      # O2
+                   0.0066,      # C1' 
+                   0.2029,      # H1' 
+                   0.0615,      # N1
+                  -0.1814,      # C6
+                   0.2097,      # H6
+                  -0.2701,      # C5
+                   0.1741,      # H5
+                   0.5873,      # C4
+                  -0.7474,      # N4
+                   0.3466,      # H41 
+                   0.0000,      # H42 
+                  -0.6107,      # N3
+                   0.6072,      # C2
+                  -0.5979,      # O2
                    0.2022,      # C3' 
                    0.0615,      # H3' 
                    0.0670,      # C2' 
@@ -1044,9 +1157,44 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246,      # O3' 
-                   0.3311 ] ]   # H3
+                   0.3276 ] ,   # H3
 
-   if residue == "PRG":
+                 [ relene,      # Relative energy STATE 2 CP
+                   2,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0066,      # C1' 
+                   0.2029,      # H1' 
+                   0.1954,      # N1
+                   0.0028,      # C6
+                   0.2366,      # H6
+                  -0.4218,      # C5
+                   0.2253,      # H5
+                   0.6466,      # C4
+                  -0.8363,      # N4
+                   0.4518,      # H41 
+                   0.4518,      # H42 
+                  -0.4871,      # N3
+                   0.5039,      # C2
+                  -0.4753,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2' 
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.4128 ] ]   # H3
+
+   if residue == "GE":
       pKa1 = 2.1
       pKa2 = 9.2
 
@@ -1063,7 +1211,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
          relene2 = 0.00
          relene3 = 0.00
 
-      return   [ [ 0,           # Relative energy STATE 0 RG
+      return   [ [ 0,           # Relative energy STATE 0 G
                    1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1099,9 +1247,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246,      # O3' 
-                   0.0000 ] ,   # H7
+                   0.0000 ] ,   # H6
 
-                 [ relene1,     # Relative energy STATE 1 RG'
+                 [ 0,           # Relative energy STATE 1 GE
                    1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1113,23 +1261,23 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1065,      # C4' 
                    0.1174,      # H4' 
                   -0.3548,      # O4' 
-                   0.0116,      # C1' 
-                   0.1784,      # H1' 
-                   0.0919,      # N9
-                   0.0623,      # C8
-                   0.2250,      # H8
-                  -0.3772,      # N7
-                  -0.0738,      # C5
-                   0.7616,      # C6
-                  -0.6575,      # O6
-                  -0.7848,      # N1
+                   0.0191,      # C1' 
+                   0.2006,      # H1' 
+                   0.0443,      # N9
+                   0.1481,      # C8
+                   0.1653,      # H8
+                  -0.5668,      # N7
+                   0.1309,      # C5
+                   0.5780,      # C6
+                  -0.6026,      # O6
+                  -0.7803,      # N1
                    0.0000,      # H1
-                   0.8684,      # C2
-                  -0.9776,      # N2
-                   0.4068,      # H21 
-                   0.4068,      # H22 
-                  -0.6261,      # N3
-                   0.1959,      # C4
+                   1.0052,      # C2
+                  -1.0220,      # N2
+                   0.4392,      # H21 
+                   0.4392,      # H22 
+                  -0.7255,      # N3
+                   0.1844,      # C4
                    0.2022,      # C3' 
                    0.0615,      # H3' 
                    0.0670,      # C2' 
@@ -1137,47 +1285,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246,      # O3' 
-                   0.4043 ] ,   # H7
+                   0.4589 ] ,   # H6
 
-                 [ relene2,     # Relative energy STATE 2 PRG
-                   2,           # Relative protonation
-                   1.1662,      # P
-                  -0.7760,      # O1P
-                  -0.7760,      # O2P
-                  -0.4989,      # O5'
-                   0.0558,      # C5'
-                   0.0679,      # H5'1
-                   0.0679,      # H5'2
-                   0.1065,      # C4'
-                   0.1174,      # H4'
-                  -0.3548,      # O4'
-                   0.2574,      # C1'
-                   0.1120,      # H1'
-                   0.0524,      # N9
-                   0.0169,      # C8
-                   0.2812,      # H8
-                  -0.3098,      # N7
-                   0.0253,      # C5
-                   0.4689,      # C6
-                  -0.4801,      # O6
-                  -0.3683,      # N1
-                   0.3389,      # H1
-                   0.6529,      # C2
-                  -0.9020,      # N2
-                   0.4465,      # H21 
-                   0.4465,      # H22 
-                  -0.5339,      # N3
-                   0.2005,      # C4
-                   0.2022,      # C3'
-                   0.0615,      # H3'
-                   0.0670,      # C2'
-                   0.0972,      # H2'1
-                  -0.6139,      # O2'
-                   0.4186,      # HO'2
-                  -0.5246,      # O3'
-                   0.4107 ] ,   # H7
-
-                 [ relene3,     # Relative energy STATE 3 DRG
+                 [ relene1,     # Relative energy STATE 2 GD
                    0,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1189,23 +1299,23 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1065,      # C4' 
                    0.1174,      # H4' 
                   -0.3548,      # O4' 
-                  -0.2296,      # C1' 
-                   0.2269,      # H1' 
-                   0.0467,      # N9
-                   0.1604,      # C8
-                   0.1079,      # H8
-                  -0.6073,      # N7
-                   0.0834,      # C5
-                   0.7356,      # C6
-                  -0.6833,      # O6
-                  -0.8027,      # N1
+                   0.0191,      # C1' 
+                   0.2006,      # H1' 
+                  -0.0623,      # N9
+                   0.1479,      # C8
+                   0.1137,      # H8
+                  -0.6127,      # N7
+                   0.0488,      # C5
+                   0.7137,      # C6
+                  -0.7191,      # O6
+                  -0.8557,      # N1
                    0.0000,      # H1
-                   0.7903,      # C2
-                  -0.9414,      # N2
-                   0.3628,      # H21 
-                   0.3628,      # H22 
-                  -0.6429,      # N3
-                   0.1464,      # C4
+                   0.9976,      # C2
+                  -1.0387,      # N2
+                   0.3969,      # H21 
+                   0.3969,      # H22 
+                  -0.8299,      # N3
+                   0.1992,      # C4
                    0.2022,      # C3' 
                    0.0615,      # H3' 
                    0.0670,      # C2' 
@@ -1213,9 +1323,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246,      # O3' 
-                   0.0000 ] ]   # H7
+                   0.0000 ] ]   # H6
 
-   if residue == "RU":
+   if residue == "UE":
       pKa = 9.3
 
       if igb == 5:
@@ -1225,7 +1335,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       else:
          relene = 0.00
 
-      return   [ [ 0,           # Relative energy STATE 0 RU
+      return   [ [ 0,           # Relative energy STATE 0 U
                    1,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1256,9 +1366,44 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.0972,      # H2'1
                   -0.6139,      # O2'
                    0.4186,      # HO'2
-                  -0.5246 ] ,   # O3' 
+                  -0.5246,      # O3' 
+                   0.0000 ] ,   # H4
 
-                 [ relene,      # Relative energy STATE 1 DRU
+                 [ 0,           # Relative energy STATE 1 UE
+                   1,           # Relative protonation
+                   1.1662,      # P
+                  -0.7760,      # O1P 
+                  -0.7760,      # O2P 
+                  -0.4989,      # O5' 
+                   0.0558,      # C5' 
+                   0.0679,      # H5'1
+                   0.0679,      # H5'2
+                   0.1065,      # C4' 
+                   0.1174,      # H4' 
+                  -0.3548,      # O4' 
+                   0.0674,      # C1' 
+                   0.1824,      # H1' 
+                  -0.1337,      # N1
+                   0.0655,      # C6
+                   0.1963,      # H6
+                  -0.5715,      # C5
+                   0.2301,      # H5
+                   0.8549,      # C4
+                  -0.6609,      # O4
+                  -0.8145,      # N3
+                   0.0000,      # H3
+                   0.8438,      # C2
+                  -0.6155,      # O2
+                   0.2022,      # C3' 
+                   0.0615,      # H3' 
+                   0.0670,      # C2' 
+                   0.0972,      # H2'1
+                  -0.6139,      # O2'
+                   0.4186,      # HO'2
+                  -0.5246,      # O3' 
+                   0.4717 ] ,   # H4 
+
+                 [ relene,      # Relative energy STATE 2 UD
                    0,           # Relative protonation
                    1.1662,      # P
                   -0.7760,      # O1P 
@@ -1270,25 +1415,26 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.1065,      # C4' 
                    0.1174,      # H4' 
                   -0.3548,      # O4' 
-                  -0.1497,      # C1' 
-                   0.1724,      # H1' 
-                  -0.0092,      # N1
-                  -0.0919,      # C6
-                   0.1707,      # H6
-                  -0.5518,      # C5
-                   0.1711,      # H5
-                   0.9793,      # C4
-                  -0.7365,      # O4
-                  -0.9169,      # N3
+                   0.0674,      # C1' 
+                   0.1824,      # H1' 
+                  -0.2733,      # N1
+                   0.0264,      # C6
+                   0.1501,      # H6
+                  -0.5820,      # C5
+                   0.1560,      # H5
+                   0.9762,      # C4
+                  -0.7808,      # O4
+                  -0.9327,      # N3
                    0.0000,      # H3
-                   0.8510,      # C2
-                  -0.7725,      # O2
+                   0.8698,      # C2
+                  -0.7435,      # O2
                    0.2022,      # C3' 
                    0.0615,      # H3' 
                    0.0670,      # C2'
                    0.0972,      # H2'1
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
-                  -0.5246 ] ]   # O3' 
+                  -0.5246,      # O3' 
+                   0.0000 ] ]   # H4
 
    return -1

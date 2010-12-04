@@ -4,7 +4,10 @@
 class PeriodicTable:
    """ Contains all of the elements in the periodic table and dictionaries that
        store all of the data found in the periodic table for that element, indexed
-       by the element's symbol """
+       by the element's symbol. For consistency with AMBER, a fictitious element
+       'EP' is added to all of the arrays that is just an Extra Point, with no mass
+       or any other meaningful attribute. It's just a container to put an extra 
+       charge """
 
    # Data descriptions:
    #
@@ -37,9 +40,9 @@ class PeriodicTable:
                  'Bk' : 97, 'Cf' : 98, 'Es' : 99, 'Fm' :100, 'Md' :101, 'No' :102,
                  'Lr' :103, 'Rf' :104, 'Db' :105, 'Sg' :106, 'Bh' :107, 'Hs' :108,
                  'Mt' :109, 'Ds' :110, 'Rg' :111, 'Cn' :112, 'Uut':113, 'Uuq':114,
-                 'Uup':115, 'Uuh':116, 'Uus':117, 'Uuo':118 }
+                 'Uup':115, 'Uuh':116, 'Uus':117, 'Uuo':118, 'EP' : 0 }
 
-   Element = [ '', # fill the 0 slot with nothing
+   Element = [ 'EP',
                'H' , 'He', 'Li', 'Be', 'B' , 'C' , 'N' , 'O' , 'F' , 'Ne', 'Na', 'Mg',
                'Al', 'Si', 'P' , 'S' , 'Cl', 'Ar', 'K' , 'Ca', 'Sc', 'Ti', 'V' , 'Cr',
                'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
@@ -90,7 +93,7 @@ class PeriodicTable:
             'Mt' : 268.     , 'Ds' : 281.     , 'Rg' : 272.     , 
             'Cn' : 285.     , 'Uut': 284.     , 'Uuq': 289.     ,
             'Uup': 288.     , 'Uuh': 292.     , 'Uus': 291.     , 
-            'Uuo': 294       }
+            'Uuo': 294.     , 'EP' : 0.000000 }
 
    Name = { 'H'  : 'Hydrogen'     , 'He' : 'Helium'       , 'Li' : 'Lithium'      , 
             'Be' : 'Beryllium'    , 'B'  : 'Boron'        , 'C'  : 'Carbon'       , 
@@ -131,7 +134,7 @@ class PeriodicTable:
             'Mt' : 'Meitnerium'   , 'Ds' : 'Darmstadtium' , 'Rg' : 'Roentgenium'  , 
             'Cn' : 'Copernicium'  , 'Uut': 'Ununtrium'    , 'Uuq': 'Ununquadium'  ,
             'Uup': 'Ununpentium'  , 'Uuh': 'Ununhexium'   , 'Uus': 'Ununseptium'  , 
-            'Uuo': 'Ununoctium'    }
+            'Uuo': 'Ununoctium'   , 'EP' : 'Extra Point' }
 
    OriginName = { 'H'  : 'Hydrogen'     , 'He' : 'Helium'       , 'Li' : 'Lithium'      , 
                   'Be' : 'Beryllium'    , 'B'  : 'Boron'        , 'C'  : 'Carbon'       , 
@@ -172,7 +175,7 @@ class PeriodicTable:
                   'Mt' : 'Meitnerium'   , 'Ds' : 'Darmstadtium' , 'Rg' : 'Roentgenium'  , 
                   'Cn' : 'Copernicium'  , 'Uut': 'Ununtrium'    , 'Uuq': 'Ununquadium'  ,
                   'Uup': 'Ununpentium'  , 'Uuh': 'Ununhexium'   , 'Uus': 'Ununseptium'  , 
-                  'Uuo': 'Ununoctium'    }
+                  'Uuo': 'Ununoctium'   , 'EP' : 'Extra Point'  }
 
    Phase = { 'H'  : 'Gas'          , 'He' : 'Gas'          , 'Li' : 'Solid'        , 
              'Be' : 'Solid'        , 'B'  : 'Solid'        , 'C'  : 'Solid'        , 
@@ -208,9 +211,9 @@ class PeriodicTable:
              'Pu' : 'Solid'        , 'Am' : 'Solid'        , 'Cm' : 'Solid'        ,
              'Bk' : 'Solid'        , 'Cf' : 'Solid'        , 'Es' : 'Solid'        , 
              'Fm' : 'Solid'        , 'Md' : 'Solid'        , 'No' : 'Solid'        ,
-             'Lr' : 'Solid'        , 'Rf' : 'Solid'        , 'Db' : 'Solid'        , 
-             'Sg' : 'Solid'        , 'Bh' : 'Solid'        , 'Hs' : 'Solid'        ,
-             'Mt' : 'Solid'        , 'Ds' : 'Solid'        , 'Rg' : 'Solid'        , 
-             'Cn' : 'Solid'        , 'Uut': 'Solid'        , 'Uuq': 'Solid'        ,
-             'Uup': 'Solid'        , 'Uuh': 'Solid'        , 'Uus': 'Solid'        ,
-             'Uuo': 'Solid'        }
+             'Lr' : 'Solid'        , 'Rf' : 'Unknown'      , 'Db' : 'Unknown'      , 
+             'Sg' : 'Unknown'      , 'Bh' : 'Unknown'      , 'Hs' : 'Unknown'      ,
+             'Mt' : 'Unknown'      , 'Ds' : 'Unknown'      , 'Rg' : 'Unknown'      , 
+             'Cn' : 'Unknown'      , 'Uut': 'Unknown'      , 'Uuq': 'Unknown'      ,
+             'Uup': 'Unknown'      , 'Uuh': 'Unknown'      , 'Uus': 'Unknown'      ,
+             'Uuo': 'Unknown'      , 'EP' : 'N/A' }

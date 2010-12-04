@@ -5,7 +5,7 @@
 # prmtop object. It will also extract parameters and write a frcmod.   #
 # See readparm.README for more detailed description                    #
 #                                                                      #
-#          Last updated: 10/18/2010                                    #
+#          Last updated: 12/04/2010                                    #
 #                                                                      #
 ########################################################################
 
@@ -35,17 +35,11 @@ try: # fsum is only part of python 2.6 or later, I think, so add in a substitute
    from math import fsum
 except ImportError:
    def fsum(array):
-      sum = 0
-      try:
-         for element in range(len(array)):
-            sum += float(array[element])
-         return sum
-      except ValueError:
-         return -1
+      return sum(array)
 
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223
-POINTER_VARIABLES = """
+AMBER_POINTERS = """
 NATOM  : total number of atoms 
 NTYPES : total number of distinct atom types
 NBONH  : number of bonds containing hydrogen
@@ -56,7 +50,8 @@ NPHIH  : number of dihedrals containing hydrogen
 MPHIA  : number of dihedrals not containing hydrogen
 NHPARM : currently not used
 NPARM  : currently not used
-NEXT   : number of excluded atoms NRES   : number of residues
+NEXT   : number of excluded atoms 
+NRES   : number of residues
 NBONA  : MBONA + number of constraint bonds
 NTHETA : MTHETA + number of constraint angles
 NPHIA  : MPHIA + number of constraint dihedrals
@@ -75,11 +70,48 @@ MDPER  : number of dihedrals with atoms completely in perturbed groups
 IFBOX  : set to 1 if standard periodic box, 2 when truncated octahedral
 NMXRS  : number of atoms in the largest residue
 IFCAP  : set to 1 if the CAP option from edit was specified
+NUMEXTRA: number of extra points
+NCOPY  : Number of copies for advanded simulations
 """
+# These global variables provide a more natural way of accessing
+# the various pointers.  Most useful if they're loaded into the
+# top-level namespace.
+NATOM  = 0
+NTYPES = 1
+NBONH  = 2
+MBONA  = 3
+NTHETH = 4
+MTHETA = 5
+NPHIH  = 6
+MPHIA  = 7
+NHPARM = 8
+NPARM  = 9
+NEXT   = 10
+NRES   = 11
+NBONA  = 12
+NTHETA = 13
+NPHIA  = 14
+NUMBND = 15
+NUMANG = 16
+NPTRA  = 17
+NATYP  = 18
+NPHB   = 19
+IFPERT = 20
+NBPER  = 21
+NGPER  = 22
+NDPER  = 23
+MBPER  = 24
+MGPER  = 25
+MDPER  = 26
+IFBOX  = 27
+NMXRS  = 28
+IFCAP  = 29
+NUMEXTRA= 30
+NCOPY  = 31
 
 # ++++  Functions associated with readparm objects...  ++++++++++++++++++++++++++++
 
-def parseFormat(format_string):  # parse a format statement and send back details
+def _parseFormat(format_string):  # parse a format statement and send back details
    """ Parses the fortran format statement. Recognizes ints, exponents, and strings.
        Returns the number of items/line, size of each item, and type of data """
 
@@ -130,36 +162,38 @@ class amberParm:
       self.valid = self.exists # if it exists, fill the pointers
       if self.exists:
          try: # try to load all of the pointers into the 
-            self.pointers["NATOM"] = self.parm_data["POINTERS"][0]
-            self.pointers["NTYPES"] = self.parm_data["POINTERS"][1]
-            self.pointers["NBONH"] = self.parm_data["POINTERS"][2]
-            self.pointers["MBONA"] = self.parm_data["POINTERS"][3]
-            self.pointers["NTHETH"] = self.parm_data["POINTERS"][4]
-            self.pointers["MTHETA"] = self.parm_data["POINTERS"][5]
-            self.pointers["NPHIH"] = self.parm_data["POINTERS"][6]
-            self.pointers["MPHIA"] = self.parm_data["POINTERS"][7]
-            self.pointers["NHPARM"] = self.parm_data["POINTERS"][8]
-            self.pointers["NPARM"] = self.parm_data["POINTERS"][9]
-            self.pointers["NEXT"] = self.parm_data["POINTERS"][10]
-            self.pointers["NRES"] = self.parm_data["POINTERS"][11]
-            self.pointers["NBONA"] = self.parm_data["POINTERS"][12]
-            self.pointers["NTHETA"] = self.parm_data["POINTERS"][13]
-            self.pointers["NPHIA"] = self.parm_data["POINTERS"][14]
-            self.pointers["NUMBND"] = self.parm_data["POINTERS"][15]
-            self.pointers["NUMANG"] = self.parm_data["POINTERS"][16]
-            self.pointers["NPTRA"] = self.parm_data["POINTERS"][17]
-            self.pointers["NATYP"] = self.parm_data["POINTERS"][18]
-            self.pointers["NPHB"] = self.parm_data["POINTERS"][19]
-            self.pointers["IFPERT"] = self.parm_data["POINTERS"][20]
-            self.pointers["NBPER"] = self.parm_data["POINTERS"][21]
-            self.pointers["NGPER"] = self.parm_data["POINTERS"][22]
-            self.pointers["NDPER"] = self.parm_data["POINTERS"][23]
-            self.pointers["MBPER"] = self.parm_data["POINTERS"][24]
-            self.pointers["MGPER"] = self.parm_data["POINTERS"][25]
-            self.pointers["MDPER"] = self.parm_data["POINTERS"][26]
-            self.pointers["IFBOX"] = self.parm_data["POINTERS"][27]
-            self.pointers["NMXRS"] = self.parm_data["POINTERS"][28]
-            self.pointers["IFCAP"] = self.parm_data["POINTERS"][29]
+            self.pointers["NATOM"] = self.parm_data["POINTERS"][NATOM]
+            self.pointers["NTYPES"] = self.parm_data["POINTERS"][NTYPES]
+            self.pointers["NBONH"] = self.parm_data["POINTERS"][NBONH]
+            self.pointers["MBONA"] = self.parm_data["POINTERS"][MBONA]
+            self.pointers["NTHETH"] = self.parm_data["POINTERS"][NTHETH]
+            self.pointers["MTHETA"] = self.parm_data["POINTERS"][MTHETA]
+            self.pointers["NPHIH"] = self.parm_data["POINTERS"][NPHIH]
+            self.pointers["MPHIA"] = self.parm_data["POINTERS"][MPHIA]
+            self.pointers["NHPARM"] = self.parm_data["POINTERS"][NHPARM]
+            self.pointers["NPARM"] = self.parm_data["POINTERS"][NPARM]
+            self.pointers["NEXT"] = self.parm_data["POINTERS"][NEXT]
+            self.pointers["NRES"] = self.parm_data["POINTERS"][NRES]
+            self.pointers["NBONA"] = self.parm_data["POINTERS"][NBONA]
+            self.pointers["NTHETA"] = self.parm_data["POINTERS"][NTHETA]
+            self.pointers["NPHIA"] = self.parm_data["POINTERS"][NPHIA]
+            self.pointers["NUMBND"] = self.parm_data["POINTERS"][NUMBND]
+            self.pointers["NUMANG"] = self.parm_data["POINTERS"][NUMANG]
+            self.pointers["NPTRA"] = self.parm_data["POINTERS"][NPTRA]
+            self.pointers["NATYP"] = self.parm_data["POINTERS"][NATYP]
+            self.pointers["NPHB"] = self.parm_data["POINTERS"][NPHB]
+            self.pointers["IFPERT"] = self.parm_data["POINTERS"][IFPERT]
+            self.pointers["NBPER"] = self.parm_data["POINTERS"][NBPER]
+            self.pointers["NGPER"] = self.parm_data["POINTERS"][NGPER]
+            self.pointers["NDPER"] = self.parm_data["POINTERS"][NDPER]
+            self.pointers["MBPER"] = self.parm_data["POINTERS"][MBPER]
+            self.pointers["MGPER"] = self.parm_data["POINTERS"][MGPER]
+            self.pointers["MDPER"] = self.parm_data["POINTERS"][MDPER]
+            self.pointers["IFBOX"] = self.parm_data["POINTERS"][IFBOX]
+            self.pointers["NMXRS"] = self.parm_data["POINTERS"][NMXRS]
+            self.pointers["IFCAP"] = self.parm_data["POINTERS"][IFCAP]
+            self.pointers["NUMEXTRA"] = self.parm_data["POINTERS"][NUMEXTRA]
+            self.pointers["NCOPY"] = self.parm_data["POINTERS"][NCOPY]
             self.valid = True
          except KeyError:
             print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
@@ -168,7 +202,7 @@ class amberParm:
             print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
             self.valid = False
 
-      if self.valid:
+      if self.valid and 'LENNARD_JONES_ACOEF' in self.parm_data.keys() and 'LENNARD_JONES_BCOEF' in self.parm_data.keys():
          try:
             self.fill_LJ() # fill LJ arrays with LJ data for easy manipulations
          except:
@@ -186,12 +220,8 @@ class amberParm:
       """ Returns the value of the given pointer, and converts to upper-case so it's case-insensitive.
           A pointer that doesn't exist is met with an error message and a list of valid pointers """
 
-      global POINTER_VARIABLES
-      try:
-         return self.pointers[pointer.upper()]
-      except KeyError:
-         print >> stderr, 'No pointer %s in prmtop. Pointers are: ' % pointer.upper() + POINTER_VARIABLES
-         return -1
+      global AMBER_POINTERS
+      return self.pointers[pointer.upper()]
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -238,7 +268,7 @@ class amberParm:
 
          elif prmlines[i][0:7] == '%FORMAT':
             self.formats[current_flag] = prmlines[i][8:len(prmlines[i].strip())-1]
-            number_items_perline, size_item, dat_type = parseFormat(self.formats[current_flag])
+            number_items_perline, size_item, dat_type = _parseFormat(self.formats[current_flag])
             gathering_data = True
 
          elif gathering_data:
@@ -302,7 +332,7 @@ class amberParm:
          flag = self.flag_list[i]
          new_prm.write('%%FLAG %s\n' % flag)
          new_prm.write('%%FORMAT(%s)\n' % self.formats[flag])
-         number_items_perline, size_item, dat_type = parseFormat(self.formats[flag])
+         number_items_perline, size_item, dat_type = _parseFormat(self.formats[flag])
          if dat_type == 'dec':
             decnum = int(self.formats[flag].split('E')[1].split('.')[1])
          line = ''

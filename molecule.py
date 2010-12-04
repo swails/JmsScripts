@@ -130,6 +130,8 @@ class AmberMolecule:
    #  BoxInfo     :  Box information (sizes, angles) if present
    #
    # External functions:
+   #
+   #  ToMolecule  :  returns a molecule object of the prmtop in the system
 
 #-------------------------------------------
 
@@ -329,3 +331,5 @@ class AmberMolecule:
       return elements
 
 #-------------------------------------------
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

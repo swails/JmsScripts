@@ -17,13 +17,13 @@ file = open(sys.argv[1],'r')
 wfile = open('%s.%s' % (sys.argv[1], fileno), 'w')
 
 for line in file:
-   if line.strip() == "ENDMDL":
+   if line.strip() == "ENDMDL" or line.strip() == "END":
       wfile.close()
       fileno += 1
       wfile = open('%s.%s' % (sys.argv[1], fileno), 'w')
       continue
    elif not "MODEL" in line:
-      wfile.write(line)
+      wfile.write(line.replace('RU',' U').replace('RG',' G').replace('RC',' C').replace('RA',' A'))
 
 file.close()
 wfile.close()

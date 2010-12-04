@@ -80,6 +80,8 @@ IFCAP  : set to 1 if the CAP option from edit was specified
 # ++++  Functions associated with readparm objects...  ++++++++++++++++++++++++++++
 
 def parseFormat(format_string):  # parse a format statement and send back details
+   """ Parses the fortran format statement. Recognizes ints, exponents, and strings.
+       Returns the number of items/line, size of each item, and type of data """
 
    if 'a' in format_string: # this is a string
       format_parts = format_string.split('a')
@@ -101,10 +103,14 @@ def parseFormat(format_string):  # parse a format statement and send back detail
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class amberParm:
+   """ Amber Topology (parm7 format) class. Gives low, and some high, level access to
+       topology data. """
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def __init__(self, prm_name='prmtop'): # set up necessary variables
+      """ Instantiates an amberParm object from data in prm_name and establishes validity
+          based on presence of POINTERS and CHARGE sections """
 
       # instance variables:
       self.prm_name = prm_name # name of the prmtop file
@@ -171,11 +177,15 @@ class amberParm:
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def __str__(self):
+      """ Returns the name of the topology file as its string representation """
       return self.prm_name
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def ptr(self,pointer):
+      """ Returns the value of the given pointer, and converts to upper-case so it's case-insensitive.
+          A pointer that doesn't exist is met with an error message and a list of valid pointers """
+
       global POINTER_VARIABLES
       try:
          return self.pointers[pointer.upper()]
@@ -186,6 +196,7 @@ class amberParm:
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def rdparm(self):   # read topology file and load all data into arrays/dictionaries
+      """ Reads the topology file and loads data in parm_data array """
       # global variable(s)
       global AMBER_ELECTROSTATIC
 
@@ -254,6 +265,8 @@ class amberParm:
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def writeParm(self, name):   # write a new prmtop with the current prmtop data
+      """ Writes the current data in parm_data into a new topology file with a given name. Will not
+          overwrite the original prm_name unless the overwrite variable is set to True. """
       # global variable(s)
       global AMBER_ELECTROSTATIC
 
@@ -647,6 +660,8 @@ class amberParm:
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def fill_LJ(self):
+      """ Fills the LJ_radius, LJ_depth arrays and LJ_types dictionary with data from LENNARD_JONES_ACOEF
+          and LENNARD_JONES_BCOEF sections of the prmtop files, by undoing the canonical combining rules. """
       self.LJ_radius = []  # empty LJ_radii so it can be re-filled
       self.LJ_depth = []   # empty LJ_depths so it can be re-filled
       self.LJ_types = {}   # empty LJ_types so it can be re-filled
@@ -668,6 +683,8 @@ class amberParm:
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def recalculate_LJ(self):
+      """ Takes the values of the LJ_radius and LJ_depth arrays and recalculates the LENNARD_JONES_A/BCOEF
+          topology sections from the canonical combining rules. """
       from math import sqrt
 
       index = 0

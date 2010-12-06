@@ -36,6 +36,29 @@ class Molecule:
        atoms and residues, along with information about each atom. The idea
        is to be able to print them out in different formats. """
 
+   # Class variables:
+   #
+   #  BOND_CUTOFF : cut-off value in Angstroms for what is considered a bond
+   #                if no bonding information is found/given
+   #  BOND_DICT   : dictionary containing element-specific Bond cutoff lengths. The 2 elements
+   #                should be alphabetically-ordered in an array as the key. If no key is found
+   #                for the atom pair, then the BOND_CUTOFF will be used. The default will have only
+   #                those bonds common to Simulations
+   #  MAX_BONDS   : Dictionary that matches each element to the maximum number of atoms it can be 
+   #                bonded to. This is the typical value in biological systems. It is ignored if
+   #                bonding information is provided.
+   #  ignore_max_bond : logical for whether or not the maximum bond should be a fatal limit or
+   #                    quietly ignored
+
+   BOND_CUTOFF = 1.6  # bond cutoff is 1.6 angstroms
+   BOND_DICT   = { ('C' ,'H' ) : 1.2, ('C' ,'Cl') : 1.9, ('Br','C' ) : 2.0, ('C' ,'C' ) : 1.6, 
+                   ('C' ,'Fe') : 2.0, ('C' ,'N' ) : 1.6, ('C' ,'O' ) : 1.6, ('C' ,'S' ) : 1.9,
+                   ('O' ,'P' ) : 1.7, ('O' ,'S' ) : 1.6, ('H' ,'O' ) : 1.1, ('H', 'S' ) : 1.4,
+                   ('H' ,'N' ) : 1.1, ('N' ,'O' ) : 1.4, ('H' ,'P' ) : 1.5 }
+   MAX_BONDS   = { 'H'  : 1, 'Be' : 2, 'B'  : 3, 'C'  : 4, 'N'  : 3, 'O'  : 2, 'F'  : 1, 'Ne' : 0,
+                   'Na' : 1, 'Mg' : 2, 'Al' : 3, 'Si' : 4, 'P'  : 5, 'S'  : 6, 'Cl' : 1, 'Ar' : 0 }
+   ignore_max_bond = False
+
    # Instance variables:
    #
    #  SystemName  : Name of the system
@@ -52,7 +75,7 @@ class Molecule:
 
 #-------------------------------------------
 
-   def __init__(self, name, atoms, elements, coords, residues, res_ptr, bonds=[], mass=[], charge=[]):
+   def __init__(self, name, atoms, elements, coords, residues, res_ptr, bonds={}, mass=[], charge=[]):
       """ Instantiate molecule information:
             o  SystemName .. name of the system of this instance
             o  AtomNames .................... names of each atom
@@ -77,7 +100,7 @@ class Molecule:
 
 
       # fill the mass array if it's not already filled
-      if len(self.mass) == 0:
+      if len(self.Mass) == 0:
          self._fillMasses()
 
       # fill the charge array with zeroes if it's not already filled
@@ -88,6 +111,10 @@ class Molecule:
       # validate the molecule: _validate() changes self.valid to True if it's valid
       self.valid = False
       self._validate()
+
+      # Determine the connectivity if self.Bonds is an empty dictionary
+      if len(self.Bonds.keys()) == 0 and self.valid:
+         self._fillBond()
 
 #-------------------------------------------
 
@@ -114,6 +141,51 @@ class Molecule:
       self.Mass = []
       for i in range(len(natom)):
          self.Mass.append(PeriodicTable.Mass[self.Elements[i]])
+
+#-------------------------------------------
+
+   def _fillBond(self):
+      """ Determines the connectivity based on distance cut-off criteria. """
+      self.Bonds = {}
+
+      # this is an invalid molecule until proven otherwise
+      self.valid = False
+
+      # Loop from atoms i = 1 -- (natom-1) and compare distance with atoms from 
+      # j = i + 1 -- natom, so we don't double-count.
+      for i in range(1, self.natom):
+         self.Bonds[i] = []
+         i3 = i * 3 - 3
+         for j in range(i+1, self.natom+1):
+            try:
+               cutdist = Molecule.BOND_DICT[tuple(sorted(self.Elements[i], self.Elements[j]))]
+            except KeyError:
+               cutdist = Molecule.BOND_CUTOFF
+            cutdist *= cutdist
+            j3 = j * 3 - 3
+            xij = self.Coordinates(i3  ) - self.Coordinates(j3  )
+            yij = self.Coordinates(i3+1) - self.Coordinates(j3+1)
+            zij = self.Coordinates(i3+2) - self.Coordinates(j3+2)
+            dij = xij * xij + yij * yij + zij * zij
+            if dij <= cutdist:
+               self.Bonds[i].append(j)
+
+      # Now, if we are not allowing over-loading of bonds, check to make sure we haven't gone
+      # overboard. Check one atom at a time (have to check all of the atoms before it, since
+      # if atom 2 is bonded to atom 1, it only appears in the list for atom 1).
+      if not Molecule.ignore_max_bond:
+         for i in range(1, self.natom):
+            numbonds = len(self.Bonds[i])
+            for j in range(1,i):
+               if i in self.Bonds[j]:
+                  numbonds += 1
+            try:
+               if numbonds > Molecule.MAX_BONDS[self.Elements[i]]:
+                  raise MoleculeError('Too many bonds to %s (%d)' % (self.Elements[i], numbonds))
+            except KeyError:
+               pass
+      # we've made it through, so it must be OK.
+      self.valid = True
 
 #-------------------------------------------
 
@@ -176,7 +248,7 @@ class AmberMolecule:
       # if we make it through this subroutine, turn this to True
       self.valid = False
 
-      hasBox = self.Topology.ptr('ifbox') > 0
+      hasbox = self.Topology.ptr('ifbox') > 0
       natom = self.Topology.ptr('natom')
       natom2 = natom * 2
 
@@ -196,6 +268,11 @@ class AmberMolecule:
       done = False
 
       while line != '':
+         # skip over all blank lines
+         if len(line.strip()) == 0: 
+            line = crdfile.readline()
+            continue
+
          # add the 6 coordinates on this line to the self.Coordinates array
          if coords_complete < natom:
             self.Coordinates.append(float(line[ 0:12]))
@@ -235,6 +312,10 @@ class AmberMolecule:
          self.BoxInfo = [float(line[ 0:12]), float(line[12:24]), float(line[24:36]),
                          float(line[36:48]), float(line[48:60]), float(line[60:72])]
 
+         line = crdfile.readline() # read the next line
+      
+      crdfile.close()
+
       # we're out of the while loop now -- check to see if we caught 6 velocities that really
       # should be BoxInfo. We will try to fill BoxInfo only if hasbox is True. If it is false,
       # and we have 6 velocities and NOT natom=2, then we raise a MoleculeError. Require a box
@@ -255,7 +336,7 @@ class AmberMolecule:
       if len(self.Velocities) != 0 and len(self.Velocities) != natom * 3:
          raise MoleculeError('Not enough velocities found')
 
-      if hasbox and len(BoxInfo) == 0:
+      if hasbox and len(self.BoxInfo) == 0:
          raise MissingBox()
 
       self.valid = True
@@ -286,15 +367,15 @@ class AmberMolecule:
       # first take care of bonds including hydrogens
       for i in range(self.Topology.ptr('nbonh')):
          i3 = i * 3
-         atom1 = self.Topology.parm_data['BONDS_INC_HYDROGEN'][i3]
-         atom2 = self.Topology.parm_data['BONDS_INC_HYDROGEN'][i3 + 1]
+         atom1 = self.Topology.parm_data['BONDS_INC_HYDROGEN'][i3] / 3 + 1
+         atom2 = self.Topology.parm_data['BONDS_INC_HYDROGEN'][i3 + 1] / 3 + 1
          bonds[min(atom1,atom2)].append(max(atom1,atom2))
 
       # next take care of bonds not including hydrogens
       for i in range(self.Topology.ptr('nbona')):
          i3 = i * 3
-         atom1 = self.Topology.parm_data['BONDS_WITHOUT_HYDROGEN'][i3]
-         atom2 = self.Topology.parm_data['BONDS_WITHOUT_HYDROGEN'][i3 + 1]
+         atom1 = self.Topology.parm_data['BONDS_WITHOUT_HYDROGEN'][i3] / 3 + 1
+         atom2 = self.Topology.parm_data['BONDS_WITHOUT_HYDROGEN'][i3 + 1] / 3 + 1
          bonds[min(atom1,atom2)].append(max(atom1,atom2))
 
       # now sort all of the arrays for all of the atoms
@@ -322,7 +403,7 @@ class AmberMolecule:
 
       for i in range(self.Topology.ptr('natom')):
          for j in PeriodicTable.Mass.keys():
-            diff = abs(self.Topology.parm_data['MASS'] - PeriodicTable.Mass[j])
+            diff = abs(self.Topology.parm_data['MASS'][i] - PeriodicTable.Mass[j])
             if diff < min_diff:
                min_diff = diff
                diff_el = j

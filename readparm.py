@@ -199,8 +199,9 @@ class amberParm:
             print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
             self.valid = False
          except IndexError:
-            print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
-            self.valid = False
+            if (len(self.parm_data['POINTERS'])) < 30:
+               print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
+               self.valid = False
 
       if self.valid and 'LENNARD_JONES_ACOEF' in self.parm_data.keys() and 'LENNARD_JONES_BCOEF' in self.parm_data.keys():
          try:

@@ -248,9 +248,12 @@ if len(resnums) != 0:
 # otherwise, add in all matching residues
 
 else:
-   for x in range(len(prmtop_residues)):
+   for x in range(len(prmtop_residues)-1):
       if " %s " % prmtop_residues[x] in titrate_residues:
-         titrated_residue_nums.append(x+1)
+         check_data = cpin_data.getData(prmtop_residues[x], igb)
+         # make sure we aren't adding termini
+         if len(check_data[0])-2 == prmtop_object.parm_data['RESIDUE_POINTER'][x+1] - prmtop_object.parm_data['RESIDUE_POINTER'][x]:
+            titrated_residue_nums.append(x+1)
 
 # Check to make sure that at least one residue is going to be titrated
 

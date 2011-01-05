@@ -4,7 +4,7 @@
 # pmemd (or others). The program specification loads the appropriate   #
 # dictionaries with default values, etc. It can read and write mdins.  #
 #                                                                      #
-#          Last updated: 10/18/2010                                    #
+#          Last updated: 01/03/2011                                    #
 #                                                                      #
 ########################################################################
 
@@ -31,6 +31,7 @@
 from cntrl import cntrl
 from ewald import ewald
 from pb import pb
+from qmmm import qmmm
 from sys import stderr, stdout
 
 # =====================================================================================
@@ -56,6 +57,7 @@ class mdin:
       self.cntrl_obj = cntrl()      # object with cntrl namelist vars in a dictionary
       self.ewald_obj = ewald()      # object with ewald namelist vars in a dictionary
       self.pb_obj = pb()            # object with pb namelist vars in a dictionary
+      self.qmmm_obj = qmmm()        # object with qmmm namelist vars in a dictionary
       self.verbosity = 0            # verbosity level: 0 -- print nothing
                                     #                  1 -- print errors
                                     #                  2 -- print errors and warnings
@@ -67,6 +69,8 @@ class mdin:
       self.ewald_nml_defaults = {}  # dictionary with default ewald namelist vars
       self.pb_nml = {}              # dictionary with pb namelist vars
       self.pb_nml_defaults = {}     # dictionary with default pb namelist vars
+      self.qmmm_nml = {}            # dictionary with qmmm namelist vars
+      self.qmmm_nml_defaults = {}   # dictionary with default qmmm namelist vars
       self.valid_namelists = []     # array with valid namelists for each program
       self.title = 'mdin prepared by mdin.py'   # title for the mdin file
 
@@ -75,6 +79,7 @@ class mdin:
          self.cntrl_nml = self.cntrl_obj.sander
          self.ewald_nml = self.ewald_obj.sander
          self.pb_nml = self.pb_obj.sander
+         self.qmmm_nml = self.qmmm_obj.sander
          self.valid_namelists = ['cntrl','ewald','qmmm','pb']
       elif self.program == "sander.APBS":
          self.cntrl_nml = self.cntrl_obj.sander
@@ -91,6 +96,7 @@ class mdin:
       self.cntrl_nml_defaults = self.cntrl_nml.copy()
       self.ewald_nml_defaults = self.ewald_nml.copy()
       self.pb_nml_defaults = self.pb_nml.copy()
+      self.qmmm_nml_defaults = self.qmmm_nml.copy()
 
 # =====================================================================================
 
@@ -149,6 +155,24 @@ class mdin:
                has_been_printed = True
             line = addOn(line,'%s=%s, ' % (var, self.pb_nml[var]), file)
 
+      # flush any remaining items that haven't been printed to the mdin file
+      if len(line.strip()) != 0:
+         file.write(line + '\n')
+
+      # end the namelist
+      if has_been_printed:
+         file.write('/\n')
+
+      # print the qmmm namelist if any variables differ from the original
+      line = ' '
+      has_been_printed = False # keep track if this namelist has been printed
+      for var in self.qmmm_nml.keys():
+         if self.qmmm_nml[var] != self.qmmm_nml_defaults[var]:
+            if (not has_been_printed):
+               file.write('&qmmm\n')
+               has_been_printed = True
+            line = addOn(line, '%s=%s, ' % (var, self.qmmm_nml[var]), file)
+      
       # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:
          file.write(line + '\n')
@@ -263,7 +287,12 @@ class mdin:
          if variable in self.pb_nml.keys():
             self.pb_nml[variable] = value
          else:
-            print >> stderr, 'Unknown variable (%s) in &pb!' % variable
+            print >> stderr, 'Unknown variable (%s) in &%s!' % (variable, namelist)
+      elif namelist == 'qmmm':
+         if variable in self.qmmm_nml.keys():
+            self.qmmm_nml[variable] = value
+         else:
+            print >> stderr, 'Unknown variable (%s) in &qmmm' % variable
       else:
          print >> stderr, 'Unknown namelist (%s)!' % namelist
 

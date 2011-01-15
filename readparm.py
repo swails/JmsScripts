@@ -381,8 +381,7 @@ class amberParm:
       """Prints an Frcmod file that contains every parameter found in prmtop"""
       from math import pi, pow
 
-      print >> stderr, "Warning: amberParm.Frcmod() does not work for 10-12 non-" \
-            + "bonded interactions or variable 1-4 scaling prmtops yet."
+      print >> stderr, "Warning: amberParm.Frcmod() does not work for 10-12 non-bonded prmtops yet!"
 
       def getMatches(entry, array):
          counter = 0
@@ -535,15 +534,25 @@ class amberParm:
          dihedral = "%s-%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][atom1].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][atom2].ljust(2), 
                       self.parm_data["AMBER_ATOM_TYPE"][abs(atom3)].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][abs(atom4)].ljust(3))
 
+         # support variable 1-4 scaled prmtops and write out an frcmod that will always have 1-4 scaling info
+         try:
+            scee_scale = self.parm_data["SCEE_SCALE_FACTOR"][term-1]
+            scnb_scale = self.parm_data["SCNB_SCALE_FACTOR"][term-1]
+         except:
+            scee_scale = 1.2
+            scnb_scale = 2.0
+
          if atom4 < 0:
             dihedral = "%s %8.3f %8.3f %5.1f" % (dihedral, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
                            self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
          elif atom3 < 0: # if there's another term in the series
-            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
-                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+            dihedral = "%s %4i %8.3f %8.3f %5.1f    SCEE=%s SCNB=%s" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1],
+                           scee_scale, scnb_scale)
          else:
-            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
-                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+            dihedral = "%s %4i %8.3f %8.3f %5.1f    SCEE=%s SCNB=%s" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1],
+                           scee_scale, scnb_scale)
          if atom4 < 0: # if it's a *new* improper, store it if necessary
             is_found = False
             for j in range(len(stored_impropers)):
@@ -577,15 +586,25 @@ class amberParm:
          dihedral = "%s-%s-%s-%s" % (self.parm_data["AMBER_ATOM_TYPE"][atom1].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][atom2].ljust(2), 
                       self.parm_data["AMBER_ATOM_TYPE"][abs(atom3)].ljust(2),self.parm_data["AMBER_ATOM_TYPE"][abs(atom4)].ljust(3))
 
+         # support variable 1-4 scaled prmtops and write out an frcmod that will always have 1-4 scaling info
+         try:
+            scee_scale = self.parm_data["SCEE_SCALE_FACTOR"][term-1]
+            scnb_scale = self.parm_data["SCNB_SCALE_FACTOR"][term-1]
+         except:
+            scee_scale = 1.2
+            scnb_scale = 2.0
+
          if atom4 < 0:
             dihedral = "%s %8.3f %8.3f %5.1f" % (dihedral, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
                            self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
          elif atom3 < 0: # if there's another term in the series
-            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
-                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+            dihedral = "%s %4i %8.3f %8.3f %5.1f    SCEE=%s SCNB=%s" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, -self.parm_data["DIHEDRAL_PERIODICITY"][term-1],
+                           scee_scale, scnb_scale)
          else:
-            dihedral = "%s %4i %8.3f %8.3f %5.1f" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
-                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1])
+            dihedral = "%s %4i %8.3f %8.3f %5.1f    SCEE=%s SCNB=%s" % (dihedral, 1, self.parm_data["DIHEDRAL_FORCE_CONSTANT"][term-1],
+                           self.parm_data["DIHEDRAL_PHASE"][term-1]*180/pi, self.parm_data["DIHEDRAL_PERIODICITY"][term-1],
+                           scee_scale, scnb_scale)
 
          if atom4 < 0: # if it's a *new* improper, store it if necessary
             is_found = False
@@ -627,8 +646,7 @@ class amberParm:
          while num_left > 0:
             if num_left > 1:
                for j in range(len(stored_dihedtypes)):
-                  if float(stored_dihedtypes[j][len(stored_dihedtypes[j])-6:]) < 0 and  \
-                                          stored_dihedtypes[j][0:11] == unique_diheds[i]:
+                  if float(stored_dihedtypes[j][11:].split()[3]) < 0 and stored_dihedtypes[j][0:11] == unique_diheds[i]:
                      file.write(stored_dihedtypes.pop(j) + '\n')
                      num_left -= 1
                      break

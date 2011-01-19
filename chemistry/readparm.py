@@ -30,6 +30,8 @@
 
 from sys import stderr, stdout
 from datetime import datetime
+from . import exceptions
+from math import ceil
 
 try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
    from math import fsum
@@ -140,7 +142,7 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def __init__(self, prm_name='prmtop'): # set up necessary variables
+   def __init__(self, prm_name='prmtop', rst7_name=''): # set up necessary variables
       """ Instantiates an amberParm object from data in prm_name and establishes validity
           based on presence of POINTERS and CHARGE sections """
 
@@ -208,6 +210,9 @@ class amberParm:
             self.fill_LJ() # fill LJ arrays with LJ data for easy manipulations
          except:
             print >> stderr, 'Warning: Problem parsing L-J 6-12 parameters.'
+   
+      if rst7_name != '':
+         self.LoadRst7(rst7_name)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -745,5 +750,148 @@ class amberParm:
             self.parm_data["LENNARD_JONES_ACOEF"][index] = wdij * pow(rij, 12)
             self.parm_data["LENNARD_JONES_BCOEF"][index] = 2 * wdij * pow(rij, 6)
             index += 1
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def LoadRst7(self, filename):
+      """ Loads coordinates into the amberParm class """
+      self.rst7 = rst7(filename)
+      if not self.rst7.valid:
+         return -1
+      self.coords = self.rst7.coords
+      self.hasvels = self.rst7.hasvels
+      self.hasbox = self.rst7.hasbox
+      if self.hasbox:
+         self.box = self.rst7.box
+      if self.hasvels:
+         self.vels = self.rst7.vels
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def ToMolecule(self):
+      """ Translates an amber system into a molecule format """
+      from .molecule import Molecule
+      from copy import copy
+
+      all_bonds = []        # bond array in Molecule format
+      residue_pointers = [] # residue pointers adjusted for index starting from 0
+
+      # Set up initial, blank, bond array
+      for i in range(self.pointers['NATOM']):
+         all_bonds.append([])
+      
+      # Fill up bond arrays with bond partners excluding H atoms
+      for i in range(self.pointers['MBONA']):
+         atom1 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i  ]/3
+         atom2 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1]/3
+         all_bonds[atom1].append(atom2)
+         all_bonds[atom2].append(atom1)
+
+      # Fill up bond arrays with bond partners including H atoms
+      for i in range(self.pointers['NBONH']):
+         atom1 = self.parm_data['BONDS_INC_HYDROGEN'][3*i  ]/3
+         atom2 = self.parm_data['BONDS_INC_HYDROGEN'][3*i+1]/3
+         all_bonds[atom1].append(atom2)
+         all_bonds[atom2].append(atom1)
+
+      # Sort bond arrays
+      for i in range(len(all_bonds)):
+         all_bonds[i].sort()
+
+      # Adjust RESIDUE_POINTER for indexing from 0
+      for i in range(len(self.parm_data['RESIDUE_POINTER'])):
+         residue_pointers.append(self.parm_data['RESIDUE_POINTER'][i]-1)
+
+      if self.valid and self.rst7.valid:
+         return Molecule(copy(self.parm_data['ATOM_NAME']), copy(self.parm_data['AMBER_ATOM_TYPE']), copy(self.parm_data['CHARGE']),
+                         copy(self.parm_data['RESIDUE_LABEL']), all_bonds, residue_pointers, copy(self.coords))
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class rst7:
+   """ Amber input coordinate (or restart coordinate) file format """
+   
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def __init__(self, filename):
+      """ Initialize the inpcrd file """
+      self.filename = filename
+      self.valid = False
+
+      try:
+         self._read()
+      except BaseException as err:
+         raise(exceptions.ReadError('Error parsing coordinates from %s: %s' % (self.filename, err)))
+
+      self.valid = True
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def _read(self):
+      """ Read in the coordinates from the file """
+      restrt = open(self.filename, 'r')
+      lines = restrt.readlines()
+
+      # Load the title, number of atoms, and time
+      self.title = lines[0].strip()
+      self.natom = int(lines[1].strip().split()[0])
+      self.coords = []
+      self.vels = []
+      try:
+         self.time = float(lines[1].strip().split()[1])
+      except IndexError:
+         self.time = 0.0
+
+      lineno = 2
+
+      numlines = len(lines)
+
+      # Check to see if we have velocities or not and box or not
+      if len(lines) == int(ceil(self.natom/2.0) + 2):
+         self.hasbox = False
+         self.hasvels = False
+      if len(lines) == int(ceil(self.natom/2.0) + 3):
+         self.hasbox = True
+         self.hasvels = False
+      if len(lines) == int(2*ceil(self.natom/2.0) + 2):
+         self.hasbox = False
+         self.hasvels = True
+      if len(lines) == int(2*ceil(self.natom/2.0) + 3):
+         self.hasbox = True
+         self.hasvels = True
+
+      startline = 2
+      endline = startline + int(ceil(self.natom/2.0))
+      # load the coordinates
+      for i in range(startline,endline):
+         x1 = float(lines[i][0 :12])
+         y1 = float(lines[i][12:24])
+         z1 = float(lines[i][24:36])
+         x2 = float(lines[i][36:48])
+         y2 = float(lines[i][48:60])
+         z2 = float(lines[i][60:72])
+         self.coords.extend([x1, y1, z1, x2, y2, z2])
+         
+      startline += int(ceil(self.natom/2.0))
+      # load the velocities
+      if self.hasvels:
+         endline = startline + int(ceil(self.natom/2.0))
+
+         for i in range(startline, endline):
+            x1 = float(lines[i][0 :12])
+            y1 = float(lines[i][12:24])
+            z1 = float(lines[i][24:36])
+            x2 = float(lines[i][36:48])
+            y2 = float(lines[i][48:60])
+            z2 = float(lines[i][60:72])
+            self.vels.extend([x1, y1, z1, x2, y2, z2])
+
+         startline += int(ceil(self.natom/2.0))
+      # load the box information
+      if self.hasbox:
+         endline = startline + 1
+         self.box = lines[startline].strip().split()
+         self.box[0], self.box[1], self.box[2]  = float(self.box[0]), float(self.box[1]), float(self.box[2])
+         self.box[3], self.box[4], self.box[5]  = float(self.box[3]), float(self.box[4]), float(self.box[5])
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

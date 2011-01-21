@@ -776,7 +776,8 @@ class amberParm:
 
       all_bonds = []        # bond array in Molecule format
       residue_pointers = [] # residue pointers adjusted for index starting from 0
-      elements = []
+      elements = []         # which element each atom is
+      radii = []
 
       # Set up initial, blank, bond array
       for i in range(self.pointers['NATOM']):
@@ -813,11 +814,16 @@ class amberParm:
       for i in range(len(self.parm_data['TITLE'])):
          title += self.parm_data['TITLE'][i]
 
+      # Fill the VDW radii array
+      self.fill_LJ()
+      for i in range(self.pointers['NATOM']):
+         radii.append(self.LJ_radius[self.LJ_types[self.parm_data['AMBER_ATOM_TYPE'][i]]-1])
+
       if self.valid and self.rst7.valid:
          return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
                          charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
                          bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
-                         elements=elements, title=title)
+                         elements=elements, title=title, radii=radii)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

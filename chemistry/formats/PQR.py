@@ -1,12 +1,12 @@
 """
-This module interacts with the Molecule class via the PDB file format.
+This module interacts with the Molecule class via the PQR file format.
 """
 
 from ..molecule import Molecule
 from os.path import exists as file_exists
 from .. import exceptions
 
-# Determines if we can overwrite existing files or not with PutPDB
+# Determines if we can overwrite existing files or not with PutPQR
 overwrite = False
 
 # Lists the standard residues for which we have topology data
@@ -90,8 +90,8 @@ AmberResidues    = {'ALA' : 'ALA',
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def PutPDB(molecule, filename, standard=False, title='Created by Python chemistry package'):
-   """ Writes a PDB based on the PDB version 3 spec """
+def PutPQR(molecule, filename, standard=False, title='Created by Python chemistry package'):
+   """ Writes a PQR based on the PQR version 3 spec """
 
    # define an array with location of TER cards and call the function to initialize it
    ter_locations = []
@@ -120,10 +120,10 @@ def PutPDB(molecule, filename, standard=False, title='Created by Python chemistr
    for i in range(len(molecule.atoms)):
       record, resname = _resname(molecule.residues[molecule.residue_container[i]], standard)
       rectypes.append(record)
-      line = "%-6s%5d %4s %3s A%4i    %8.3f%8.3f%8.3f%6.2f%6.2f          %2s" % \
+      line = "%-6s %4d %4s %3s  %4i    %8.3f %7.3f %7.3f %7.4f %7.4f      %2s" % \
              (record, atom_counter % 10000, _format(molecule.atoms[i]), resname,
               molecule.residue_container[i]+1, molecule.coords[3*i], molecule.coords[3*i+1], 
-              molecule.coords[3*i+2], 1.0, 0.0, molecule.elements[i])
+              molecule.coords[3*i+2], molecule.charges[i], molecule.radii[i], molecule.elements[i])
       print >> file, line
       atom_counter += 1
       try:
@@ -145,16 +145,16 @@ def PutPDB(molecule, filename, standard=False, title='Created by Python chemistr
          numconect += 1
 
    # Now print out the MASTER record
-   print >> file, 'MASTER        1    0    0    0    0    0    0    0%5d%5d%5d    0' % \
+   print >> file, 'MASTER        1    0    0    0    0    0    0    0 %4d %4d %4d    0' % \
             (atom_counter, numters, numconect)
 
-   # End the PDB
+   # End the PQR
    print >> file, 'END'
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def _format(name):
-   """ Formats an atom name for use in PDB files """
+   """ Formats an atom name for use in PQR files """
    
    if len(name) == 4: return '%4s' % name
    else: return ' %-3s' % name.strip()
@@ -162,7 +162,7 @@ def _format(name):
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def _needTer(molecule, ter_locations):
-   """ Determines where we need to put TER cards in the PDB file """
+   """ Determines where we need to put TER cards in the PQR file """
    # Only check to see if this residue is bonded to a residue that
    # comes later in the sequence. If so, we don't put a TER card
    for i in range(len(molecule.residues)-1):

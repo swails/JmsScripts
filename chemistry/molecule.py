@@ -23,7 +23,7 @@ class Molecule:
    """
 
    def __init__(self, atoms=[], atom_types=[], charges=[], residues=[], bonds=[], 
-                residue_pointers=[], coords=[], elements=[], title=''):
+                residue_pointers=[], coords=[], elements=[], title='',radii=[]):
       """ Initializing and checking the molecular data """
       self.atoms = atoms
       self.residues = residues
@@ -34,6 +34,7 @@ class Molecule:
       self.charges = charges
       self.elements = elements
       self.title = title
+      self.radii = radii
       
       self._check()
       if self.valid:
@@ -50,6 +51,8 @@ class Molecule:
       self.atom_types.pop(atomno)
       self.charges.pop(atomno)
       self.elements.pop(atomno)
+      if len(self.radii) > 0:
+         self.radii.pop(atomno)
 
       # Remove atomno from all of the bonds
       self.bonds.pop(atomno)
@@ -96,6 +99,9 @@ class Molecule:
 
       if len(self.elements) != len(self.atoms):
          raise(exceptions.MoleculeError('len(elements) != len(atoms)'))
+
+      if len(self.radii) != 0 and len(self.radii) != len(self.atoms):
+         raise(exceptions.MoleculeError('len(radii) != len(atoms)'))
 
       self.valid = True
 

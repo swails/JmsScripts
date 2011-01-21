@@ -1,3 +1,2 @@
 clean:
-	/bin/rm -f *.pyc
-	/bin/rm -f */*.pyc
+	(find . -name "*.pyc" | /usr/bin/xargs /bin/rm)

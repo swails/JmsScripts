@@ -31,6 +31,7 @@
 from sys import stderr, stdout
 from datetime import datetime
 from . import exceptions
+from . import periodic_table
 from math import ceil
 
 try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
@@ -775,6 +776,7 @@ class amberParm:
 
       all_bonds = []        # bond array in Molecule format
       residue_pointers = [] # residue pointers adjusted for index starting from 0
+      elements = []
 
       # Set up initial, blank, bond array
       for i in range(self.pointers['NATOM']):
@@ -802,9 +804,20 @@ class amberParm:
       for i in range(len(self.parm_data['RESIDUE_POINTER'])):
          residue_pointers.append(self.parm_data['RESIDUE_POINTER'][i]-1)
 
+      # Determine which element each atom is
+      for i in range(self.pointers['NATOM']):
+         elements.append(Element(self.parm_data['MASS'][i]))
+
+      # Put together the title
+      title = ''
+      for i in range(len(self.parm_data['TITLE'])):
+         title += self.parm_data['TITLE'][i]
+
       if self.valid and self.rst7.valid:
-         return Molecule(copy(self.parm_data['ATOM_NAME']), copy(self.parm_data['AMBER_ATOM_TYPE']), copy(self.parm_data['CHARGE']),
-                         copy(self.parm_data['RESIDUE_LABEL']), all_bonds, residue_pointers, copy(self.coords))
+         return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
+                         charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
+                         bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
+                         elements=elements, title=title)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -867,10 +880,13 @@ class rst7:
          x1 = float(lines[i][0 :12])
          y1 = float(lines[i][12:24])
          z1 = float(lines[i][24:36])
-         x2 = float(lines[i][36:48])
-         y2 = float(lines[i][48:60])
-         z2 = float(lines[i][60:72])
-         self.coords.extend([x1, y1, z1, x2, y2, z2])
+         try:
+            x2 = float(lines[i][36:48])
+            y2 = float(lines[i][48:60])
+            z2 = float(lines[i][60:72])
+            self.coords.extend([x1, y1, z1, x2, y2, z2])
+         except ValueError:
+            self.coords.extend([x1, y1, z1])
          
       startline += int(ceil(self.natom/2.0))
       # load the velocities
@@ -881,10 +897,13 @@ class rst7:
             x1 = float(lines[i][0 :12])
             y1 = float(lines[i][12:24])
             z1 = float(lines[i][24:36])
-            x2 = float(lines[i][36:48])
-            y2 = float(lines[i][48:60])
-            z2 = float(lines[i][60:72])
-            self.vels.extend([x1, y1, z1, x2, y2, z2])
+            try:
+               x2 = float(lines[i][36:48])
+               y2 = float(lines[i][48:60])
+               z2 = float(lines[i][60:72])
+               self.vels.extend([x1, y1, z1, x2, y2, z2])
+            except ValueError:
+               self.vels.extend([x1, y1, z1])
 
          startline += int(ceil(self.natom/2.0))
       # load the box information
@@ -893,5 +912,20 @@ class rst7:
          self.box = lines[startline].strip().split()
          self.box[0], self.box[1], self.box[2]  = float(self.box[0]), float(self.box[1]), float(self.box[2])
          self.box[3], self.box[4], self.box[5]  = float(self.box[3]), float(self.box[4]), float(self.box[5])
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def Element(mass):
+   """ Determines what element the given atom is based on its mass """
+
+   diff = mass
+   best_guess = 'EP'
+
+   for element in periodic_table.Element:
+      if abs(periodic_table.Mass[element] - mass) < diff:
+         best_guess = element
+         diff = abs(periodic_table.Mass[element] - mass)
+
+   return best_guess
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

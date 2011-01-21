@@ -11,16 +11,19 @@ class Molecule:
    Molecule class that contains biomolecular data:
       o  atoms       : sequential list of atoms in an array
       o  atom_types  : atom types associated with each atom
+      o  elements    : element of each atom
       o  charges     : partial charges on each atom
       o  residues    : array of residue names
       o  bonds       : array in which each element lists the atom indices
                        of the other atoms that atom is bonded to
       o  residue_pointers : index of first atom of each residue
+      o  residue_container: which residue each atom belongs to
       o  coords      : cartesian coordinates (x1,y1,z1,x2,y2,z2,...) of
                        each atom in the molecule
    """
 
-   def __init__(self, atoms=[], atom_types=[], charges=[], residues=[], bonds=[], residue_pointers=[], coords=[]):
+   def __init__(self, atoms=[], atom_types=[], charges=[], residues=[], bonds=[], 
+                residue_pointers=[], coords=[], elements=[], title=''):
       """ Initializing and checking the molecular data """
       self.atoms = atoms
       self.residues = residues
@@ -29,6 +32,8 @@ class Molecule:
       self.bonds = bonds
       self.atom_types = atom_types
       self.charges = charges
+      self.elements = elements
+      self.title = title
       
       self._check()
       if self.valid:
@@ -44,6 +49,7 @@ class Molecule:
       self.coords.pop(atomno*3    )
       self.atom_types.pop(atomno)
       self.charges.pop(atomno)
+      self.elements.pop(atomno)
 
       # Remove atomno from all of the bonds
       self.bonds.pop(atomno)
@@ -87,6 +93,9 @@ class Molecule:
 
       if len(self.residue_pointers) != len(self.residues):
          raise(exceptions.MoleculeError('len(residue_pointers) != len(residues)'))
+
+      if len(self.elements) != len(self.atoms):
+         raise(exceptions.MoleculeError('len(elements) != len(atoms)'))
 
       self.valid = True
 

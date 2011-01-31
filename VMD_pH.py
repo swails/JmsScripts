@@ -66,10 +66,10 @@ for x in range(2,len(sys.argv)):
       continue   # done for this line, go to next step in loop
     if foundrst == 0: #if we have not yet found a full record
       continue # skip to next line
-    elif foundrst < 5: # the first four lines have no residue data
+    elif foundrst < 4: # the first four lines have no residue data
       foundrst = foundrst + 1 # so move on to the next line
-    elif foundrst < 5 + len(residuelist): # while we're still looking at residues
-      if isfirst == 0: # The first full record corresponds to initial state, not to any frame
+    elif foundrst < 4 + len(residuelist): # while we're still looking at residues
+      if isfirst == 0: # The first full record corresponds to initial state, not to any frame\
         statelist.append(int(line[21]))  # only add to this if it's not initial state
       foundrst = foundrst + 1  # add one to this counter so we know when we've scanned everything
     else:

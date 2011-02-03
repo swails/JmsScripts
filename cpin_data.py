@@ -481,9 +481,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       pKa = 3.9
 
       if igb == 2:
-         relene = -36.6696 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -19.8442 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -36.5912 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -19.8442 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -563,9 +563,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       pKa = 4.3
 
       if igb == 2:
-         relene = -69.3910 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -40.526 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -69.5117 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -40.526 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -638,13 +638,12 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.4108 ] ]   # H3
 
    if residue == "DG":
-      pKa1 = 2.1
-      pKa2 = 9.2
+      pKa = 9.2
 
       if igb == 2:
-         relene = -81.6459 - KB * TEMP * LN_TO_LOG * pKa2
+         relene = -90.0011 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -80.6124 - KB * TEMP * LN_TO_LOG * pKa2
+         relene = -90.0011 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.00
 
@@ -724,9 +723,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       pKa = 9.7
 
       if igb == 5:
-         relene = -9.71931 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -56.7729 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = -11.0095 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -56.7729 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -804,7 +803,7 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       pKa = 3.9
 
       if igb == 5:
-         relene = 55.2867 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 15.903 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
          relene = 55.1918 + KB * TEMP * LN_TO_LOG * pKa
       else:
@@ -885,12 +884,12 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.4310 ] ]   # H1
 
    if residue == "CP":
-      pKa = 3.9
+      pKa = 4.3
 
       if igb == 5:
-         relene = 80.9798 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 40.1407 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = 80.7889 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 40.1407 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.
 
@@ -965,12 +964,12 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
                    0.4128 ] ]   # H3
 
    if residue == "G":
-      pKa = 2.1
+      pKa = 9.2
 
       if igb == 5:
-         relene = -53.4505 + KB * TEMP * LN_TO_LOG * pKa
+         relene = -96.0454 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = -53.5572 + KB * TEMP * LN_TO_LOG * pKa
+         relene = -96.0454 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.00
 
@@ -1052,9 +1051,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       pKa = 9.3
 
       if igb == 5:
-         relene = -67.2222 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -134.883 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = -68.4318 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -134.883 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.00
 

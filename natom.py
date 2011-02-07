@@ -3,7 +3,7 @@
 # Find the number of residues in a given prmtop
 
 from sys import stderr, stdout, exit, argv
-from readparm import amberParm
+from chemistry.readparm import amberParm
 from os import path
 
 def usage():

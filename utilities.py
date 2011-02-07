@@ -33,7 +33,7 @@
 #
 ##########################################################################################
 
-from readparm import *
+from chemistry.readparm import *
 
 def which(program):
    import os

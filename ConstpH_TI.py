@@ -9,7 +9,7 @@
 
 # modules
 from cpin_data import getData
-from readparm import amberParm
+from chemistry.readparm import amberParm
 from utilities import which
 
 from math import fsum

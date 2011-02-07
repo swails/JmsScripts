@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from readparm import amberParm
+from chemistry.readparm import amberParm
 import sys
 
 def printusage():

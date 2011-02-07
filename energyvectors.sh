@@ -16,7 +16,7 @@
 prefix="_MMPBSA_"
 
 # gb or pb mdouts? (lowercase only!)
-solvent="gb"
+solvent="pb"
 
 # non-bonded output file
 nbout="${solvent}_nonbond.dat"
@@ -52,7 +52,7 @@ fi
 # remove old output files
 echo "All files are listed in 3 columns: Complex  Receptor  Ligand"
 echo "Removing ${nbout} and ${bout}..."
-rm -f $nbout $bout .*evtmp
+rm -f $nbout $bout .*evtmp 2>/dev/null
 
 # start with complex: store bond, angle, dihedral, 1-4 eel (eelof), 1-4 vdw
 # (vdwof) vdw, eel, and esurf in .___.evtmp files

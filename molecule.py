@@ -8,8 +8,8 @@ from copy import copy
 import sys, os
 
 # import custom modules
-from periodic_table import PeriodicTable
-from readparm import amberParm
+from chemistry.periodic_table import PeriodicTable
+from chemistry.readparm import amberParm
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

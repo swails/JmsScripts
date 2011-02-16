@@ -49,6 +49,8 @@ program calcpka
 !     chrgdat            : Array with all partial atomic charges
 !     trescnt            : Number of titratable residues
 !     resname            : Array holding all residue names
+!     cph_igb            : GB model used for hybrid explicit CpHMD
+!     cphfirst_sol       : Atom number of first bulk solvent atom
 
 !     protonations       : Array holding populations of every protonation state
 !     protonations_chunk : same as above, but reset every interval steps
@@ -73,15 +75,15 @@ program calcpka
    end type const_ph_info
    ! end dynph.h
 
-   character (len=128)              :: cpin
-   character (len=128), allocatable :: cpout(:)
-   character (len=128)              :: output_file = 'none'
-   character (len=128)              :: alternative_output = "pKa_evolution.dat"
-   character (len=128)              :: population_output = "populations.dat"
-   character (len=128)              :: arg_holder
+   character (len=256)              :: cpin
+   character (len=256), allocatable :: cpout(:)
+   character (len=256)              :: output_file = 'none'
+   character (len=256)              :: alternative_output = "pKa_evolution.dat"
+   character (len=256)              :: population_output = "populations.dat"
+   character (len=256)              :: arg_holder
    character (len=80)               :: line_holder
 
-   integer :: narg
+   integer :: narg, iargc
    integer :: num_cpout = 1
    integer :: dump_interval = 0
    integer :: i, j
@@ -104,6 +106,7 @@ program calcpka
    real                 :: chrgdat(0:ATOM_CHRG_C-1)
    integer              :: trescnt
    character (len=40)   :: resname(0:TITR_RES_C)
+   integer              :: cph_igb, cphfirst_sol
 
    integer, allocatable :: protonations(:,:), protonations_chunk(:,:)
    logical              :: updating
@@ -117,7 +120,9 @@ program calcpka
                                                   statene,  &
                                                   chrgdat,  &
                                                   trescnt,  &
-                                                  resname
+                                                  resname,  &
+                                                  cph_igb,  &
+                                                  cphfirst_sol
 
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ! END VARIABLE DECLARATIONS !
@@ -328,7 +333,7 @@ subroutine usage()
 
    implicit none
 
-   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} {-o output} \'
+   write(0,*) 'Usage: calcpka <cpin> <cpout1> {<cpout2> ... <cpoutN>} {-o output} \\'
    write(0,*) '               {-t dump_interval} {-ao dump_output} {-po population_output}'
 
 end subroutine usage
@@ -383,7 +388,7 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
       fracprot(i+1) = numprot / (numdep + numprot)
    end do
 
-   write(fileno, '(a,f5.3)') "Solvent pH is ", solvph
+   write(fileno, '(a,f8.3)') "Solvent pH is ", solvph
    do i = 1, trescnt
       rnm = resname(i)
       write(fileno, '(a,a,f6.3,a,f6.3,a,f5.3,a,i9)') rnm(10:17), ': Offset ', &

@@ -20,7 +20,8 @@ if not prmtop.valid:
    print >> sys.stderr, 'Error: %s is not a valid prmtop!' % sys.argv[1]
    printusage()
 
-data = getData(prmtop.parm_data['RESIDUE_LABEL'][int(sys.argv[2])],5)
+res = int(sys.argv[2]) - 1
+data = getData(prmtop.parm_data['RESIDUE_LABEL'][res],5)
 starting_point = prmtop.parm_data['RESIDUE_POINTER'][int(sys.argv[2])] - 1
 state = int(sys.argv[3])
 

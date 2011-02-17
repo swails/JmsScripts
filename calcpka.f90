@@ -502,7 +502,7 @@ subroutine average_protonations(avg_prot, resstate, protcnt, stateinf, trescnt)
 
    integer :: i
 
-   do i = 0, trescnt
+   do i = 0, trescnt - 1
       avg_prot = avg_prot + protcnt(stateinf(i)%first_state + resstate(i))
    end do
 

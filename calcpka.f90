@@ -51,6 +51,10 @@ program calcpka
 !     resname            : Array holding all residue names
 !     cph_igb            : GB model used for hybrid explicit CpHMD
 !     cphfirst_sol       : Atom number of first bulk solvent atom
+!     avg_prot           : Average protonation count -- running avg
+!     avg_prot_chunk     : Average protonation count reset for chunks
+!     frames             : counter for how many frames we have
+!     frames_chunk       : counter for how many frames since the last output dump
 
 !     protonations       : Array holding populations of every protonation state
 !     protonations_chunk : same as above, but reset every interval steps
@@ -88,6 +92,10 @@ program calcpka
    integer :: dump_interval = 0
    integer :: i, j
    integer :: ios
+   integer :: frames = 0
+   integer :: frames_chunk = 0
+   real    :: avg_prot = 0.0d0
+   real    :: avg_prot_chunk = 0.0d0
    logical :: cpout_done = .false.
 
    real    :: solvph
@@ -269,6 +277,8 @@ program calcpka
 
          ! Now update the protonations
          if (line_holder(1:8) .eq. "Residue ") then
+            frames = frames + 1
+            frames_chunk = frames_chunk + 1
             updating = .true.
             do while(updating)
                read(line_holder(9:12),'(i4)'), res_holder
@@ -285,6 +295,9 @@ program calcpka
             end do !while(updating)
 
             onstep = onstep + step_size
+
+            call average_protonations(avg_prot, resstate, protcnt, stateinf, trescnt)
+            call average_protonations(avg_prot_chunk, resstate, protcnt, stateinf, trescnt)
             
             if (dump_interval .eq. 0) then
                do j = 1, trescnt
@@ -298,11 +311,13 @@ program calcpka
                if (mod(onstep, dump_interval) .eq. 0) then
                   write(unit=alternative_unit,fmt='(a)'), "========================== CUMULATIVE ========================"
                   call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, max_nstate, alternative_unit, &
-                                      protonated, resname, transitions)
+                                      protonated, resname, transitions, avg_prot, frames)
                   write(unit=alternative_unit,fmt='(a)'), "============================ CHUNK ==========================="
                   call calculate_pKas(protonations_chunk, solvph, stateinf, protcnt, trescnt, max_nstate, alternative_unit, &
-                                      protonated, resname, transitions)
+                                      protonated, resname, transitions, avg_prot_chunk, frames_chunk)
                   call empty_protonation(protonations_chunk, trescnt, max_nstate)
+                  avg_prot_chunk = 0
+                  frames_chunk = 0
                end if ! mod(onstep
             end if ! dump_interval
          end if ! line_holder(1:8)
@@ -315,7 +330,7 @@ program calcpka
    end do
 
    call calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, max_nstate, &
-                       output_unit, protonated, resname, transitions)
+                       output_unit, protonated, resname, transitions, avg_prot, frames)
 
    write(population_unit,*) "Populations: "
    write(population_unit,*)
@@ -353,7 +368,8 @@ subroutine empty_protonation(array, index1, index2)
 end subroutine empty_protonation
 
 subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
-                          max_nstate, fileno, protonated, resname, transitions)
+                          max_nstate, fileno, protonated, resname, transitions, &
+                          avg_prot, nsteps)
 
    type :: const_ph_info ! from dynph.h
       sequence
@@ -368,6 +384,8 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
    real, intent(in)                 :: solvph
    character (len=40), intent(in)   :: resname(0:*)
    integer, intent(in)              :: transitions(*)
+   real, intent(in)                 :: avg_prot
+   integer, intent(in)              :: nsteps
 
    integer                          :: i, j ! counters
    real, dimension(trescnt)         :: pkas, fracprot
@@ -395,6 +413,9 @@ subroutine calculate_pKas(protonations, solvph, stateinf, protcnt, trescnt, &
                pkas(i) - solvph, "  Pred ", pkas(i), "  Frac Prot ", fracprot(i), "  Transitions ", &
                transitions(i)
    end do
+
+   write(fileno, '()')
+   write(fileno, '(a,f7.3)') "Average total molecular protonation: ", avg_prot / nsteps
 
 end subroutine calculate_pKas
 
@@ -451,3 +472,38 @@ subroutine dump_protonations(protonations, stateinf, protcnt, trescnt, max_nstat
    end do
 
 end subroutine dump_protonations
+
+subroutine average_protonations(avg_prot, resstate, protcnt, stateinf, trescnt)
+   implicit none
+
+   ! stateinf type
+   type :: const_ph_info
+      sequence
+      integer :: num_states, first_atom, num_atoms, first_state, first_charge
+   end type const_ph_info
+
+   ! Variables
+
+   ! Passed:
+   !  avg_prot    : average protonations that we're adding to
+   !  resstate    : current state of each titratable residue
+   !  protcnt     : number of protons in each state of each residue
+   !  stateinf    : titratable residue state information
+   !  trescnt     : titratable residue count
+
+   ! Local:
+   !  i           : loop counter
+
+   real, intent(inout)              :: avg_prot
+   integer, intent(in)              :: resstate(*)
+   integer, intent(in)              :: protcnt(*)
+   integer, intent(in)              :: trescnt
+   type (const_ph_info), intent(in) :: stateinf(*)
+
+   integer :: i
+
+   do i = 0, trescnt
+      avg_prot = avg_prot + protcnt(stateinf(i)%first_state + resstate(i))
+   end do
+
+end subroutine average_protonations

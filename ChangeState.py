@@ -22,7 +22,7 @@ if not prmtop.valid:
 
 res = int(sys.argv[2]) - 1
 data = getData(prmtop.parm_data['RESIDUE_LABEL'][res],5)
-starting_point = prmtop.parm_data['RESIDUE_POINTER'][int(sys.argv[2])] - 1
+starting_point = prmtop.parm_data['RESIDUE_POINTER'][res] - 1
 state = int(sys.argv[3])
 
 for i in range(2,len(data[state])):

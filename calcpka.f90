@@ -495,10 +495,10 @@ subroutine average_protonations(avg_prot, resstate, protcnt, stateinf, trescnt)
    !  i           : loop counter
 
    real, intent(inout)              :: avg_prot
-   integer, intent(in)              :: resstate(*)
-   integer, intent(in)              :: protcnt(*)
+   integer, intent(in)              :: resstate(0:*)
+   integer, intent(in)              :: protcnt(0:*)
    integer, intent(in)              :: trescnt
-   type (const_ph_info), intent(in) :: stateinf(*)
+   type (const_ph_info), intent(in) :: stateinf(0:*)
 
    integer :: i
 

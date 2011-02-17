@@ -231,7 +231,7 @@ if binning:
             psiprintval = psistart
             if gnuformat:
                outputfile.write('\n')
-         outputfile.write('%s %s %s\n' % (phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
+         outputfile.write('%12.6f %12.6f %12.6f\n' % (phiprintval, psiprintval, float(phipsibins[y])/float(number_frames)*360**2/(bins[0]*bins[1])))
          psiprintval = psiprintval + psiinterval
 
       outputfile.close()
@@ -252,7 +252,7 @@ if binning:
 tglobalend = time.time()
 
 print 'Timings: '
-print 'ptraj Dihedral Dump: %9.3f min.' % ((tptrajstart-tptrajend)/60)
+print 'ptraj Dihedral Dump: %9.3f min.' % ((tptrajend - tptrajstart)/60)
 if binning:
    print 'Binning:             %9.3f min.' % ((tbinend-tbinstart)/60)
 print 'Total time:          %9.3f min.' % ((tglobalend-tglobalstart)/60)

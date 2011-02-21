@@ -714,6 +714,44 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+   def writeOFF(self, off_file='off.lib'):
+      """ Writes an OFF file from all of the residues found in a prmtop """
+      from .residue import ToResidue
+   
+      file = open(off_file,'w',0)
+   
+      # keep track of all the residues we have to print to the OFF file
+      residues = []
+   
+      # First create a Molecule object from the prmtop
+      mol = self.ToMolecule()
+   
+      # Now loop through all of the residues in the Molecule object and add
+      # unique ones to the list of residues to print
+      for i in range(len(mol.residues)):
+         res = ToResidue(mol, i)
+         present = False
+         for compres in residues:
+            if res == compres:
+               present = True
+   
+         if not present:
+            residues.append(res)
+      
+      # Now that we have all of the residues that we need to add, put their names
+      # in the header of the OFF file
+      file.write('!!index array str\n')
+      for res in residues:
+         file.write(' "%s"\n' % res.name)
+   
+      # Now write the OFF strings to the file
+      for res in residues:
+         file.write(res.OFF())
+
+      file.close()
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
    def fill_LJ(self):
       """ Fills the LJ_radius, LJ_depth arrays and LJ_types dictionary with data from LENNARD_JONES_ACOEF
           and LENNARD_JONES_BCOEF sections of the prmtop files, by undoing the canonical combining rules. """
@@ -771,7 +809,7 @@ class amberParm:
 
    def ToMolecule(self):
       """ Translates an amber system into a molecule format """
-      from .molecule import Molecule
+      from ..molecule import Molecule
       from copy import copy
 
       all_bonds = []        # bond array in Molecule format

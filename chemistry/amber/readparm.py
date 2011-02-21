@@ -30,8 +30,8 @@
 
 from sys import stderr, stdout
 from datetime import datetime
-from . import exceptions
-from . import periodic_table
+from .. import exceptions
+from .. import periodic_table
 from math import ceil
 
 try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.

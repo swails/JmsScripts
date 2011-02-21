@@ -80,15 +80,17 @@ def GetPDB(filename):
    """ Read in a PDB file and return a molecule object """
    if not file_exists(filename):
       raise(exceptions.FileError('%s does not exist' % filename))
-   file = open(filename,'r')
-   lines = file.readlines()
-   file.close()
+
+   raise(exceptions.FileError("PDB Reading not yet implemented"))
 
    # number of atoms in the system
    natom = 0
 
-   for i in range(len(lines)):
-      if lines[i][0:6] != 'ATOM  ' or lines[i][0:6] != 'HETATM':
+   # Open the file and parse it
+   file = open(filename,'r')
+   for line in file:
+      if line[0:6] != 'ATOM  ' or line[0:6] != 'HETATM':
+         natom += 1
          pass
          
 

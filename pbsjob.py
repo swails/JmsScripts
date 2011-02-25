@@ -280,3 +280,9 @@ class PBSjob:
       print >> stdout, 'I have chosen the name "%s" for your job...'%self.name
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def walltime(self, time):
+      """ Add the default walltime """
+      self.resources.append['walltime=%s']
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

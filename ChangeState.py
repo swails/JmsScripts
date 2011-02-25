@@ -3,7 +3,7 @@
 """ Changes the protonation state of a given residue in a given prmtop """
 
 from cpin_data import getData
-from chemistry.readparm import amberParm
+from chemistry.amber.readparm import amberParm
 import sys, os
 
 def printusage():

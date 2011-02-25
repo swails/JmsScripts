@@ -10,7 +10,7 @@
 ####################################################
 
 from sys import stderr, stdout, exit, argv
-from chemistry.readparm import amberParm
+from chemistry.amber.readparm import amberParm
 
 if len(argv) != 2 or '-help' in argv[1] or argv[1] == '-h':
    print 'mass.py <prmtop>'

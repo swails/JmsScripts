@@ -124,7 +124,7 @@ if residue_number == -1:
    sys.exit()
 
 for x in range(len(residues)):
-   if residues[x] == 2 or residues[x] == residue_number:
+   if residues[x] == 1 or residues[x] == residue_number:
       print 'Error: You cannot get phi/psi dihedrals for either terminus!'
       sys.exit()
    elif residues[x] < 1:

@@ -30,8 +30,8 @@
 
 from sys import stderr, stdout
 from datetime import datetime
-from .. import exceptions
-from .. import periodic_table
+from chemistry import exceptions
+from chemistry import periodic_table
 from math import ceil
 
 try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
@@ -716,7 +716,7 @@ class amberParm:
 
    def writeOFF(self, off_file='off.lib'):
       """ Writes an OFF file from all of the residues found in a prmtop """
-      from .residue import ToResidue
+      from chemistry.amber.residue import ToResidue
    
       file = open(off_file,'w',0)
    
@@ -809,7 +809,7 @@ class amberParm:
 
    def ToMolecule(self):
       """ Translates an amber system into a molecule format """
-      from ..molecule import Molecule
+      from chemistry.molecule import Molecule
       from copy import copy
 
       all_bonds = []        # bond array in Molecule format
@@ -877,7 +877,7 @@ class rst7:
 
       try:
          self._read()
-      except BaseException as err:
+      except BaseException, err:
          raise(exceptions.ReadError('Error parsing coordinates from %s: %s' % (self.filename, err)))
 
       self.valid = True

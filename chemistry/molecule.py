@@ -3,8 +3,8 @@ Molecule class for manipulating biomolecular structures and storing
 molecular data for use in various transformations.
 """
 
-from . import periodic_table
-from . import exceptions
+from chemistry import periodic_table
+from chemistry import exceptions
 
 class Molecule:
    """ 

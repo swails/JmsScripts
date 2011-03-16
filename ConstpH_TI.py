@@ -9,7 +9,7 @@
 
 # modules
 from cpin_data import getData
-from chemistry.readparm import amberParm
+from chemistry.amber.readparm import amberParm
 from utilities import which
 
 from math import fsum
@@ -73,7 +73,7 @@ except IndexError:
 
 TI_mdin = """TI calculation
 &cntrl
-   nstlim =1000000, nscm=2000,
+   nstlim =5000000, nscm=2000,
    ntx={0}, irest={1}, ntpr=1000,
    tempi=0.0, temp0=300.0, ntt=3, gamma_ln=5.0,
    ntb=0, igb={2}, cut=999.0,
@@ -110,10 +110,12 @@ TI_groupfile2 = """-O -i mdin -p {0}0.prmtop -c {1}_0.restrt -o {2}_0.mdout -r {
 sander = which("sander.MPI")
 sandermin = which("sander")
 tleap = which("tleap")
+if igb == 8:
+   changerad = which("ChangeParmRadii.py")
 if tleap == "none":
    tleap = which("sleap")
 
-if sander == "none" or tleap == "none":
+if sander == "none" or tleap == "none" or (igb == 8 and changerad == 'none'):
    print >> sys.stderr, "Error: You need sander.MPI and tleap or sleap in your PATH to run this program!"
    sys.exit()
 
@@ -134,7 +136,9 @@ quit
 file = open("tleap.in","w")
 file.write(tleap_script)
 file.close()
-os.system("tleap -f tleap.in > tleap.log")
+os.system(tleap + " -f tleap.in > tleap.log")
+if igb == 8:
+   os.system(changerad + ' -p {0}0.prmtop -r mbondi3'.format(resname.lower()))
 
 # Get the data for the residue and load the amberParm object
 charges = getData(resname, igb)
@@ -148,8 +152,8 @@ prm.overwrite = True # allow the prmtop to be overwritten
 
 # check validity of prmtop
 
-if not prm.exists:
-   print >> sys.stderr, "Error in making the prmtop. Check tleap.log for errors."
+if not prm.valid:
+   print >> sys.stderr, "Error: Invalid prmtop (%s)!" % prm
    sys.exit()
 
 try:

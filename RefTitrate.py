@@ -20,6 +20,10 @@ commrank = commworld.Get_rank()
 commsize = commworld.Get_size()
 master = commrank == 0
 
+if not master: # suppress non-master output
+   sys.stdout = open(os.devnull, 'w')
+   sys.stderr = open(os.devnull, 'w')
+
 # Set up the parser and add options
 parser = OptionParser()
 
@@ -41,27 +45,28 @@ parser.add_option('-n', '--nucleic-acid', dest='aa', action='store_false', defau
 # Make sure we have enough arguments
 if options.res == None or options.pH == None:
    parser.print_help()
-   sys.exit()
+   commworld.Abort()
 
 # Now determine where required programs are
 sander = which('sander')
 tleap = which('tleap')
 cpinutil = which('cpinutil')
-if options.igb == 8:
-   converter = which('ChangeParmRadii.py')
+converter = which('ChangeParmRadii.py')
 
 if 'none' in [sander, tleap, cpinutil]:
    print >> sys.stderr, 'sander, tleap, and cpinutil are all necessary!'
-   sys.exit()
+   commworld.Abort()
 
 if options.igb == 8 and converter == 'none':
    print >> sys.stderr, 'ChangeParmRadii.py is needed for igb = 8!'
-   sys.exit()
+   commworld.Abort()
+
+print " Found necessary programs!"
 
 # Keep a log of all stdout
 log = open('%s.log' % os.path.split(sys.argv[0])[1].strip('.py'), 'w')
 
-mdin = """Mdin file for titrating stuff
+md_mdin = """Mdin file for titrating stuff
  &cntrl
    imin=0, irest=0, ntx=1,
    ntpr=1000, nstlim=%s,
@@ -99,44 +104,62 @@ quit
 
 if master:
    # First it's time to create the prmtop
+   print "\n Making topology file"
    file = open('tleap.in', 'w')
    file.write(tleapin)
    file.close()
 
-   proc_return = Popen(['tleap', '-f', 'tleap.in'], executable=tleap, stdout=log)
+   proc_return = Popen(['tleap', '-f', 'tleap.in'], executable=tleap, stdout=log).wait()
 
    if proc_return != 0:
       print >> sys.stderr, 'tleap error!'
-      sys.exit()
+      commworld.Abort()
+
+   print " Successfully created topology file %s.parm7" % options.res
    
+   print "\n Setting prmtop radii"
    # If we're doing igb = 8, do the prmtop conversion
-   proc_return = Popen(['ChangeParmRadii.py','-p','%s.parm7' % options.res, '-r', 'mbondi3'],
-                       executable=converter, stdout=log)
+   if options.igb == 8:
+      proc_return = Popen(['ChangeParmRadii.py','-p','%s.parm7' % options.res, '-r', 'mbondi3'],
+                          executable=converter, stdout=log).wait()
+      print " Set prmtop radii to mbondi3"
+   else:
+      proc_return = Popen(['ChangeParmRadii.py','-p','%s.parm7' % options.res, '-r', 'mbondi2'],
+                          executable=converter, stdout=log).wait()
+      print " Set prmtop radii to mbondi2"
 
    # Create the cpin
+   print "\n Creating cpin file"
    cpin = open(options.res + '.cpin', 'w')
-   proc_return = Popen(['cpinutil', '-p', '%s.parm7' % options.res, '-igb', options.igb],
-                       executable=cpinutil, stdout=cpin, stderr=log)
+   proc_return = Popen(['cpinutil', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb],
+                       executable=cpinutil, stdout=cpin, stderr=log).wait()
    cpin.close()
+   print " Finished making cpin file"
 
    if proc_return != 0:
       print >> sys.stderr, 'cpinutil error!'
-      sys.exit()
+      commworld.Abort()
 
    # Now it's time to minimize the structure
    mdin = open('mdin.min', 'w')
    mdin.write(min_mdin)
    mdin.close()
    
+   print "\n Minimizing initial structure"
    proc_return = Popen(['sander', '-i', 'mdin.min', '-c', '%s.rst7' % options.res, '-p', 
                         '%s.parm7' % options.res,'-o', 'min.mdout', '-r', '%s.min.rst7' % options.res], 
-                        executable=sander)
-   
+                        executable=sander).wait()
+
    if proc_return != 0:
       print >> sys.stderr, 'sander minimization error!'
-      sys.exit()
+      commworld.Abort()
+
+   print " Structure minimized"
 
    os.system('rm -f min.mdout leap.log')
+
+# Wait here for master to catch up
+commworld.Barrier()
 
 # Now we're done with the system, so it's time to start each process
 
@@ -175,25 +198,32 @@ else:
 # Now split up the load
 xtras = len(pH_sims) % commsize
 
-num_frames = int(pH_sims / commsize)
-start_frame = num_frames * rank
+num_frames = int(len(pH_sims) / commsize)
+start_frame = num_frames * commrank
 
-if rank < xtras:
+if commrank < xtras:
    num_frames += 1
-   start_frame += rank
+   start_frame += commrank
 else:
    start_frame += xtras
 
 end_frame = start_frame + num_frames
 
+commworld.Barrier()
+
 # Now it's time to write the MDIN file
-for i in range(startframe, endframe):
+print "\n Beginning titrations. master thread has %s pH values" % num_frames
+i = 1
+for i in range(start_frame, end_frame):
    mdin = open('mdin.%s' % commrank, 'w')
-   mdin.write(mdin % pH_sims[i])
+   mdin.write(md_mdin % pH_sims[i])
    mdin.close()
 
    proc_return = Popen(['sander', '-i', 'mdin.%s' % commrank, '-c', '%s.min.rst7' % options.res, '-p', 
                         '%s.parm7' % options.res,'-o', '%s_pH%s.mdout' % (options.res, pH_sims[i]), '-r', 
-                        '%s.md.rst7' % options.res, '-inf', commrank + '.mdinfo', '-cpin', options.res + '.cpin',
-                        '-cpout', '%s_pH%s.cpout' % (options.res, pH_sims[i]), '-cprestrt', commrank + '.cprestrt'], 
-                        executable=sander)
+                        '%s.md.rst7.%s' % (options.res, commrank), '-inf', str(commrank) + '.mdinfo', 
+                        '-cpin', options.res + '.cpin', '-cpout', 
+                        '%s_pH%s.cpout' % (options.res, pH_sims[i]), '-cprestrt', str(commrank) + '.cprestrt'], 
+                        executable=sander).wait()
+   print " Finished frame %d" % i
+   i += 1

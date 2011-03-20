@@ -40,7 +40,12 @@ usages = {
                    'values are received from each thread on each thread (NOT total received from all put together). However, recv_buffer must be allocated for all values.'],
 'mpi_scatter' : ['C  : MPI_Scatter(*sendbuf, int send_count, MPI_Datatype, *recvbuf, int recv_count, MPI_Datatype, Communicator)',
                  'F90: MPI_Scatter(sendbuf, int send_count, MPI_Datatype, recvbuf, int recv_count, MPI_Datatype, Communicator, ier)',
-                 'Thread "root" splits sendbuf into numtasks different segments which it then distributes to each thread.']
+                 'Thread "root" splits sendbuf into numtasks different segments which it then distributes to each thread.'], 
+'mpi_comm_split' : ['C  : MPI_Comm_split(Input Communicator, int color, int key, Output Communicator)',
+                    'F90: MPI_Comm_split(Input Communicator, int color, int key, Output Communicator, ier)',
+                    'Splits a communicator into several different communicators. "color" is the comm key you want to join\n' + \
+                    '"key" is your rank in the input communicator'],
+'mpi_barrier' : ['C  : MPI_Barrier(Communicator)', 'F90: MPI_Barrier(Communicator, ier)', 'Synchronizes threads by making them all wait']
 }
 
 

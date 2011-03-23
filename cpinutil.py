@@ -187,7 +187,7 @@ if not ignore_warn:
       print >> sys.stderr, 'Error: mbondi2 radius set should be used for constant pH simulations. All reference energies were calculated'
       print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore this warning.'
       sys.exit()
-   else if radius_set != 'H(N), salt-bridge modified Bondi radii (mbondi3)' and igb == 8:
+   elif radius_set != 'H(N), salt-bridge modified Bondi radii (mbondi3)' and igb == 8:
       print >> sys.stderr, 'Error: mbondi3 radius set should be used for constant pH simulations. All reference energies were calculated'
       print >> sys.stderr, '       using these radii for igb=8! Set --ignore-warnings to ignore this warning.'
       sys.exit()

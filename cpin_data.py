@@ -6,7 +6,7 @@ EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3"
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
 
-def getData(residue, igb, has_water, neighbor_right='none', neighbor_left='none'):
+def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left='none'):
    import sys, math
 
 # Factors to adjust TI energies

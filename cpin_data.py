@@ -323,7 +323,7 @@ def getData(residue, igb, has_water, neighbor_right='none', neighbor_left='none'
          relene2 = -6.24932 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 8:
          relene1 = -3.4072 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = 0.0000000
+         relene2 = -6.29877 - KB * TEMP * LN_TO_LOG * pKa2
       else:
          relene1 = 0.0
          relene2 = 0.0

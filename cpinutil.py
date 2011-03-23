@@ -183,9 +183,13 @@ except KeyError:
    radius_set = "NO RADIUS SET SPECIFIED"
 
 if not ignore_warn:
-   if radius_set != 'H(N)-modified Bondi radii (mbondi2)':
+   if radius_set != 'H(N)-modified Bondi radii (mbondi2)' and igb in [2, 5]:
       print >> sys.stderr, 'Error: mbondi2 radius set should be used for constant pH simulations. All reference energies were calculated'
       print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore this warning.'
+      sys.exit()
+   else if radius_set != 'H(N), salt-bridge modified Bondi radii (mbondi3)' and igb == 8:
+      print >> sys.stderr, 'Error: mbondi3 radius set should be used for constant pH simulations. All reference energies were calculated'
+      print >> sys.stderr, '       using these radii for igb=8! Set --ignore-warnings to ignore this warning.'
       sys.exit()
 
 # Turn resnum and notresnum into integers. Turn igb into integer. Turn maxpKa and

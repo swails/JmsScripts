@@ -6,7 +6,7 @@ EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3"
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
 
-def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
+def getData(residue, igb, has_water, neighbor_right='none', neighbor_left='none'):
    import sys, math
 
 # Factors to adjust TI energies
@@ -24,7 +24,10 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       if igb == 2:
          relene = 26.6012839 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 5:
-         relene = 26.5980488 + KB * LN_TO_LOG * TEMP * pKa
+         if has_water: relene = 26.18816363 + KB * LN_TO_LOG * TEMP * pKa
+         else:         relene = 26.5980488 + KB * LN_TO_LOG * TEMP * pKa
+      elif igb == 8:
+         relene = 22.0683 + KB * LN_TO_LOG * TEMP * pKa
       else:
          relene = 0.0
 
@@ -130,7 +133,10 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       if igb == 2:
          relene = 8.2906037 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 8.0855764 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = 7.6690995 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = 8.0855764 + KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 8:
+         relene = 4.0841 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -250,7 +256,10 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       if igb == 2:
          relene = -65.070555 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -64.166385 - KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = -64.047229 - KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = -64.166385 - KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 8:
+         relene = -61.3522 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -312,6 +321,9 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       elif igb == 5:
          relene1 = -2.86001 - KB * TEMP * LN_TO_LOG * pKa1
          relene2 = -6.24932 - KB * TEMP * LN_TO_LOG * pKa2
+      elif igb == 8:
+         relene1 = -3.4072 - KB * TEMP * LN_TO_LOG * pKa1
+         relene2 = 0.0000000
       else:
          relene1 = 0.0
          relene2 = 0.0
@@ -385,7 +397,10 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       if igb == 2:
          relene = -15.2423959 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = -14.5392838 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = -14.3162107 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = -14.5392838 + KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 8:
+         relene = -18.4322 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -445,7 +460,10 @@ def getData(residue, igb, neighbor_right='none', neighbor_left='none'):
       if igb == 2:
          relene = 77.4666763 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
-         relene = 76.2588331 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = 76.2827217 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = 76.2588331 + KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 8:
+         relene = 71.5604 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 

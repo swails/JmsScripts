@@ -27,7 +27,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = 26.18816363 + KB * LN_TO_LOG * TEMP * pKa
          else:         relene = 26.5980488 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 8:
-         relene = 22.0683 + KB * LN_TO_LOG * TEMP * pKa
+         relene = 21.6040215 + KB * LN_TO_LOG * TEMP * pKa
       else:
          relene = 0.0
 
@@ -136,7 +136,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = 7.6690995 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 8.0855764 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = 4.0841 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 3.5654376 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -259,7 +259,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = -64.047229 - KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -64.166385 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = -61.3522 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -61.310885 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -400,7 +400,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = -14.3162107 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -14.5392838 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = -18.4322 + KB * TEMP * LN_TO_LOG * pKa
+         relene = -18.4151468 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -463,7 +463,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = 76.2827217 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 76.2588331 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = 71.5604 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 71.5780565 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 

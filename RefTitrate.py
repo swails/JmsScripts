@@ -146,7 +146,7 @@ if master:
    mdin.close()
    
    print "\n Minimizing initial structure"
-   proc_return = Popen(['sander', '-i', 'mdin.min', '-c', '%s.rst7' % options.res, '-p', 
+   proc_return = Popen(['sander', '-O', '-i', 'mdin.min', '-c', '%s.rst7' % options.res, '-p', 
                         '%s.parm7' % options.res,'-o', 'min.mdout', '-r', '%s.min.rst7' % options.res], 
                         executable=sander).wait()
 
@@ -184,13 +184,15 @@ if starting_pH < options.pH:
    higher_pHs += options.coarseres
    pH_sims.append(higher_pHs)
 else:
-   lower_pHs -= options.coarseres
+   lower_pHs -= options.fineres
    pH_sims.append(lower_pHs)
    lower_pHs -= options.coarseres
    pH_sims.append(lower_pHs)
    lower_pHs -= options.coarseres
    pH_sims.append(lower_pHs)
    higher_pHs += options.fineres
+   pH_sims.append(higher_pHs)
+   higher_pHs += options.coarseres
    pH_sims.append(higher_pHs)
    higher_pHs += options.coarseres
    pH_sims.append(higher_pHs)
@@ -219,11 +221,17 @@ for i in range(start_frame, end_frame):
    mdin.write(md_mdin % pH_sims[i])
    mdin.close()
 
-   proc_return = Popen(['sander', '-i', 'mdin.%s' % commrank, '-c', '%s.min.rst7' % options.res, '-p', 
+   proc_return = Popen(['sander', '-O', '-i', 'mdin.%s' % commrank, '-c', '%s.min.rst7' % options.res, '-p', 
                         '%s.parm7' % options.res,'-o', '%s_pH%s.mdout' % (options.res, pH_sims[i]), '-r', 
                         '%s.md.rst7.%s' % (options.res, commrank), '-inf', str(commrank) + '.mdinfo', 
                         '-cpin', options.res + '.cpin', '-cpout', 
                         '%s_pH%s.cpout' % (options.res, pH_sims[i]), '-cprestrt', str(commrank) + '.cprestrt'], 
                         executable=sander).wait()
+
+   if proc_return != 0:
+      print >> sys.stderr, 'Error in sander!'
+      commworld.Abort()
+      sys.exit(1)
+
    print " Finished frame %d" % i
    i += 1

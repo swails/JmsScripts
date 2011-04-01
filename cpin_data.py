@@ -22,9 +22,10 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
 
       # set the relative energies for the different igb choices
       if igb == 2:
-         relene = 26.6012839 + KB * LN_TO_LOG * TEMP * pKa
+         if has_water: relene = 26.6047496 + KB * LN_TO_LOG * TEMP * pKa
+         else:         relene = 26.6012839 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 5:
-         if has_water: relene = 26.18816363 + KB * LN_TO_LOG * TEMP * pKa
+         if has_water: relene = 26.1881636 + KB * LN_TO_LOG * TEMP * pKa
          else:         relene = 26.5980488 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 8:
          relene = 21.6040215 + KB * LN_TO_LOG * TEMP * pKa
@@ -131,7 +132,8 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa = 4.4
 
       if igb == 2:
-         relene = 8.2906037 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = 8.0464682 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = 8.2906037 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = 7.6690995 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 8.0855764 + KB * TEMP * LN_TO_LOG * pKa
@@ -254,7 +256,8 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa = 9.6
       
       if igb == 2:
-         relene = -65.070555 - KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = -65.003415 - KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = -65.070555 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = -64.047229 - KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -64.166385 - KB * TEMP * LN_TO_LOG * pKa
@@ -317,13 +320,13 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
 
       if igb == 2:
          relene1 = -2.84183 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.35183 - KB * TEMP * LN_TO_LOG * pKa2
+         relene2 = -6.5879293 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 5:
          relene1 = -2.86001 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.24932 - KB * TEMP * LN_TO_LOG * pKa2
+         relene2 = -6.7072629 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 8:
          relene1 = -3.4072 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.29877 - KB * TEMP * LN_TO_LOG * pKa2
+         relene2 = -6.3373386 - KB * TEMP * LN_TO_LOG * pKa2
       else:
          relene1 = 0.0
          relene2 = 0.0
@@ -395,7 +398,8 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa = 10.4
 
       if igb == 2:
-         relene = -15.2423959 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = -15.1417977 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = -15.2423959 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = -14.3162107 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -14.5392838 + KB * TEMP * LN_TO_LOG * pKa
@@ -458,7 +462,8 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa = 8.5
 
       if igb == 2:
-         relene = 77.4666763 + KB * TEMP * LN_TO_LOG * pKa
+         if has_water: relene = 77.5680281 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = 77.4666763 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = 76.2827217 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 76.2588331 + KB * TEMP * LN_TO_LOG * pKa

@@ -319,11 +319,19 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa2 = 7.1
 
       if igb == 2:
-         relene1 = -2.84183 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.5879293 - KB * TEMP * LN_TO_LOG * pKa2
+         if has_water:
+            relene1 = -2.77641 - KB * TEMP * LN_TO_LOG * pKa1
+            relene2 = -6.71562 - KB * TEMP * LN_TO_LOG * pKa2
+         else
+            relene1 = -2.84183 - KB * TEMP * LN_TO_LOG * pKa1
+            relene2 = -6.58793 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 5:
-         relene1 = -2.86001 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.7072629 - KB * TEMP * LN_TO_LOG * pKa2
+         if has_water:
+            relene1 = -2.90517 - KB * TEMP * LN_TO_LOG * pKa1
+            relene2 = -6.82684 - KB * TEMP * LN_TO_LOG * pKa2
+         else:
+            relene1 = -2.86001 - KB * TEMP * LN_TO_LOG * pKa1
+            relene2 = -6.70726 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 8:
          relene1 = -3.4072 - KB * TEMP * LN_TO_LOG * pKa1
          relene2 = -6.3373386 - KB * TEMP * LN_TO_LOG * pKa2

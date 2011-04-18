@@ -45,7 +45,12 @@ usages = {
                     'F90: MPI_Comm_split(Input Communicator, int color, int key, Output Communicator, ier)',
                     'Splits a communicator into several different communicators. "color" is the comm key you want to join\n' + \
                     '"key" is your rank in the input communicator'],
-'mpi_barrier' : ['C  : MPI_Barrier(Communicator)', 'F90: MPI_Barrier(Communicator, ier)', 'Synchronizes threads by making them all wait']
+'mpi_barrier' : ['C  : MPI_Barrier(Communicator)', 'F90: MPI_Barrier(Communicator, ier)', 'Synchronizes threads by making them all wait'],
+'mpi_sendrecv' : ['C  : MPI_Sendrecv(*sendbuf, int send_count, MPI_Datatype, int destination, int sendtag, *recvbuf, \n' + 
+                  '                  int recv_count, MPI_Datatype, int source, int recvtag, Communicator, mpi_status)',
+                  'F90: MPI_Sendrecv(*sendbuf, int send_count, MPI_Datatype, int destination, int sendtag, *recvbuf, \n' +
+                  '                  int recv_count, MPI_Datatype, int source, int recvtag, Communicator, mpi_status, ierror)',
+                  'Sends and receives in the same call...']
 }
 
 

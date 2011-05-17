@@ -157,9 +157,9 @@ class amberParm:
       self.exists = False      # Logical set to true if the prmtop exists
       self.valid = False       # Logical set to true if the prmtop is valid
       self.pointers = {}       # list of all the pointers in the prmtop
-      LJ_types = {}            # dictionary in which each atom name pairs with its LJ atom type number
-      LJ_radius = []           # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
-      LJ_depth = []            # ordered array of L-J depths in kcal/mol analagous to LJ_radius
+      self.LJ_types = {}       # dictionary in which each atom name pairs with its LJ atom type number
+      self.LJ_radius = []      # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
+      self.LJ_depth = []       # ordered array of L-J depths in kcal/mol analagous to LJ_radius
 
       self.rdparm() # read the prmtop
       self.valid = self.exists # if it exists, fill the pointers

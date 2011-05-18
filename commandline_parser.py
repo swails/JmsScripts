@@ -412,9 +412,16 @@ class OptionParser:
             file.write('%s %s%s%s\n' % (tab1, flag, spaces, 
                                         self.options[flag].variable))
          elif self.options[flag].__name__ == 'ArrayOption':
-            file.write('%s %s%s%s1,%s2,...,%sN\n' % (tab1, flag, spaces,
-                 self.options[flag].variable, self.options[flag].variable,
-                 self.options[flag].variable))
+            if self.options[flag].num_entries == -1:
+               file.write('%s %s%s%s1,%s2,...,%sN\n' % (tab1, flag, spaces,
+                    self.options[flag].variable, self.options[flag].variable,
+                    self.options[flag].variable))
+            else:
+               file.write('%s %s%s%s1,' % (tab1, flag, spaces, 
+                          self.options[flag].variable))
+               for i in range(1,self.options[flag].num_entries):
+                  file.write('%s%d,' % (self.options[flag].variable, i+1))
+               file.write('\n')
 
          file.write(self._format(flag, tab2, max_line_len) + '\n')
 

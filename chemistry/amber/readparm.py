@@ -764,7 +764,7 @@ class amberParm:
          self.LJ_types[self.parm_data["AMBER_ATOM_TYPE"][i]] = self.parm_data["ATOM_TYPE_INDEX"][i]
          
       for i in range(self.pointers["NTYPES"]):
-         lj_index = (i + 1) * (i + 2) / 2 - 1 # n(n+1)/2 th position adjusted for indexing from 0
+         lj_index = self.pointers["NTYPES"] * i - (i * (i - 1) / 2)
          if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
             self.LJ_radius.append(0)
             self.LJ_depth.append(0)

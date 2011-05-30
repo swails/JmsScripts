@@ -764,7 +764,8 @@ class amberParm:
          self.LJ_types[self.parm_data["AMBER_ATOM_TYPE"][i]] = self.parm_data["ATOM_TYPE_INDEX"][i]
          
       for i in range(self.pointers["NTYPES"]):
-         lj_index = self.pointers["NTYPES"] * i - (i * (i - 1) / 2)
+         lj_index = self.parm_data["NONBONDED_PARM_INDEX"][
+                     self.pointers["NTYPES"] * i + i] - 1
          if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
             self.LJ_radius.append(0)
             self.LJ_depth.append(0)
@@ -857,11 +858,19 @@ class amberParm:
       for i in range(self.pointers['NATOM']):
          radii.append(self.LJ_radius[self.LJ_types[self.parm_data['AMBER_ATOM_TYPE'][i]]-1])
 
-      if self.valid and self.rst7.valid:
-         return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
-                         charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
-                         bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
-                         elements=elements, title=title, radii=radii)
+      try:
+         if self.valid and self.rst7.valid:
+            return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
+                            charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
+                            bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
+                            elements=elements, title=title, radii=radii)
+      except AttributeError: # in case no coordinates were loaded, use a dummy-list
+         if self.valid:
+            return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
+                            charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
+                            bonds=all_bonds, residue_pointers=residue_pointers, coords=list(range(self.pointers['NATOM']*3)),
+                            elements=elements, title=title, radii=radii)
+            
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

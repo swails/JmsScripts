@@ -54,12 +54,8 @@ atm_1_idx = parm.LJ_types[opt.atom_1] - 1
 atm_2_idx = parm.LJ_types[opt.atom_2] - 1
 
 # Find the atom1 - atom1 interaction
-start_idx = parm.ptr('ntypes') * atm_1_idx - (atm_1_idx * 
-            (atm_1_idx - 1) / 2)
-
-# The atom1 - atom2 interaction is past the atom1 - atom2 interaction
-# by as much as the difference in their indices
-term_idx = start_idx + atm_2_idx - atm_1_idx
+term_idx = parm.parm_data['NONBONDED_PARM_INDEX'][
+                parm.parm_data['NTYPES']*(atm_1_idx - 1) + atm_2_idx]
 
 # Now change the ACOEF and BCOEF arrays, assuming the proper combining
 # rules

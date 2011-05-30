@@ -765,7 +765,7 @@ class amberParm:
          
       for i in range(self.pointers["NTYPES"]):
          lj_index = self.parm_data["NONBONDED_PARM_INDEX"][
-                     self.pointers["NTYPES"] * i + i] - 1
+                     self.pointers["NTYPES"] * i + i - 1] - 1
          if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
             self.LJ_radius.append(0)
             self.LJ_depth.append(0)

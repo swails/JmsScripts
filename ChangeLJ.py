@@ -55,7 +55,7 @@ atm_2_idx = parm.LJ_types[opt.atom_2] - 1
 
 # Find the atom1 - atom1 interaction (adjusting for indexing from 0)
 term_idx = parm.parm_data['NONBONDED_PARM_INDEX'][
-                parm.parm_data['NTYPES']*(atm_1_idx - 1) + atm_2_idx] - 1
+                parm.pointers['NTYPES']*(atm_1_idx - 1) + atm_2_idx] - 1
 
 # Now change the ACOEF and BCOEF arrays, assuming the proper combining
 # rules

@@ -50,12 +50,12 @@ if parm.LJ_types[opt.atom_1] > parm.LJ_types[opt.atom_2]:
    opt.atom_2 = holder
 
 # Find the index of where the pairs of the first atom type starts
-atm_1_idx = parm.LJ_types[opt.atom_1]
-atm_2_idx = parm.LJ_types[opt.atom_2]
+atm_1_idx = parm.LJ_types[opt.atom_1] 
+atm_2_idx = parm.LJ_types[opt.atom_2] 
 
 # Find the atom1 - atom1 interaction (adjusting for indexing from 0)
 term_idx = parm.parm_data['NONBONDED_PARM_INDEX'][
-                parm.pointers['NTYPES']*(atm_1_idx - 1) + atm_2_idx] - 1
+                parm.pointers['NTYPES']*(atm_1_idx - 1) + atm_2_idx - 1] - 1
 
 # Now change the ACOEF and BCOEF arrays, assuming the proper combining
 # rules

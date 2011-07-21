@@ -118,22 +118,44 @@ def _parseFormat(format_string):  # parse a format statement and send back detai
    """ Parses the fortran format statement. Recognizes ints, exponents, and strings.
        Returns the number of items/line, size of each item, and type of data """
 
+   # Get rid of ( and ) specifiers in Fortran format strings. This is a hack, but
+   # should work for existing chamber prmtop files
+
+   format_string = format_string.replace('(','').replace(')','')
+
+   # Fix case for E, I, and F
+
+   format_string = format_string.replace('e','E')
+   format_string = format_string.replace('i','I')
+   format_string = format_string.replace('f','F')
+
    if 'a' in format_string: # this is a string
       format_parts = format_string.split('a')
-      return int(format_parts[0]), int(format_parts[1]), 'str'
+      try:
+         return int(format_parts[0]), int(format_parts[1]), 'str', None
+      except:
+         return 1, 80, 'str', None
 
    elif 'I' in format_string: # this is an integer
       format_parts = format_string.split('I')
-      return int(format_parts[0]), int(format_parts[1]), 'int'
+      if len(format_parts[0].strip()) == 0: format_parts[0] = 1
+      return int(format_parts[0]), int(format_parts[1]), 'int', None
 
    elif 'E' in format_string: # this is a floating point decimal
       format_parts = format_string.split('E')
       decimal_parts = format_parts[1].split('.')
-      return int(format_parts[0]), int(decimal_parts[0]), 'dec'
+      if len(format_parts[0].strip()) == 0: format_parts[0] = 1
+      return int(format_parts[0]), int(decimal_parts[0]), 'dec', int(decimal_parts[1])
+   
+   elif 'F' in format_string: # this is also a floating point decimal
+      format_parts = format_string.split('F')
+      decimal_parts = format_parts[1].split('.')
+      if len(format_parts[0].strip()) == 0: format_parts[0] = 1
+      return int(format_parts[0]), int(decimal_parts[0]), 'dec', int(decimal_parts[1])
 
    else:
       print >> stderr, 'Error: Unrecognized format "%s"!' % format_string
-      return 1, 80, 'str'
+      return 1, 80, 'str', None
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -275,7 +297,7 @@ class amberParm:
 
          elif prmlines[i][0:7] == '%FORMAT':
             self.formats[current_flag] = prmlines[i][8:len(prmlines[i].strip())-1]
-            number_items_perline, size_item, dat_type = _parseFormat(self.formats[current_flag])
+            number_items_perline, size_item, dat_type, junk = _parseFormat(self.formats[current_flag])
             gathering_data = True
 
          elif gathering_data:
@@ -339,17 +361,17 @@ class amberParm:
          flag = self.flag_list[i]
          new_prm.write('%%FLAG %s\n' % flag)
          new_prm.write('%%FORMAT(%s)\n' % self.formats[flag])
-         number_items_perline, size_item, dat_type = _parseFormat(self.formats[flag])
-         if dat_type == 'dec':
-            decnum = int(self.formats[flag].split('E')[1].split('.')[1])
+         number_items_perline, size_item, dat_type, decnum = _parseFormat(self.formats[flag])
          line = ''
          num_items = 0
          if len(self.parm_data[flag]) == 0: # empty field...
             new_prm.write('\n')
             continue
          for j in range(len(self.parm_data[flag])): # write data in new_prm
-            if dat_type == 'dec':
+            if dat_type == 'dec' and 'E' in self.formats[flag].upper():
                line += ('%%%s.%sE' % (size_item, decnum)) % self.parm_data[flag][j] 
+            elif dat_type == 'dec' and 'F' in self.formats[flag].upper():
+               line += ('%%%s.%sF' % (size_item, decnum)) % self.parm_data[flag][j] 
             elif dat_type == 'int':
                line += ('%%%sd' % size_item) % self.parm_data[flag][j] 
             else:
@@ -764,7 +786,8 @@ class amberParm:
          self.LJ_types[self.parm_data["AMBER_ATOM_TYPE"][i]] = self.parm_data["ATOM_TYPE_INDEX"][i]
          
       for i in range(self.pointers["NTYPES"]):
-         lj_index = (i + 1) * (i + 2) / 2 - 1 # n(n+1)/2 th position adjusted for indexing from 0
+         lj_index = self.parm_data["NONBONDED_PARM_INDEX"][
+                     self.pointers["NTYPES"] * i + i - 1] - 1
          if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
             self.LJ_radius.append(0)
             self.LJ_depth.append(0)
@@ -857,11 +880,19 @@ class amberParm:
       for i in range(self.pointers['NATOM']):
          radii.append(self.LJ_radius[self.LJ_types[self.parm_data['AMBER_ATOM_TYPE'][i]]-1])
 
-      if self.valid and self.rst7.valid:
-         return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
-                         charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
-                         bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
-                         elements=elements, title=title, radii=radii)
+      try:
+         if self.valid and self.rst7.valid:
+            return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
+                            charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
+                            bonds=all_bonds, residue_pointers=residue_pointers, coords=copy(self.coords),
+                            elements=elements, title=title, radii=radii)
+      except AttributeError: # in case no coordinates were loaded, use a dummy-list
+         if self.valid:
+            return Molecule(atoms=copy(self.parm_data['ATOM_NAME']), atom_types=copy(self.parm_data['AMBER_ATOM_TYPE']),
+                            charges=copy(self.parm_data['CHARGE']), residues=copy(self.parm_data['RESIDUE_LABEL']), 
+                            bonds=all_bonds, residue_pointers=residue_pointers, coords=list(range(self.pointers['NATOM']*3)),
+                            elements=elements, title=title, radii=radii)
+            
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

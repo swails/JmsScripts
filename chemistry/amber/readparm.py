@@ -5,7 +5,7 @@
 # prmtop object. It will also extract parameters and write a frcmod.   #
 # See readparm.README for more detailed description                    #
 #                                                                      #
-#          Last updated: 12/04/2010                                    #
+#          Last updated: 07/20/2011                                    #
 #                                                                      #
 ########################################################################
 
@@ -154,7 +154,7 @@ def _parseFormat(format_string):  # parse a format statement and send back detai
       return int(format_parts[0]), int(decimal_parts[0]), 'dec', int(decimal_parts[1])
 
    else:
-      print >> stderr, 'Error: Unrecognized format "%s"!' % format_string
+      print >> stderr, 'Warning: Unrecognized format "%s"! Assuming string.' % format_string
       return 1, 80, 'str', None
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -178,6 +178,7 @@ class amberParm:
       self.overwrite = False   # whether writeParm will overwrite filename prm_name
       self.exists = False      # Logical set to true if the prmtop exists
       self.valid = False       # Logical set to true if the prmtop is valid
+      self.chamber = False     # Is this a chamber-generated prmtop file?
       self.pointers = {}       # list of all the pointers in the prmtop
       self.LJ_types = {}       # dictionary in which each atom name pairs with its LJ atom type number
       self.LJ_radius = []      # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
@@ -187,55 +188,70 @@ class amberParm:
       self.valid = self.exists # if it exists, fill the pointers
       if self.exists:
          try: # try to load all of the pointers into the 
-            self.pointers["NATOM"] = self.parm_data["POINTERS"][NATOM]
-            self.pointers["NTYPES"] = self.parm_data["POINTERS"][NTYPES]
-            self.pointers["NBONH"] = self.parm_data["POINTERS"][NBONH]
-            self.pointers["MBONA"] = self.parm_data["POINTERS"][MBONA]
-            self.pointers["NTHETH"] = self.parm_data["POINTERS"][NTHETH]
-            self.pointers["MTHETA"] = self.parm_data["POINTERS"][MTHETA]
-            self.pointers["NPHIH"] = self.parm_data["POINTERS"][NPHIH]
-            self.pointers["MPHIA"] = self.parm_data["POINTERS"][MPHIA]
-            self.pointers["NHPARM"] = self.parm_data["POINTERS"][NHPARM]
-            self.pointers["NPARM"] = self.parm_data["POINTERS"][NPARM]
-            self.pointers["NEXT"] = self.parm_data["POINTERS"][NEXT]
-            self.pointers["NRES"] = self.parm_data["POINTERS"][NRES]
-            self.pointers["NBONA"] = self.parm_data["POINTERS"][NBONA]
-            self.pointers["NTHETA"] = self.parm_data["POINTERS"][NTHETA]
-            self.pointers["NPHIA"] = self.parm_data["POINTERS"][NPHIA]
-            self.pointers["NUMBND"] = self.parm_data["POINTERS"][NUMBND]
-            self.pointers["NUMANG"] = self.parm_data["POINTERS"][NUMANG]
-            self.pointers["NPTRA"] = self.parm_data["POINTERS"][NPTRA]
-            self.pointers["NATYP"] = self.parm_data["POINTERS"][NATYP]
-            self.pointers["NPHB"] = self.parm_data["POINTERS"][NPHB]
-            self.pointers["IFPERT"] = self.parm_data["POINTERS"][IFPERT]
-            self.pointers["NBPER"] = self.parm_data["POINTERS"][NBPER]
-            self.pointers["NGPER"] = self.parm_data["POINTERS"][NGPER]
-            self.pointers["NDPER"] = self.parm_data["POINTERS"][NDPER]
-            self.pointers["MBPER"] = self.parm_data["POINTERS"][MBPER]
-            self.pointers["MGPER"] = self.parm_data["POINTERS"][MGPER]
-            self.pointers["MDPER"] = self.parm_data["POINTERS"][MDPER]
-            self.pointers["IFBOX"] = self.parm_data["POINTERS"][IFBOX]
-            self.pointers["NMXRS"] = self.parm_data["POINTERS"][NMXRS]
-            self.pointers["IFCAP"] = self.parm_data["POINTERS"][IFCAP]
-            self.pointers["NUMEXTRA"] = self.parm_data["POINTERS"][NUMEXTRA]
-            self.pointers["NCOPY"] = self.parm_data["POINTERS"][NCOPY]
+            self.LoadPointers()
             self.valid = True
          except KeyError:
             print >> stderr, 'Error: POINTERS flag not found! Likely a bad AMBER topology file.'
             self.valid = False
          except IndexError:
             if (len(self.parm_data['POINTERS'])) < 30:
-               print >> stderr, 'Error: Fewer integers in POINTERS section than expected! Likely a bad AMBER topology file.'
+               print >> stderr, 'Error: Fewer integers in POINTERS section than expected! ' + \
+                                'Likely a bad AMBER topology file.'
                self.valid = False
+
+      if 'CTITLE' in self.flag_list: # We've found a chamber prmtop
+         self.chamber = True
 
       if self.valid and 'LENNARD_JONES_ACOEF' in self.parm_data.keys() and 'LENNARD_JONES_BCOEF' in self.parm_data.keys():
          try:
-            self.fill_LJ() # fill LJ arrays with LJ data for easy manipulations
-         except:
-            print >> stderr, 'Warning: Problem parsing L-J 6-12 parameters.'
-   
+            # fill LJ arrays with LJ data for easy manipulations
+            self.fill_LJ()
+            if self.chamber:
+               self.fill_14_LJ()
+         except Exception, err:
+            print >> stderr, 'Warning: Problem parsing L-J 6-12 parameters. \n%s' % err
+
       if rst7_name != '':
          self.LoadRst7(rst7_name)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   
+   def LoadPointers(self):
+      self.pointers["NATOM"] = self.parm_data["POINTERS"][NATOM]
+      self.pointers["NTYPES"] = self.parm_data["POINTERS"][NTYPES]
+      self.pointers["NBONH"] = self.parm_data["POINTERS"][NBONH]
+      self.pointers["MBONA"] = self.parm_data["POINTERS"][MBONA]
+      self.pointers["NTHETH"] = self.parm_data["POINTERS"][NTHETH]
+      self.pointers["MTHETA"] = self.parm_data["POINTERS"][MTHETA]
+      self.pointers["NPHIH"] = self.parm_data["POINTERS"][NPHIH]
+      self.pointers["MPHIA"] = self.parm_data["POINTERS"][MPHIA]
+      self.pointers["NHPARM"] = self.parm_data["POINTERS"][NHPARM]
+      self.pointers["NPARM"] = self.parm_data["POINTERS"][NPARM]
+      self.pointers["NEXT"] = self.parm_data["POINTERS"][NEXT]
+      self.pointers["NRES"] = self.parm_data["POINTERS"][NRES]
+      self.pointers["NBONA"] = self.parm_data["POINTERS"][NBONA]
+      self.pointers["NTHETA"] = self.parm_data["POINTERS"][NTHETA]
+      self.pointers["NPHIA"] = self.parm_data["POINTERS"][NPHIA]
+      self.pointers["NUMBND"] = self.parm_data["POINTERS"][NUMBND]
+      self.pointers["NUMANG"] = self.parm_data["POINTERS"][NUMANG]
+      self.pointers["NPTRA"] = self.parm_data["POINTERS"][NPTRA]
+      self.pointers["NATYP"] = self.parm_data["POINTERS"][NATYP]
+      self.pointers["NPHB"] = self.parm_data["POINTERS"][NPHB]
+      self.pointers["IFPERT"] = self.parm_data["POINTERS"][IFPERT]
+      self.pointers["NBPER"] = self.parm_data["POINTERS"][NBPER]
+      self.pointers["NGPER"] = self.parm_data["POINTERS"][NGPER]
+      self.pointers["NDPER"] = self.parm_data["POINTERS"][NDPER]
+      self.pointers["MBPER"] = self.parm_data["POINTERS"][MBPER]
+      self.pointers["MGPER"] = self.parm_data["POINTERS"][MGPER]
+      self.pointers["MDPER"] = self.parm_data["POINTERS"][MDPER]
+      self.pointers["IFBOX"] = self.parm_data["POINTERS"][IFBOX]
+      self.pointers["NMXRS"] = self.parm_data["POINTERS"][NMXRS]
+      self.pointers["IFCAP"] = self.parm_data["POINTERS"][IFCAP]
+      self.pointers["NUMEXTRA"] = self.parm_data["POINTERS"][NUMEXTRA]
+      # The next is probably only there for LES-prmtops
+      try:
+         self.pointers["NCOPY"] = self.parm_data["POINTERS"][NCOPY]
+      except: pass
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -268,6 +284,7 @@ class amberParm:
       self.version = '' # reset all topology information each time rdparm is called
       self.formats = {}
       self.parm_data = {}
+      self.parm_comments = {}
       self.flag_list = []
 
       try: # open up the prmtop file, catching if it doesn't exist
@@ -292,8 +309,12 @@ class amberParm:
             current_flag = prmlines[i][6:].strip()
             self.formats[current_flag] = ''
             self.parm_data[current_flag] = []
+            self.parm_comments[current_flag] = []
             self.flag_list.append(current_flag)
             gathering_data = False
+
+         elif prmlines[i][0:8] == '%COMMENT':
+            self.parm_comments[current_flag].append(prmlines[i][9:].strip())
 
          elif prmlines[i][0:7] == '%FORMAT':
             self.formats[current_flag] = prmlines[i][8:len(prmlines[i].strip())-1]
@@ -320,6 +341,17 @@ class amberParm:
             self.parm_data["CHARGE"][i] /= AMBER_ELECTROSTATIC
       except KeyError:
          print >> stderr, 'Error: CHARGE flag not found in prmtop! Likely a bad AMBER topology file.'
+
+      # Fill the residue container array
+      self.residue_container = []
+      for i in range(self.parm_data['POINTERS'][NRES]-1):
+         curres = self.parm_data['RESIDUE_POINTER'][i] - 1
+         nextres = self.parm_data['RESIDUE_POINTER'][i+1] - 1
+         for j in range(curres, nextres):
+            self.residue_container.append(i+1)
+      for i in range(self.parm_data['RESIDUE_POINTER'][len(self.parm_data['RESIDUE_POINTER'])-1],
+                     self.parm_data['POINTERS'][NATOM]):
+         self.residue_container.append(self.parm_data['POINTERS'][NRES])
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -360,6 +392,9 @@ class amberParm:
       for i in range(len(self.flag_list)):
          flag = self.flag_list[i]
          new_prm.write('%%FLAG %s\n' % flag)
+         # Insert any comments before the %FORMAT specifier
+         for comment in self.parm_comments[flag]:
+            new_prm.write('%%COMMENT %s\n' % comment)
          new_prm.write('%%FORMAT(%s)\n' % self.formats[flag])
          number_items_perline, size_item, dat_type, decnum = _parseFormat(self.formats[flag])
          line = ''
@@ -410,6 +445,8 @@ class amberParm:
       from math import pi, pow
 
       print >> stderr, "Warning: amberParm.Frcmod() does not work for 10-12 non-bonded prmtops yet!"
+
+      self.fill_LJ()
 
       def getMatches(entry, array):
          counter = 0
@@ -787,8 +824,8 @@ class amberParm:
          
       for i in range(self.pointers["NTYPES"]):
          lj_index = self.parm_data["NONBONDED_PARM_INDEX"][
-                     self.pointers["NTYPES"] * i + i - 1] - 1
-         if self.parm_data["LENNARD_JONES_BCOEF"][lj_index] < 1.0e-6:
+                     self.pointers["NTYPES"] * i + i] - 1
+         if self.parm_data["LENNARD_JONES_ACOEF"][lj_index] < 1.0e-6:
             self.LJ_radius.append(0)
             self.LJ_depth.append(0)
          else:
@@ -798,20 +835,42 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def recalculate_LJ(self):
-      """ Takes the values of the LJ_radius and LJ_depth arrays and recalculates the LENNARD_JONES_A/BCOEF
-          topology sections from the canonical combining rules. """
-      from math import sqrt
-
-      index = 0
+   def fill_14_LJ(self):
+      """ Fills the LJ_14_radius, LJ_14_depth arrays with data (LJ_types is identical)
+          from LENNARD_JONES_14_ACOEF and LENNARD_JONES_14_BCOEF sections of the 
+          prmtop files, by undoing the canonical combining rules. """
+      self.LJ_14_radius = []  # empty LJ_radii so it can be re-filled
+      self.LJ_14_depth = []   # empty LJ_depths so it can be re-filled
+      one_sixth = 1.0 / 6.0 # we need to raise some numbers to the 1/6th power
 
       for i in range(self.pointers["NTYPES"]):
-         for j in range(i+1):
+         lj_index = self.parm_data["NONBONDED_PARM_INDEX"][
+                     self.pointers["NTYPES"] * i + i] - 1
+         if self.parm_data["LENNARD_JONES_14_ACOEF"][lj_index] < 1.0e-6:
+            self.LJ_14_radius.append(0)
+            self.LJ_14_depth.append(0)
+         else:
+            factor = 2 * self.parm_data["LENNARD_JONES_14_ACOEF"][lj_index] / \
+                     self.parm_data["LENNARD_JONES_14_BCOEF"][lj_index]
+            self.LJ_14_radius.append(pow(factor, one_sixth) * 0.5)
+            self.LJ_14_depth.append(self.parm_data["LENNARD_JONES_14_BCOEF"][lj_index] 
+                                    / 2 / factor)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def recalculate_LJ(self):
+      """ Takes the values of the LJ_radius and LJ_depth arrays and recalculates the 
+          LENNARD_JONES_A/BCOEF topology sections from the canonical combining rules. 
+      """
+      from math import sqrt
+
+      for i in range(self.pointers["NTYPES"]):
+         for j in range(i,self.pointers["NTYPES"]):
+            index = self.parm_data['NONBONDED_PARM_INDEX'][self.ptr('ntypes')*i + j] - 1
             rij = self.LJ_radius[i] + self.LJ_radius[j]
             wdij = sqrt(self.LJ_depth[i] * self.LJ_depth[j])
             self.parm_data["LENNARD_JONES_ACOEF"][index] = wdij * pow(rij, 12)
             self.parm_data["LENNARD_JONES_BCOEF"][index] = 2 * wdij * pow(rij, 6)
-            index += 1
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

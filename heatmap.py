@@ -16,7 +16,7 @@ from optparse import OptionParser
 import math
 import numpy
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as pyplot
 import matplotlib.colors as colours
 
@@ -28,7 +28,7 @@ parser = OptionParser(usage="usage: %prog [options] <datafile>")
 parser.set_defaults(binsize=0.1, normalise=True, freeEnergy=False,
 	unicode=False, raw=False, temperature=None, xub=None, xlb=None,
 	xtickspacing=5.0, xlabel="X axis", yub=None, ylb=None,
-	ytickspacing=5.0, ylabel="Y axis")
+	ytickspacing=5.0, ylabel="Y axis", resolution=80.0)
 
 parser.add_option("-b", "--binsize", type="float", dest="binsize",
 	metavar="NUM", help="Width of each bin ( > 0) [default: 0.1]")
@@ -72,6 +72,9 @@ parser.add_option("--y-label", type="string", dest="ylabel", metavar="STRING",
 	"and so forth, please see " + \
 	"http://matplotlib.sourceforge.net/users/mathtext.html " + \
 	"[default: the string \"Y axis\"]")
+parser.add_option("--resolution", type="float", dest="resolution",
+	metavar="NUM",
+	help="Resolution of final image (dpi) [default: 80.0]")
 
 (options, args) = parser.parse_args()
 
@@ -92,6 +95,10 @@ if (options.ytickspacing <= 0):
 	print >> sys.stderr, "Bad value for Y tick spacing " + \
 	"(should be greater than 0)"
 	sys.exit(1)
+if (options.resolution <= 0):
+	print >> sys.stderr, "Bad value for resolution " + \
+	"(should be greater than 0)"
+	sys.exit(1)
 
 # Try to parse X-axis label.
 defaultEncoding = sys.getdefaultencoding()
@@ -100,9 +107,7 @@ if (defaultEncoding == ""):
 	print >> sys.stderr, "This probably indicates a serious underlying " + \
 	"problem."
 	sys.exit(1)
-fallbackEncodings = { "UTF-8" : "utf-8" }
-if (locale.nl_langinfo(locale.CODESET) == "UTF-8"):
-	fallbackEncoding = 'utf-8'
+fallbackEncodings = { "UTF-8" : "utf-8", "US-ASCII" : "utf-8" }
 
 try:
 	uxlabel = options.xlabel.decode(defaultEncoding)
@@ -348,4 +353,8 @@ else:
 pyplot.xlabel(uxlabel)
 pyplot.ylabel(uylabel)
 pyplot.colorbar()
-pyplot.show()
+defaultres = pyplot.gcf().get_dpi()
+if (options.resolution != None):
+	pyplot.gcf().set_dpi(options.resolution)
+
+pyplot.gcf().savefig('heatmap.png', dpi=options.resolution, bbox_inches='tight')

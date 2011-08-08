@@ -349,7 +349,7 @@ class amberParm:
          nextres = self.parm_data['RESIDUE_POINTER'][i+1] - 1
          for j in range(curres, nextres):
             self.residue_container.append(i+1)
-      for i in range(self.parm_data['RESIDUE_POINTER'][len(self.parm_data['RESIDUE_POINTER'])-1],
+      for i in range(self.parm_data['RESIDUE_POINTER'][len(self.parm_data['RESIDUE_POINTER'])-1]-1,
                      self.parm_data['POINTERS'][NATOM]):
          self.residue_container.append(self.parm_data['POINTERS'][NRES])
 

@@ -353,6 +353,22 @@ class amberParm:
                      self.parm_data['POINTERS'][NATOM]):
          self.residue_container.append(self.parm_data['POINTERS'][NRES])
 
+      # Load the bond[] list, so each Atom # references a list of bonded partners. Note
+      # that the index into bond[] begins atom indexing at 0, and each atom located in
+      # the bonded list also starts from index 0. Start with bonds containing H
+      self.bonds = [[] for i in range(self.parm_data['POINTERS'][NATOM])]
+      for i in range(self.parm_data['POINTERS'][NBONH]):
+         at1 = self.parm_data['BONDS_INC_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['BONDS_INC_HYDROGEN'][3*i+1] / 3
+         self.bonds[at1].append(at2)
+         self.bonds[at2].append(at1)
+      # Now do bonds not including hydrogen
+      for i in range(self.parm_data['POINTERS'][NBONA]):
+         at1 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1] / 3
+         self.bonds[at1].append(at2)
+         self.bonds[at2].append(at1)
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def writeParm(self, name):   # write a new prmtop with the current prmtop data

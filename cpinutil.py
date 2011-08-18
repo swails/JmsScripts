@@ -8,7 +8,7 @@ import sys, string
 try:
    import cpin_data
    from cpin_utilities import *
-   from readparm import amberParm
+   from chemistry.amber.readparm import amberParm
 except ImportError:
    print >> sys.stdout, 'Error: You must put cpin_data.py, cpin_utilities.py, and ' + \
             'readparm.py in a directory referenced by PYTHONPATH!'
@@ -53,6 +53,7 @@ resname_spec = False
 nresname_spec = False
 resnum_spec = False
 nresnum_spec = False
+has_water = False
 titrated_residue_names = []
 titrated_residue_nums = []
 
@@ -159,6 +160,8 @@ except IndexError:
    printusage()
 
 prmtop_object = amberParm(prmtop)
+has_water = 'WAT' in prmtop_object.parm_data['RESIDUE_LABEL']
+
 if not prmtop_object.exists:
    sys.exit()
 if igb == ' ':
@@ -180,9 +183,13 @@ except KeyError:
    radius_set = "NO RADIUS SET SPECIFIED"
 
 if not ignore_warn:
-   if radius_set != 'H(N)-modified Bondi radii (mbondi2)':
+   if radius_set != 'H(N)-modified Bondi radii (mbondi2)' and igb in [2, 5]:
       print >> sys.stderr, 'Error: mbondi2 radius set should be used for constant pH simulations. All reference energies were calculated'
       print >> sys.stderr, '       using these radii! Set --ignore-warnings to ignore this warning.'
+      sys.exit()
+   elif radius_set != 'H(N), salt-bridge modified Bondi radii (mbondi3)' and igb == 8:
+      print >> sys.stderr, 'Error: mbondi3 radius set should be used for constant pH simulations. All reference energies were calculated'
+      print >> sys.stderr, '       using these radii for igb=8! Set --ignore-warnings to ignore this warning.'
       sys.exit()
 
 # Turn resnum and notresnum into integers. Turn igb into integer. Turn maxpKa and
@@ -250,7 +257,7 @@ if len(resnums) != 0:
 else:
    for x in range(len(prmtop_residues)-1):
       if " %s " % prmtop_residues[x] in titrate_residues:
-         check_data = cpin_data.getData(prmtop_residues[x], igb)
+         check_data = cpin_data.getData(prmtop_residues[x], igb, has_water)
          # make sure we aren't adding termini
          if len(check_data[0])-2 == prmtop_object.parm_data['RESIDUE_POINTER'][x+1] - prmtop_object.parm_data['RESIDUE_POINTER'][x]:
             titrated_residue_nums.append(x+1)
@@ -308,7 +315,7 @@ print >> sys.stdout, "&CNSTPH"
 resdata = []
 
 for x in range(len(titrated_residue_names)):
-   resdata.append(cpin_data.getData(titrated_residue_names[x], igb))
+   resdata.append(cpin_data.getData(titrated_residue_names[x], igb, has_water))
 
 
 # First print out the charge data

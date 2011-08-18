@@ -23,9 +23,9 @@ Functions:
       "func" on object "obj" with argument "arg", use the following command:
       obj.func(arg)
 
-   o  __init__(prm_name) [amberParm]: The initialization routine called automatically
-      when an amberParm object is instantiated.  You should never actually call this. The
-      default name for prm_name is "prmtop".
+   o  __init__(prm_name, <restart/inpcrd>) [amberParm]: The initialization routine called 
+      automatically when an amberParm object is instantiated.  You should never actually call
+      this.
 
    o  ptr(pointer) [amberParm]: Returns the value of the passed pointer.  Example pointers
       are "natom" and "nres".  Passing an incorrect pointer to this functions returns a
@@ -55,10 +55,19 @@ Functions:
 
    o  fill_LJ() [amberParm]: This will take the Lennard Jones ACOEFF and BCOEFF and calculate
       the well depth and VDW radii (i.e. that's found in amber parameter files). This is called
-      automatically in __init__ if there were no errors in rdparm() and assigning pointers.
+      automatically in __init__ if there were no errors in rdparm() and assigning pointers. This
+      array is indexed by (self.parm_data['ATOM_TYPE_INDEX'][i]-1); the -1 is there because python
+      indexes start from 0 instead of 1. Thus, to get the radius and well depth of a given atom i,
+      use the indices of parm_data['ATOM_TYPE_INDEX'][i]-1 in LJ_radius and LJ_depth.
 
    o  recalculate_LJ() [amberParm]: This function will take the VDW well depths and radii and
       fill in the LENNARD_JONES_(A/B)COEF arrays using the normal combining rules.
+
+   o  LoadRst7(filename) [amberParm]: This function will load the info from restart/inpcrd 
+      <filename> and load the appropriate data structures for that.
+
+   o  writeOFF(off_file) [amberParm]: This function will write an OFF file from the given prmtop
+      with every residue in it. You need to load a restart/inpcrd in order to use this function.
 
 Variables:
    ** Each instance of the object has its own set of the variables listed below.  The class
@@ -108,6 +117,30 @@ Variables:
       that you use that function to access the values of the POINTERS rather than this dictionary
       explicitly.
 
+   o  LJ_type: Dictionary that maps AMBER_ATOM_TYPE to the type index from flag ATOM_TYPE_INDEX. The
+      only reason to use this instead of ATOM_TYPE_INDEX directly is if you have the ATOM_TYPE on hand
+      and *not* just the atom index.
+
+   o  LJ_radius: LJ Radius of given atom type.  It only fills in according to canonical AMBER combining
+      rules for now.
+
+   o  LJ_depth: LJ well depths of a given atom type.  It only fills in according to canonical AMBER
+      combining rules for now.
+
+   o  rst7: A restart class loaded on top of the topology file that provides box info, coordinates,
+      and velocities (based on what is present in the restart file given when this class is instantiated)
+
+   o  coords: Coordinates of each atom in [x1, y1, z1, x2, y2, z2, ..., xN, yN, zN] format. Only exists if
+      a restart file was loaded
+
+   o  hasvels: If this object has velocities
+
+   o  hasbox: If this object has a box
+
+   o  vels: Velocities; only present if a restart was loaded and if hasvels is True
+
+   o  box: Box dimensions/angles; only present if a restart was loaded and if hasbox is True
+
 NOTES:
    The charges in AMBER topology files are electron-charges multiplied by a factor of 18.2223. However,
    this multiplicative factor is automatically removed in rdparm() and re-added before being written
@@ -121,7 +154,7 @@ atom to -0.9.  It will then print out the change that it made to the screen and 
 named "new.prmtop"
 
 """
-from readparm import amberParm
+from chemistry.amber.readparm import amberParm
 
 prm = amberParm("prmtop")
 orig_charge = prm.parm_data["CHARGE"][0]

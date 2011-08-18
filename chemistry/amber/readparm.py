@@ -30,8 +30,8 @@
 
 from sys import stderr, stdout
 from datetime import datetime
-from .. import exceptions
-from .. import periodic_table
+from chemistry import exceptions
+from chemistry import periodic_table
 from math import ceil
 
 try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
@@ -157,9 +157,9 @@ class amberParm:
       self.exists = False      # Logical set to true if the prmtop exists
       self.valid = False       # Logical set to true if the prmtop is valid
       self.pointers = {}       # list of all the pointers in the prmtop
-      LJ_types = {}            # dictionary in which each atom name pairs with its LJ atom type number
-      LJ_radius = []           # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
-      LJ_depth = []            # ordered array of L-J depths in kcal/mol analagous to LJ_radius
+      self.LJ_types = {}       # dictionary in which each atom name pairs with its LJ atom type number
+      self.LJ_radius = []      # ordered array of L-J radii in Angstroms -- indices are elements in LJ_types-1
+      self.LJ_depth = []       # ordered array of L-J depths in kcal/mol analagous to LJ_radius
 
       self.rdparm() # read the prmtop
       self.valid = self.exists # if it exists, fill the pointers
@@ -716,7 +716,7 @@ class amberParm:
 
    def writeOFF(self, off_file='off.lib'):
       """ Writes an OFF file from all of the residues found in a prmtop """
-      from .residue import ToResidue
+      from chemistry.amber.residue import ToResidue
    
       file = open(off_file,'w',0)
    
@@ -809,7 +809,7 @@ class amberParm:
 
    def ToMolecule(self):
       """ Translates an amber system into a molecule format """
-      from ..molecule import Molecule
+      from chemistry.molecule import Molecule
       from copy import copy
 
       all_bonds = []        # bond array in Molecule format
@@ -877,7 +877,7 @@ class rst7:
 
       try:
          self._read()
-      except BaseException as err:
+      except BaseException, err:
          raise(exceptions.ReadError('Error parsing coordinates from %s: %s' % (self.filename, err)))
 
       self.valid = True

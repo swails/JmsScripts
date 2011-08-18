@@ -2,9 +2,163 @@ This is my directory for python/bash script development:
 
 Inventory with description (Almost guaranteed to be out of date)
 
+2Dbinning.py -f <data_file> -o <output_file> {-bins <NUMxNUM>} {-binrange <NUM-NUM> <NUM-NUM>} 
+   This script will take a data file with 2 columns and bin that data. Do not put any whitespace
+   inside NUMxNUM or NUM-NUM. The bin number will be chosen based on the standard deviation and
+   the binrange will be chosen based on the range of your data.
+   Witten in python by Jason
+
+AA_decomp.py <prmtop>
+   This script will break down the composition of amino acids in a given topology file.
+   It may be extended to prmtops later if the need arises. It returns the number of each
+   kind of amino acid, and it recognizes all names for each residue AMBER uses.
+   Written in Python by Jason
+
+analyzeConvergence.py <mdout> <mdcrd> <prmtop> {<gnuplot_script_prefix>}
+   This script will take an mdout and mdcrd file and create gnuplot scripts to graph the various
+   metrics of an equilibrated system (i.e. total energy, volume, pressure, density, RMS)
+   Written in python by Jason
+
 AvgCol.py <file1> <file2> <file3> ... <file n> <column>
    This script calculates the average of the specified column across all files.
    Written in python by Jason
+
+calcpka.f90 <cpin> <cpout1> <cpout2> ... <cpoutN> -o <output_file> -t <dump_interval> -ao <dump_file>
+   Does the same thing as calcpka.pl, but does it much faster and also dumps out
+   cumulative and "chunk" pKa values for a given time interval.
+   Written in Fortran90 by Jason
+
+checkCharges.py cpin1 cpin2
+   This script checks to make sure that the charge arrays between 2 cpins are the same.
+   Written in python by Jason
+
+cntrl.py
+   Object with dictionary of cntrl namelists for sander and pmemd pre-loaded with defaults. For use
+   with mdin.py.
+   Written in Python by Jason and Ben
+
+cpinutil.py -p <prmtop> -igb <2 or 5> -resname <resname list> -notresname <resname list>           \
+            -resnum <residue numbers> -notresnum <residue numbers> -minpKa <value> -maxpKa <value> \
+            -states <list of states> -system <system name> {--ignore-warnings}
+   This script will take a prmtop and igb value and it will create a CPIN file for use with
+   sander's constant pH implementation with the given options.
+   Written in python by Jason
+
+energyvectors.sh
+   This script will print out all of the energy "vectors" in a given run of MMPBSA.py. Edit the head
+   of the file to add further flexibility to the script.
+   Written in sh by Jason
+
+ewald.py
+   Object with dictionary of ewald namelist variables for sander and pmemd pre-loaded with defaults.
+   For use with mdin.py
+   Written in Python by Jason and Ben
+
+FindSaltbridge.py -p <prmtop> -y <mdcrd1> <mdcrd2> ... -o <output_list>
+   This script will locate salt bridges in a (set of) trajectory/ies.  It will print an
+   output file that has the salt bridges that are more than 25% populated (along with the
+   fraction population).
+   Written in python by Jason
+
+gaussjobs.py <gaussian_input> {<job_name>}
+   This is a python script that will automatically submit a job according to ~/.pbsdefaults
+   to the queue.  It should work for any system with a .pbsdefaults set up.
+   Written in python by Jason
+
+GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \
+             -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>
+   This script will tweak the statene values until a 50/50 protonation population is 
+   reached, and it will return the final state energy and population.
+   Written in python by Jason
+
+getResidue.py <prmtop> <atom #>
+   Returns which residue the given atom number is in in a given prmtop file.
+   Written in Python by Jason.
+
+gnuplotnxy.py <datafile> {<script to write>}
+   This script very quickly makes a gnuplot script that will graph data in a file
+   exactly the same way that using the command 'xmgrace -nxy' would.
+   Written in python by Jason
+
+heatmap.py [-b NUM | --binsize=NUM] [-e | --free-energy] [-t NUM | --temperature=NUM]
+   [--no-normalise] [--x-tick-spacing=NUM] [--x-max=NUM] [--x-min=NUM] [--x-label=STRING]
+   [--y-tick-spacing=NUM] [--y-max=NUM] [--y-min=NUM] [--y-label=STRING] <data_file>
+   This script will bin data containing two equally long columns of integer or floating-
+   point numbers, and plot the resulting histogram using matplotlib. Optionally, a free
+   energy plot (instead of a frequency plot) can be generated using the -e option. If this
+   is done, a temperature must also be provided using the -t option.
+   Written in python by Ben
+
+integrateRama.py -i <Ramachandran_datafile> -phi <NxN> -psi <NxN>
+   This script will integrate a Ramachandran data file inside the defined range and return
+   just that number. It should be used with phipsigen.py.
+   Written in python by Jason
+
+Integrate_Trap.py <data_file>
+   This script calculates the integral numerically using the trapezoid approximation for a data file.
+   Written in python by Jason
+
+makeParm.py <options>
+   This script will create a prmtop and topology file based on the options passed on the command
+   line. It currently will take PDB files as inputs.
+   Written in python by Jason
+
+mass.py <prmtop>
+   This script calculates the total mass of all atoms in a given prmtop.
+   Written in python by Jason
+
+maxmin.py -f <file> -n <column>
+   This script will take a data file and will return the maximum and minimum of the data file
+   corresponding to the given column (which defaults to 1)
+   Written in python by Jason
+
+mdin.py
+   This is a python object that calls objects for each of the input namelists.  It aids in the
+   setting of variables, checking of parameters, and writing of amber input files.
+   Written in Python by Jason and Ben
+
+natom.py <prmtop>
+   Returns the number of atoms defined by a prmtop file.
+   Written in python by Jason (NOTE: Hard link of nres.py)
+
+nres.py <prmtop>
+   Returns the number of residues defined by a prmtop file.
+   Written in python by Jason (NOTE: Hard link of natom.py)
+
+pbsjob.py
+   This is a python module that contains the PBSjob class.  This is designed to make job 
+   submissions on PBS systems easier.  The pbsjob.README file has more information about
+   this module.
+   Writen in python by Jason
+
+phipsigen.py -i <inputfile> -o <output_prefix> -p <prmtop> -y <mdcrd1> <mdcrd2> ... <mdcrdN> {-nobin} -gnuplot (DEFAULT) || -origin
+   This script will create Ramachandran plot files for specified residues in data files
+   suitable for viewing and creating graphs in gnuplot.
+   Written in Python by Jason.
+
+pkachunks.py <interval> <prefix> <cpin> <cpout1> <cpout2> ... <cpoutN>
+   This script will dump pKas as a function of time in chunks based on interval.  It will truncate
+   the "chunks" at each <interval> full record. The prefix will be the base of each file name, and
+   the suffix will be the number of the chunk.
+
+readparm.py
+   This is a python module that contains the amberParm class.  This allows you to instantiate
+   a prmtop object, modify the data, and rewrite a new topology file.  It currently only has 
+   writeParm() that's typically called outside (rdparm is called upon instantiation).  This 
+   will be built on later, but you can still alter the data and write a new topology file.
+   Written in python by Jason
+
+redjobs.py {<job_name>}
+   This is a python script that will automatically submit a job according to ~/.pbsdefaults
+   to the queue for RED.  It should work for any system with a .pbsdefaults set up.
+   Written in python by Jason
+
+_sasa_res.tcl
+   This script will, when loaded into VMD, calculate SASAs for each residue in a protein. The usage is
+   explained inside the script itself. usage: getAllResSASA "selection" probe_radius <startframe <endframe>>
+   First, source it in the VMD tclsh, then use the command above where "selection" is a VMD selection
+   you would otherwise choose.
+   Written in tcl by Lubos Vrbka (Taken from VMD mailing list archives)
 
 scan.sh
    This script must be edited for your specific system, but it takes a prmtop
@@ -22,167 +176,21 @@ SMD_to_FE.f90
    by SMDprep.sh and calculates a free energy profile from them.
    Written in Fortran90 (need ifort or gfortran to compile) by Jason.
 
-gnuplotnxy.py <datafile> {<script to write>}
-   This script very quickly makes a gnuplot script that will graph data in a file
-   exactly the same way that using the command 'xmgrace -nxy' would.
-   Written in python by Jason
-
-phipsigen.py -i <inputfile> -o <output_prefix> -p <prmtop> -y <mdcrd1> <mdcrd2> ... <mdcrdN> {-nobin} -gnuplot (DEFAULT) || -origin
-   This script will create Ramachandran plot files for specified residues in data files
-   suitable for viewing and creating graphs in gnuplot.
-   Written in Python by Jason.
-
-
-utilities.py
-   This is the accompanying python script for just about every python script in
-   here perhaps.  Hopefully an inventory of its functions has been kept up-to-
-   date in its description. Feel free to add to it.
-   Written in python (primarily thus far) by Jason
-
-AA_decomp.py <prmtop>
-   This script will break down the composition of amino acids in a given topology file.
-   It may be extended to prmtops later if the need arises. It returns the number of each
-   kind of amino acid, and it recognizes all names for each residue AMBER uses.
-   Written in Python by Jason
-
-sum.py <file1> <file2> <file3> ... <file n> <column>
-   This script calculates the sum of the specified column across all files.
-   Written in python by Jason
-
-Integrate_Trap.py <data_file>
-   This script calculates the integral numerically using the trapezoid approximation for a data file.
-   Written in python by Jason
-
-mass.py <prmtop>
-   This script calculates the total mass of all atoms in a given prmtop.
-   Written in python by Jason
-
-energyvectors.sh
-   This script will print out all of the energy "vectors" in a given run of MMPBSA.py. Edit the head
-   of the file to add further flexibility to the script.
-   Written in sh by Jason
-
-makeParm.py <options>
-   This script will create a prmtop and topology file based on the options passed on the command
-   line. It currently will take PDB files as inputs.
-   Written in python by Jason
-
-pkachunks.py <interval> <prefix> <cpin> <cpout1> <cpout2> ... <cpoutN>
-   This script will dump pKas as a function of time in chunks based on interval.  It will truncate
-   the "chunks" at each <interval> full record. The prefix will be the base of each file name, and
-   the suffix will be the number of the chunk.
-
-2Dbinning.py -f <data_file> -o <output_file> {-bins <NUMxNUM>} {-binrange <NUM-NUM> <NUM-NUM>} 
-   This script will take a data file with 2 columns and bin that data. Do not put any whitespace
-   inside NUMxNUM or NUM-NUM. The bin number will be chosen based on the standard deviation and
-   the binrange will be chosen based on the range of your data.
-   Witten in python by Jason
-
-maxmin.py -f <file> -n <column>
-   This script will take a data file and will return the maximum and minimum of the data file
-   corresponding to the given column (which defaults to 1)
-   Written in python by Jason
-
-cpinutil.py -p <prmtop> -igb <2 or 5> -resname <resname list> -notresname <resname list>           \
-            -resnum <residue numbers> -notresnum <residue numbers> -minpKa <value> -maxpKa <value> \
-            -states <list of states> -system <system name> {--ignore-warnings}
-   This script will take a prmtop and igb value and it will create a CPIN file for use with
-   sander's constant pH implementation with the given options.
-   Written in python by Jason
-
-analyzeConvergence.py <mdout> <mdcrd> <prmtop> {<gnuplot_script_prefix>}
-   This script will take an mdout and mdcrd file and create gnuplot scripts to graph the various
-   metrics of an equilibrated system (i.e. total energy, volume, pressure, density, RMS)
-   Written in python by Jason
-
-integrateRama.py -i <Ramachandran_datafile> -phi <NxN> -psi <NxN>
-   This script will integrate a Ramachandran data file inside the defined range and return
-   just that number. It should be used with phipsigen.py.
-   Written in python by Jason
-
-FindSaltbridge.py -p <prmtop> -y <mdcrd1> <mdcrd2> ... -o <output_list>
-   This script will locate salt bridges in a (set of) trajectory/ies.  It will print an
-   output file that has the salt bridges that are more than 25% populated (along with the
-   fraction population).
-   Written in python by Jason
-
-GetEnergy.py -igb <igb> -pka <pka> -resname <residue_name> -maxcyc <number_iterations> \
-             -ns <nano-s of simulation per rep> -cpin <cpin name> -reps <repetitions>
-   This script will tweak the statene values until a 50/50 protonation population is 
-   reached, and it will return the final state energy and population.
-   Written in python by Jason
-
-checkCharges.py cpin1 cpin2
-   This script checks to make sure that the charge arrays between 2 cpins are the same.
-   Written in python by Jason
-
-readparm.py
-   This is a python module that contains the amberParm class.  This allows you to instantiate
-   a prmtop object, modify the data, and rewrite a new topology file.  It currently only has 
-   writeParm() that's typically called outside (rdparm is called upon instantiation).  This 
-   will be built on later, but you can still alter the data and write a new topology file.
-   Written in python by Jason
-
-pbsjob.py
-   This is a python module that contains the PBSjob class.  This is designed to make job 
-   submissions on PBS systems easier.  The pbsjob.README file has more information about
-   this module.
-   Writen in python by Jason
-
-gaussjobs.py <gaussian_input> {<job_name>}
-   This is a python script that will automatically submit a job according to ~/.pbsdefaults
-   to the queue.  It should work for any system with a .pbsdefaults set up.
-   Written in python by Jason
-
-redjobs.py {<job_name>}
-   This is a python script that will automatically submit a job according to ~/.pbsdefaults
-   to the queue for RED.  It should work for any system with a .pbsdefaults set up.
-   Written in python by Jason
-
-natom.py <prmtop>
-   Returns the number of atoms defined by a prmtop file.
-   Written in python by Jason (NOTE: Hard link of nres.py)
-
-nres.py <prmtop>
-   Returns the number of residues defined by a prmtop file.
-   Written in python by Jason (NOTE: Hard link of natom.py)
-
-calcpka.f90 <cpin> <cpout1> <cpout2> ... <cpoutN> -o <output_file> -t <dump_interval> -ao <dump_file>
-   Does the same thing as calcpka.pl, but does it much faster and also dumps out
-   cumulative and "chunk" pKa values for a given time interval.
-   Written in Fortran90 by Jason
-
-mdin.py
-   This is a python object that calls objects for each of the input namelists.  It aids in the
-   setting of variables, checking of parameters, and writing of amber input files.
-   Written in Python by Jason and Ben
-
-cntrl.py
-   Object with dictionary of cntrl namelists for sander and pmemd pre-loaded with defaults. For use
-   with mdin.py.
-   Written in Python by Jason and Ben
-
-ewald.py
-   Object with dictionary of ewald namelist variables for sander and pmemd pre-loaded with defaults.
-   For use with mdin.py
-   Written in Python by Jason and Ben
-
 splitNMR_PDB.py <PDB>
    This script will split an NMR structure that has many models into separate, numbered PDBs with the
    same name in the same directory.  One PDB for each model.  I don't know how general it is, but it
    worked well for the one file I threw it at (and designed it for).
    Written in Python by Jason
 
-_sasa_res.tcl
-   This script will, when loaded into VMD, calculate SASAs for each residue in a protein. The usage is
-   explained inside the script itself. usage: getAllResSASA "selection" probe_radius <startframe <endframe>>
-   First, source it in the VMD tclsh, then use the command above where "selection" is a VMD selection
-   you would otherwise choose.
-   Written in tcl by Lubos Vrbka (Taken from VMD mailing list archives)
+sum.py <file1> <file2> <file3> ... <file n> <column>
+   This script calculates the sum of the specified column across all files.
+   Written in python by Jason
 
-getResidue.py <prmtop> <atom #>
-   Returns which residue the given atom number is in in a given prmtop file.
-   Written in Python by Jason.
+utilities.py
+   This is the accompanying python script for just about every python script in
+   here perhaps.  Hopefully an inventory of its functions has been kept up-to-
+   date in its description. Feel free to add to it.
+   Written in python (primarily thus far) by Jason
 
 validateCpinData.py
    This utility imports cpin_data.py and checks through all of the defined residues for consistency.

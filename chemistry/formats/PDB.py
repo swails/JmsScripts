@@ -2,10 +2,10 @@
 This module interacts with the Molecule class via the PDB file format.
 """
 
-from ..molecule import Molecule
+from chemistry.molecule import Molecule
 from os.path import exists as file_exists
-from .. import exceptions
-from .connectivity import *
+from chemistry import exceptions
+from chemistry.formats.connectivity import *
 
 # Determines if we can overwrite existing files or not with PutPDB
 overwrite = False

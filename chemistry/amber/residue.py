@@ -3,7 +3,7 @@ Holds an Amber residue class for easy writing of mol2 and
 OFF files
 """
 
-from .. import periodic_table
+from chemistry import periodic_table
 
 AMINO = [ "ALA", "ARG", "ASH", "ASN", "ASP", "CYM", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", 
           "HID", "HIE", "HIP", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR", 
@@ -156,7 +156,7 @@ class Residue:
       else: attype = '?'
       ret_string += ("!entry.%s.unit.residues table  str name  int seq  int childseq  " +
                      "int startatomx  str restype  int imagingx\n") % self.name
-      ret_string += ' "%s" 1 %d 1 %s 0\n' % (self.name, self.natom+1, attype)
+      ret_string += ' "%s" 1 %d 1 "%s" 0\n' % (self.name, self.natom+1, attype)
 
       # Write out PDB Sequence Number array
       ret_string += "!entry.%s.unit.residuesPdbSequenceNumber array int\n 1\n" % self.name

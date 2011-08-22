@@ -1065,6 +1065,29 @@ class rst7:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+   def addFlag(self, flag_name, flag_format, num_items=0, comments=[], data=None):
+      """ Adds a new flag with the given flag name and Fortran format string
+          and initializes the array with the values given, or as an array of 0s
+          of length num_items
+      """
+      self.flag_list.append(flag_name.upper())
+      self.formats[flag_name.upper()] = flag_format
+      if data:
+         self.parm_data[flag_name.upper()] = list(data)
+      else:
+         if num_items == 0:
+            raise exceptions.FlagError("If you do not supply prmtop data, num_items cannot be 0")
+         self.parm_data[flag_name.upper()] = [0 for i in range(num_items)]
+      if comments:
+         if type(comments).__name__ == 'str': comments = [comments]
+         elif type(comments).__name__ == 'tuple': comments = list(comments)
+         elif type(comments).__name__ == 'list': pass
+         else: raise TypeError('Comments are wrong type. Must be string, list, or tuple')
+         self.parm_comments[flag_name.upper()] = comments
+      else: self.parm_comments[flag_name.upper] = []
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def Element(mass):
    """ Determines what element the given atom is based on its mass """
 

@@ -130,18 +130,30 @@ if master:
    print "\n Setting prmtop radii"
    # If we're doing igb = 8, do the prmtop conversion
    if options.igb == 8:
+      file = open('__TMP__','w')
+      file.write('changeradii mbondi3\nsetoverwrite True\nparmout %s.parm7\n' % options.res)
+      file.close()
+      file = open('__TMP__','r')
       proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
-         stdin='changeradii mbondi3\nsetoverwrite True\nparmout %s.parm7\ngo' %options.res).wait()
+         stdin=file).wait()
+      file.close()
+      os.remove('__TMP__')
       print " Set prmtop radii to mbondi3"
    else:
+      file = open('__TMP__','w')
+      file.write('changeradii mbondi2\nsetoverwrite True\nparmout %s.parm7\n' % options.res)
+      file.close()
+      file = open('__TMP__','r')
       proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
-         stdin='changeradii mbondi2\nsetoverwrite True\nparmout %s.parm7\ngo' %options.res).wait()
+         stdin=file).wait()
+      file.close()
+      os.remove('__TMP__')
       print " Set prmtop radii to mbondi2"
 
    # Create the cpin
    print "\n Creating cpin file"
    cpin = open(options.res + '.cpin', 'w')
-   proc_return = Popen(['cpinutil', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb],
+   proc_return = Popen(['cpinutil', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb, '--ignore-warnings'],
                        executable=cpinutil, stdout=cpin, stderr=log).wait()
    cpin.close()
    print " Finished making cpin file"

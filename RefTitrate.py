@@ -10,14 +10,24 @@ the correct populations
 import sys, os, math
 from optparse import OptionParser
 from subprocess import Popen
-
-from mpi4py import MPI
 from utilities import which
 
-# Set up MPI
-commworld = MPI.COMM_WORLD
-commrank = commworld.Get_rank()
-commsize = commworld.Get_size()
+try:
+   from mpi4py import MPI
+   commworld = MPI.COMM_WORLD
+   commrank = commworld.Get_rank()
+   commsize = commworld.Get_size()
+except ImportError:
+   class COMM_WORLD:
+      def Abort():
+         sys.exit(1)
+      def Barrier():
+         pass
+   commworld = COMM_WORLD()
+   commrank = 0
+   commsize = 1
+
+
 master = commrank == 0
 
 if not master: # suppress non-master output
@@ -51,7 +61,7 @@ if options.res == None or options.pH == None:
 sander = which('sander')
 tleap = which('tleap')
 cpinutil = which('cpinutil')
-converter = which('ChangeParmRadii.py')
+converter = which('parmed.py')
 
 if 'none' in [sander, tleap, cpinutil]:
    print >> sys.stderr, 'sander, tleap, and cpinutil are all necessary!'
@@ -120,12 +130,12 @@ if master:
    print "\n Setting prmtop radii"
    # If we're doing igb = 8, do the prmtop conversion
    if options.igb == 8:
-      proc_return = Popen(['ChangeParmRadii.py','-p','%s.parm7' % options.res, '-r', 'mbondi3'],
-                          executable=converter, stdout=log).wait()
+      proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
+         stdin='changeradii mbondi3\nsetoverwrite True\nparmout %s.parm7\ngo' %options.res).wait()
       print " Set prmtop radii to mbondi3"
    else:
-      proc_return = Popen(['ChangeParmRadii.py','-p','%s.parm7' % options.res, '-r', 'mbondi2'],
-                          executable=converter, stdout=log).wait()
+      proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
+         stdin='changeradii mbondi2\nsetoverwrite True\nparmout %s.parm7\ngo' %options.res).wait()
       print " Set prmtop radii to mbondi2"
 
    # Create the cpin

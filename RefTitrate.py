@@ -10,14 +10,24 @@ the correct populations
 import sys, os, math
 from optparse import OptionParser
 from subprocess import Popen
-
-from mpi4py import MPI
 from utilities import which
 
-# Set up MPI
-commworld = MPI.COMM_WORLD
-commrank = commworld.Get_rank()
-commsize = commworld.Get_size()
+try:
+   from mpi4py import MPI
+   commworld = MPI.COMM_WORLD
+   commrank = commworld.Get_rank()
+   commsize = commworld.Get_size()
+except ImportError:
+   class COMM_WORLD:
+      def Abort():
+         sys.exit(1)
+      def Barrier():
+         pass
+   commworld = COMM_WORLD()
+   commrank = 0
+   commsize = 1
+
+
 master = commrank == 0
 
 if not master: # suppress non-master output

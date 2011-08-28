@@ -349,9 +349,25 @@ class amberParm:
          nextres = self.parm_data['RESIDUE_POINTER'][i+1] - 1
          for j in range(curres, nextres):
             self.residue_container.append(i+1)
-      for i in range(self.parm_data['RESIDUE_POINTER'][len(self.parm_data['RESIDUE_POINTER'])-1],
+      for i in range(self.parm_data['RESIDUE_POINTER'][len(self.parm_data['RESIDUE_POINTER'])-1]-1,
                      self.parm_data['POINTERS'][NATOM]):
          self.residue_container.append(self.parm_data['POINTERS'][NRES])
+
+      # Load the bond[] list, so each Atom # references a list of bonded partners. Note
+      # that the index into bond[] begins atom indexing at 0, and each atom located in
+      # the bonded list also starts from index 0. Start with bonds containing H
+      self.bonds = [[] for i in range(self.parm_data['POINTERS'][NATOM])]
+      for i in range(self.parm_data['POINTERS'][NBONH]):
+         at1 = self.parm_data['BONDS_INC_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['BONDS_INC_HYDROGEN'][3*i+1] / 3
+         self.bonds[at1].append(at2)
+         self.bonds[at2].append(at1)
+      # Now do bonds not including hydrogen
+      for i in range(self.parm_data['POINTERS'][NBONA]):
+         at1 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1] / 3
+         self.bonds[at1].append(at2)
+         self.bonds[at2].append(at1)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1046,6 +1062,29 @@ class rst7:
          self.box = lines[startline].strip().split()
          self.box[0], self.box[1], self.box[2]  = float(self.box[0]), float(self.box[1]), float(self.box[2])
          self.box[3], self.box[4], self.box[5]  = float(self.box[3]), float(self.box[4]), float(self.box[5])
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def addFlag(self, flag_name, flag_format, num_items=0, comments=[], data=None):
+      """ Adds a new flag with the given flag name and Fortran format string
+          and initializes the array with the values given, or as an array of 0s
+          of length num_items
+      """
+      self.flag_list.append(flag_name.upper())
+      self.formats[flag_name.upper()] = flag_format
+      if data:
+         self.parm_data[flag_name.upper()] = list(data)
+      else:
+         if num_items == 0:
+            raise exceptions.FlagError("If you do not supply prmtop data, num_items cannot be 0")
+         self.parm_data[flag_name.upper()] = [0 for i in range(num_items)]
+      if comments:
+         if type(comments).__name__ == 'str': comments = [comments]
+         elif type(comments).__name__ == 'tuple': comments = list(comments)
+         elif type(comments).__name__ == 'list': pass
+         else: raise TypeError('Comments are wrong type. Must be string, list, or tuple')
+         self.parm_comments[flag_name.upper()] = comments
+      else: self.parm_comments[flag_name.upper] = []
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

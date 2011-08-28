@@ -23,7 +23,6 @@ class FileError(ChemError):
    def __init__(self, msg='Illegal file manipulation'):
       self.msg = msg
 
-<<<<<<< HEAD
 class FlagError(ChemError):
    """ Error when a FLAG is manipulated in readparm.amberParm """
    def __init__(self, msg='Bad flag'):
@@ -33,9 +32,3 @@ class MaskError(ChemError):
    """ Error when a Mask is poorly formed """
    def __init__(self, msg='Bad mask'):
       self.msg = msg
-=======
-class FlagError(Exception):
-   """ Error when a FLAG is manipulated in readparm.amberParm """
-   def __init__(self, msg='Bad flag'):
-      self.msg = msg
->>>>>>> 09fc4bb1b0a2ff71b1d9c6542213be113221e102

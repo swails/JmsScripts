@@ -7,6 +7,7 @@
 ###############################################################################
 
 import sys, utilities, os
+from chemistry.amber.readparm import amberParm
 
 acceptorlist = {'ASP' : 'CG', 'AS4' : 'CG', 'GLU' : 'CD', 'GL4' : 'CD'}
 donorlist = {'AS4' : 'CG', 'ASH' : 'CG', 'GL4' : 'CD', 'GLH' : 'CD', 'LYS' : 'NZ', 'ARG' : 'CZ'}
@@ -54,6 +55,7 @@ except ValueError:
    print 'Error: "percent" must be a floating point decimal!'
    printusage()
 
+parm = amberParm(prmtop)
 if len(mdcrds) == 0: # if no mdcrd supplied, give default
    mdcrds.append('mdcrd')
 
@@ -63,14 +65,14 @@ if ptraj == 'none':
    print 'Error: ptraj needed for FindSaltbridge.py!'
    sys.exit() # quit if not found
 
-if utilities.fileexists(prmtop) == -1: # check for prmtop existence
+if not parm.valid:
    printusage()
 
 for x in range(len(mdcrds)): # check for mdcrd existences
    if utilities.fileexists(mdcrds[x]) == -1:
       printusage()
 
-residues = utilities.getallresinfo(prmtop,'RESIDUE_LABEL') # get all residue names
+residues = parm.parm_data['RESIDUE_LABEL']
 
 for x in range(len(residues)): # build acceptor list and donor list
    try:

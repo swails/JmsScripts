@@ -1,42 +1,34 @@
 #!/usr/bin/env python
 
 import sys, math, os, utilities
+from optparse import OptionParser
 
 sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
 sys.stderr = os.fdopen(sys.stderr.fileno(),'w',0)
 
-def printusage():
-   import sys
-   print "analyzeConvergence.py <mdout> <mdcrd> <prmtop> {<gnuplot_script_prefix>}"
+clparser = OptionParser()
+clparser.add_option('-o','--mdout',dest='mdout',help='MDOUT file to analyze')
+clparser.add_option('-p','--prmtop',dest='prmtop',help='PRMTOP of the system')
+clparser.add_option('-y','--mdcrd',dest='mdcrd',help='MDCRD of the process')
+clparser.add_option('-g','--gnu-prefix',dest='prefix',
+                    default='gnu', help='Prefix of gnuplot scripts')
+opt, args = clparser.parse_args()
+
+if not opt.mdout or not opt.prmtop or not opt.mdcrd:
+   clparser.print_help()
    sys.exit()
 
-if len(sys.argv) < 2:
-   printusage()
-if sys.argv[1] == '-h' or sys.argv[1] == '-help' or sys.argv[1] == '--help':
-   printusage()
-
-mdcrd = '' 
-prefix = 'gnu'
-
 try:
-   mdout = open(sys.argv[1],'r')
-   if len(sys.argv) > 3:
-      mdcrd = sys.argv[2]
-      prmtop = sys.argv[3]
-      tmp = open(mdcrd,'r')
-      tmp2 = open(prmtop,'r')
-   if len(sys.argv) > 4:
-      prefix = sys.argv[4]
+   mdout = open(opt.mdout,'r')
+   if not os.path.exists(opt.mdcrd): raise IOError('mdcrd doesn\'t exist')
+   if not os.path.exists(opt.prmtop): raise IOError('mdcrd doesn\'t exist')
 except IOError:
    print >> sys.stderr, "Error: mdout, prmtop, and/or mdcrd files don't exist!"
    printusage()
 
-tmp.close()
-tmp2.close()
-
 ptraj = utilities.which('ptraj')
 
-if ptraj == "none" and mdcrd != '':
+if ptraj == "none":
    print "Error: ptraj is needed to analyze coordinate files!"
    printusage()
 
@@ -104,15 +96,15 @@ for x in range(len(mdoutlines)):
          print >> sys.stderr, 'Error occurred on parsing the last line.'
          sys.exit()
 
-if mdcrd != '':
+if opt.mdcrd != '':
    print >> sys.stdout, "Gathering RMS data with %s..." % ptraj
    trajin = open('__ptraj.in','w')
    trajin.write("""trajin %s
 strip :WAT:Na+:Cl-:Br-:Cs+:F-:I-:K+:Li+:Mg+:MG2:Rb+:IB:CIO
 rms first mass out __RMS.dat
-""" % mdcrd)
+""" % opt.mdcrd)
    trajin.close()
-   os.system("%s %s __ptraj.in 2>>__ptraj.out 1>>__ptraj.out" % (ptraj,prmtop))
+   os.system("%s %s __ptraj.in 2>>__ptraj.out 1>>__ptraj.out" % (ptraj,opt.prmtop))
 
 print >> sys.stdout, "Printing data files..."
 
@@ -155,40 +147,44 @@ if constp:
 
 print >> sys.stdout, "Printing gnuplot scripts..."
 
-gnu = open("%s.energy" % (prefix),'w')
+gnu = open("%s.energy" % (opt.prefix),'w')
 gnu.write("""set font 'calibri,20'
 set title 'Energy equilibration'
 plot '__ETOT.dat' w l lw 2 ti 'ETOT','__EKTOT.dat' w l lw 2 ti 'EKTOT', \
      '__EPTOT.dat' w l lw 2 ti 'EPTOT','__EAMBER.dat' w l lw 2 lt -1 ti 'EAMBER'
+pause -1
 """)
 gnu.close()
 
-gnu = open('%s.temp' % (prefix),'w')
+gnu = open('%s.temp' % (opt.prefix),'w')
 gnu.write("""set font 'calibri,20'
 set title 'Temperature equilibration'
 plot '__TEMP.dat' w l lw 2 lt -1 ti 'TEMP'
+pause -1
 """)
 gnu.close()
 
 if constp:
-   gnu = open('%s.pressure' % (prefix),'w')
+   gnu = open('%s.pressure' % (opt.prefix),'w')
    gnu.write("""set font 'calibri,20'
 set title 'Pressure equilibration'
 plot '__PRESSURE.dat' w l lw 2 lt -1 ti 'Pressure'
+pause -1
 """)
    gnu.close()
-   gnu = open('%s.density' % (prefix),'w')
+   gnu = open('%s.density' % (opt.prefix),'w')
    gnu.write("""set font 'calibri,20'
 set title 'Density equilibration'
 plot '__DENSITY.dat' w l lw 2 lt -1 ti 'Density'
+pause -1
 """)
    gnu.close()
 
-if mdcrd != '':
-   gnu = open('%s.rms' % (prefix),'w')
-   gnu.write("""set font 'calibri,20'
+gnu = open('%s.rms' % (opt.prefix),'w')
+gnu.write("""set font 'calibri,20'
 set title 'RMS equilibration'
 plot '__RMS.dat' w l lt -1 lw 2 ti 'RMS'
+pause -1
 """)
-   gnu.close()
+gnu.close()
 

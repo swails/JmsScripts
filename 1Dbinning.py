@@ -1,61 +1,46 @@
 #!/usr/bin/env python
 
+from optparse import OptionParser
 import math, sys, utilities, time
 
 ttotstart = time.time()
 
-# function to print the usage statement
-def printusage():
-   import sys
-   print 'Usage: 1Dbinning.py -f data_file        \\'
-   print '                    -o output_file      \\'
-   print '                   {-bins NUM}          \\'
-   print '                   {-binrange NUM-NUM}  \\'
-   print '                   {-normalize}         \\'
-   print '                   {-gnuplot script_name}'
-   sys.exit()
-
-# answer any call for help
-if len(sys.argv) == 1 or sys.argv[1].startswith('-h') or sys.argv[1].startswith('--h'):
-   printusage()
+clopts = OptionParser()
+clopts.add_option('-f', '--file', dest="data_file", 
+                  help="Input data file", default='none')
+clopts.add_option('-o', '--output', dest="output_file",
+                  help="Binned output file", default="binned_output.dat")
+clopts.add_option('-b', '--bins', dest="bins", help="Number of bins to use",
+                  default=0, type="int")
+clopts.add_option('-r', '--binrange', dest="binrange",
+                  help="Range of bins to use")
+clopts.add_option('-n', '--normalize', dest="normalize", action="store_true",
+                  default=False, help="Normalize the histograms")
+clopts.add_option('-g', '--gnuplot', dest="script_name", default='',
+                  help="Gnuplot script name")
+clopts.add_option('-d', '--delimiter', dest="delimiter", default=None,
+               help="The column delimiter (defaults to any kind of whitespace)")
+clopts.add_option('-c', '--column', dest='column', default=1, type="int",
+                  help="Which column to pull the data from")
+(opts, args) = clopts.parse_args()
 
 # set variables with default values
-bins = 0                       # number of bins in both dimensions
-binrange = [0,0]               # range for each set of bins
-data_file = 'none'             # file with the initial data, must be 1 column
-output_file = 'binned_output.dat'  # output file to contain the binned data plottable by gnuplot
+bins = opts.bins 
+if opts.binrange:
+   binrange = [int(opts.binrange.split('-')[0].strip()),
+               int(opts.binrange.split('-')[1].strip())]
+else:
+   binrange = [0,0]
+data_file = opts.data_file
+output_file = opts.output_file
+normalize = opts.normalize
+script_name = opts.script_name
+delimiter = opts.delimiter
+column = opts.column
 phipsibins = []                    # the list of all bins in both directions (dimension bins)
-data = []                         # array of 2-element arrays that contains every pair of points
+data = []                          # array of 2-element arrays that contains every pair of points
 discarded = 0                      # count number of points that have been discarded
-normalize = False                  # whether or not to normalize
 pointweight = 1.0                  # how much a single point is worth. 1 if not normalized.
-script_name = ''
-
-# My traditional parser
-try:
-   for x in range(len(sys.argv)):
-      if sys.argv[x] == '-bins':
-         bins = int(sys.argv[x+1].split('x')[0].strip())
-      elif sys.argv[x] == '-binrange':
-         binrange[0] = float(sys.argv[x+1].split('-')[0].strip())
-         binrange[1] = float(sys.argv[x+1].split('-')[1].strip())
-      elif sys.argv[x] == '-f':
-         data_file = sys.argv[x+1]
-      elif sys.argv[x] == '-o':
-         output_file = sys.argv[x+1]
-      elif sys.argv[x] == '-normalize':
-         normalize = True
-      elif sys.argv[x] == '-gnuplot':
-         script_name = sys.argv[x+1]
-      elif sys.argv[x].startswith('-'):
-         print 'Error: Unknown flag ' + sys.argv[x]
-         printusage()
-except IndexError:
-   print 'Error: Command line error!'
-   printusage()
-except ValueError:
-   print 'Error: Bins must be integers and binrange must be floats!'
-   printusage()
 
 # read in data, check for existing file
 if data_file == 'none':
@@ -65,15 +50,16 @@ else:
       input_data = open(data_file,'r')
    except IOError:
       print 'Error: data file ' + data_file + ' not found!'
-      printusage()
+      sys.exit(1)
 
 # load data into file
 for line in input_data:
-   words = line.split()
-   if len(words) < 1: # skip any lines that don't have enough values
+   if delimiter: words = line.split(delimiter)
+   else: words = line.split()
+   if len(words) < column: # skip any lines that don't have enough values
       continue
    try: # skip any lines where value is not a float
-      data.append(float(words[0]))
+      data.append(float(words[column-1]))
    except ValueError:
       continue
 

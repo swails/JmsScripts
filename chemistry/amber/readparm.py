@@ -510,6 +510,22 @@ class _AtomList(list):
       """ Don't allow this! """
       raise exceptions.AmberParmError("Cannot add to an _AtomList!")
 
+   #===================================================
+
+   def write_to_parm(self):
+      """ Writes all of the atom data to the topology file """
+      for atm in self: atm.add_data(parm)
+
+   #===================================================
+
+   def determine_exclusions(self):
+      """ Figures out the EXCLUDED_ATOMS_LIST """
+      self.parm.parm_data['EXCLUDED_ATOMS_LIST'] = []
+      for atm in self:
+         vals_to_add = list(atm.bond_partners) + list(atm.angle_partners)
+         vals_to_add.sort()
+         self.parm.parm_data['EXCLUDED_ATOMS_LIST'].extend(vals_to_add)
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class _TypeList(list):
@@ -660,7 +676,24 @@ class AmberParm(object):
          self.LoadRst7(rst7_name)
 
       # Load the structure arrays
-      AmberParm._load_structure(self)
+      self._load_structure()
+      
+      # We now have the following instance arrays: All arrays are dynamic such that
+      # removing an item propagates the indices if applicable. bond has angle/dihed analogs.
+      # All non-dynamic lists have a check on any modification function to track if they
+      # have been changed or not so we know whether we have to reload the data before
+      # writing.
+      #
+      # atom_list          a dynamic list of all _Atom objects
+      # bond_type_list     a dynamic list of all _BondType objects
+      # bonds_inc_h        list of all bonds including hydrogen
+      # bonds_without_h    list of all bonds without hydrogen
+      # angle_type_list
+      # angles_inc_h
+      # angles_without_h
+      # dihedral_type_list
+      # dihedrals_inc_h
+      # dihedrals_without_h
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    
@@ -988,6 +1021,27 @@ class AmberParm(object):
       # eliminate multiplicative constant on charges to reduce to fraction-e charges
       for i in range(len(self.parm_data["CHARGE"])):
          self.parm_data["CHARGE"][i] /= AMBER_ELECTROSTATIC
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def remake_parm(self):
+      """ Re-fills the topology file arrays if we have changed the underlying structure """
+      # First we need to change the pointer arrays
+      self.parm_data['POINTERS'][NATOM] = len(self.atom_list)
+      self.parm_data['POINTERS'][NBONH] = len(self.bonds_inc_h)
+      self.parm_data['POINTERS'][MBONA] = len(self.bonds_without_h)
+      self.parm_data['POINTERS'][NBONA] = len(self.bonds_without_h)
+      self.parm_data['POINTERS'][NTHETH] = len(self.angles_inc_h)
+      self.parm_data['POINTERS'][MTHETA] = len(self.angles_without_h)
+      self.parm_data['POINTERS'][NTHETA] = len(self.angles_without_h)
+      self.parm_data['POINTERS'][NPHIH] = len(self.dihedrals_inc_h)
+      self.parm_data['POINTERS'][MPHIA] = len(self.dihedrals_without_h)
+      self.parm_data['POINTERS'][NPHIA] = len(self.dihedrals_without_h)
+      self.parm_data['POINTERS'][NUMBND] = len(self.bond_type_list)
+      self.parm_data['POINTERS'][NUMANG] = len(self.angle_type_list)
+      self.parm_data['POINTERS'][NPTRA] = len(self.dihedral_type_list)
+
+      # Now we have to fill all of the arrays
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

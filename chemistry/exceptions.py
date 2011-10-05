@@ -32,3 +32,9 @@ class MaskError(ChemError):
    """ Error when a Mask is poorly formed """
    def __init__(self, msg='Bad mask'):
       self.msg = msg
+
+class BondError(ChemError):
+   """ This is what happens when you try to bond an atom to itself """
+
+class AmberParmError(ChemError):
+   """ This is a generic AmberParmError """

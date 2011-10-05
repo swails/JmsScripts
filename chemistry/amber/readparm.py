@@ -34,12 +34,6 @@ from chemistry import exceptions
 from chemistry import periodic_table
 from math import ceil
 
-try: # fsum is only part of python 2.6 or later, I think, so add in a substitute here.
-   from math import fsum
-except ImportError:
-   def fsum(array):
-      return sum(array)
-
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223
 AMBER_POINTERS = """
@@ -159,14 +153,465 @@ def _parseFormat(format_string):  # parse a format statement and send back detai
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-class amberParm:
+# We now add all of the classes that are necessary to rebuild a topology file's set
+# of pointers and stuff if you want to add or remove atoms, bonds, etc.
+
+class _Atom(object):
+   """ 
+   An atom. Only fill these in _AtomList types, since _AtomList will keep track
+   of when indexes and other stuff needs to be updated
+   """
+   #===================================================
+
+   def __init__(self, atnum, parm=None, index_from=0):
+      self.bond_partners = []
+      self.angle_partners = []
+      self.index_from = int(index_from)
+      self.atnum = int(atnum)
+      if parm and type(parm).__name__ == 'AmberParm': self.load_from_parm(parm)
+   
+   #===================================================
+
+   def add_data(self, parm):
+      """ 
+      Writes this atom's data to the AmberParm object. Don't pitch a fit if we're
+      missing some useless (unused) flags.
+      """
+      # Make sure we're indexing from 0
+      atnum = self.atnum - self.index_from
+      parm.parm_data['ATOM_NAME'][atnum] = self.atname[:4]
+      parm.parm_data['CHARGE'][atnum] = self.charge
+      parm.parm_data['MASS'][atnum] = self.mass
+      parm.parm_data['ATOM_TYPE_INDEX'][atnum] = self.nb_idx
+      parm.parm_data['NUMBER_EXCLUDED_ATOMS'][atnum] = (sum(self.bond_partners) +
+                                                        sum(self.angle_partners))
+      parm.parm_data['AMBER_ATOM_TYPE'][atnum] = self.atname[:4]
+      try: parm.parm_data['JOIN_ARRAY'][atnum] = 0
+      except KeyError: pass
+      parm.parm_data['TREE_CHAIN_CLASSIFICATION'][atnum] = self.tree[:4]
+      try: parm.parm_data['IROTAT'][atnum] = 0
+      except KeyError: pass
+      parm.parm_data['RADII'][atnum] = self.radii
+      parm.parm_data['SCREEN'][atnum] = self.screen
+
+   #===================================================
+
+   def load_from_parm(self, parm):
+      """ Load data from the AmberParm class """
+      atnum = self.atnum - self.index_from # adjust for where we begin our indexing
+      self.atname = parm.parm_data['ATOM_NAME'][atnum]
+      self.charge = parm.parm_data['CHARGE'][atnum]
+      self.mass = parm.parm_data['MASS'][atnum]
+      self.nb_idx = parm.parm_data['ATOM_TYPE_INDEX'][atnum]
+      self.atname = parm.parm_data['AMBER_ATOM_TYPE'][atnum]
+      self.tree = parm.parm_data['TREE_CHAIN_CLASSIFICATION'][atnum]
+      self.radii = parm.parm_data['RADII'][atnum]
+      self.screen = parm.parm_data['SCREEN'][atnum]
+
+   #===================================================
+      
+   def bond_to(self, other):
+      """ 
+      Log this atom as bonded to another atom. Check if this has already been
+      added to the angle list. If so, remove it from there.
+      """
+      if self == other:
+         raise exceptions.BondError("Cannot bond atom to itself!")
+      if other in self.angle_partners:
+         del self.angle_partners[self.angle_partners.index(other)]
+      if other in self.bond_partners: return
+      self.bond_partners.append(other)
+
+   #===================================================
+      
+   def angle_to(self, other):
+      """
+      Log this atom as angled to another atom. Check if this has already been
+      added to the bond list. If so, do nothing
+      """
+      if self == other:
+         raise exceptions.BondError("Cannot angle an atom with itself!")
+      if other in self.bond_partners or other in self.angle_partners: return
+      self.angle_partners.append(other)
+   
+   #===================================================
+      
+   def atom_deleted(self, other):
+      """ 
+      This should be called for every atom in _AtomList so we know to delete
+      it from any of the bond/angle partners
+      """
+      if other in self.bond_partners:
+         del self.bond_partners[self.bond_partners.index(other)]
+      if other in self.angle_partners:
+         del self.angle_partners[self.angle_partners.index(other)]
+
+   #===================================================
+
+   def __eq__(self, other):
+      return id(self) == id(other)
+      
+   def __ne__(self, other):
+      return not _Atom.__eq__(self, other)
+
+   def __gt__(self, other):
+      return self.atnum > other.atnum
+
+   def __lt__(self, other):
+      return self.atnum < other.atnum
+
+   def __ge__(self, other):
+      return not _Atom.__lt__(self, other)
+
+   def __le__(self, other):
+      return not _Atom.__gt__(self, other)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _Bond(object):
+   """ Bond class. Stores 2 atoms involved and force constant/equil value """
+
+   #===================================================
+
+   def __init__(self, atom1, atom2, bond_type):
+      """ Bond constructor """
+      # Order the atoms so the lowest atom # is first
+      self.atom1 = atom1
+      self.atom2 = atom2
+      # Register each as bonded to the other
+      self.atom1.bond_to(atom2)
+      self.atom2.bond_to(atom1)
+      # Load the force constant and equilibrium distance
+      self.bond_type = bond_type
+
+   #===================================================
+
+   def write_info(self, parm, key, idx):
+      """ Writes the bond info to the topology file. idx starts at 0 """
+      parm.parm_data[key][3*idx  ] = 3*(self.atom1.atnum - self.atom1.index_from)
+      parm.parm_data[key][3*idx+1] = 3*(self.atom2.atnum - self.atom2.index_from)
+      parm.parm_data[key][3*idx+2] = self.bond_type.idx + 1
+      # Now have this bond type write its info
+      self.bond_type.write_info(parm)
+
+   #===================================================
+   
+   def __contains__(self, thing):
+      """ Quick and easy way to see if an _BondType or _Atom is in this _Bond """
+      if type(thing).__name__ == '_BondType':
+         return self.bond_type == thing
+      elif type(thing).__name__ == '_Atom':
+         return thing == self.atom1 or thing == self.atom2
+      else: return False
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _BondType(object):
+   """ A bond type """
+
+   #===================================================
+
+   def __init__(self, k, req, idx):
+      """_BondType constructor. idx must start from 0!!! """
+      self.idx = idx
+      self.k = k
+      self.req = req
+
+   #===================================================
+
+   def write_info(self, parm):
+      """ Writes the bond parameters in the parameter file """
+      parm.parm_data['BOND_FORCE_CONSTANT'][self.idx] = self.k
+      parm.parm_data['BOND_EQUIL_VALUE'][self.idx] = self.req
+
+   #===================================================
+
+   def __eq__(self, other):
+      return id(self) == id(other)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _Angle(object):
+   """ Angle class. Stores 3 atoms involved and force constant/equil value """
+      
+   #===================================================
+
+   def __init__(self, atom1, atom2, atom3, angle_type):
+      """ Angle constructor """
+      self.atom1 = atom1
+      self.atom2 = atom2
+      self.atom3 = atom3
+      # Register each as angled to the others
+      self.atom1.angle_to(self.atom2)
+      self.atom1.angle_to(self.atom3)
+      self.atom2.angle_to(self.atom1)
+      self.atom2.angle_to(self.atom3)
+      self.atom3.angle_to(self.atom1)
+      self.atom3.angle_to(self.atom2)
+      # Load the force constant and equilibrium angle
+      self.angle_type = angle_type
+
+   #===================================================
+
+   def write_info(self, parm, key, idx):
+      """ Write the info to the topology file """
+      parm.parm_data[key][4*idx  ] = 3*(self.atom1.atnum - self.atom1.index_from)
+      parm.parm_data[key][4*idx+1] = 3*(self.atom2.atnum - self.atom2.index_from)
+      parm.parm_data[key][4*idx+2] = 3*(self.atom3.atnum - self.atom3.index_from)
+      parm.parm_data[key][4*idx+3] = self.angle_type.idx + 1
+      # Now have this bond type write its info
+      self.angle_type.write_info(parm)
+
+   #===================================================
+   
+   def __contains__(self, thing):
+      """ Quick and easy way to see if an _AngleType or _Atom is in this _Angle """
+      if type(thing).__name__ == '_AngleType':
+         return self.angle_type == thing
+      elif type(thing).__name__ == '_Atom':
+         return thing == self.atom1 or thing == self.atom2 or thing == self.atom3
+      else: return False
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _AngleType(object):
+   """ An angle type """
+   #===================================================
+
+   def __init__(self, k, theteq, idx):
+      """ _AngleType constructor. idx must start from 0!!! """
+      self.k = k
+      self.theteq = theteq
+      self.idx = idx
+
+   #===================================================
+
+   def write_info(self, parm):
+      """ Writes the bond parameters in the parameter file """
+      parm.parm_data['ANGLE_FORCE_CONSTANT'][self.idx] = self.k
+      parm.parm_data['ANGLE_EQUIL_VALUE'][self.idx] = self.req
+
+   #===================================================
+
+   def __eq__(self, other):
+      return id(self) == id(other)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _Dihedral(object):
+   " Dihedral class with 4 atoms involved and force constant/periodicity/phase "
+      
+   #===================================================
+
+   def __init__(self, atom1, atom2, atom3, atom4, dihed_type, signs):
+      """ _Dihedral constructor. idx must start from 0!!! """
+      self.atom1 = atom1
+      self.atom2 = atom2
+      self.atom3 = atom3
+      self.atom4 = atom4
+      # Load the force constant and equilibrium angle
+      self.dihed_type = dihed_type
+      self.signs = signs # is our 3rd or 4th term negative?
+
+   #===================================================
+
+   def write_info(self, parm, key, idx):
+      """ Write the info to the topology file """
+      parm.parm_data[key][5*idx  ] = 3*(self.atom1.atnum - self.atom1.index_from)
+      parm.parm_data[key][5*idx+1] = 3*(self.atom2.atnum - self.atom2.index_from)
+      parm.parm_data[key][5*idx+2] = 3*(self.atom3.atnum - self.atom3.index_from)\
+                                   * self.signs[0]
+      parm.parm_data[key][5*idx+3] = 3*(self.atom4.atnum - self.atom4.index_from)\
+                                   * self.signs[1]
+      parm.parm_data[key][5*idx+4] = self.dihed_type.idx + 1
+      # Now have this bond type write its info
+      self.dihed_type.write_info(parm)
+
+   #===================================================
+
+   def __contains__(self, thing):
+      """ 
+      Quick and easy way to find out if either a _DihedralType or _Atom is
+      in this _Dihedral
+      """
+      if type(thing).__name__ == "_DihedralType":
+         return self.dihedral_type == thing
+      elif type(thing).__name__ == "_Atom":
+         return thing == self.atom1 or thing == self.atom2 or \
+                thing == self.atom3 or thing == self.atom4
+      else: return False
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _DihedralType(object):
+   """ A type of dihedral """
+
+   #===================================================
+   
+   def __init__(self, phi_k, per, phase, idx):
+      """ _DihedralType constructor """
+      self.phi_k = phi_k
+      self.per = per
+      self.phase = phase
+
+   #===================================================
+
+   def write_info(self, parm):
+      """ Write out the dihedral parameters """
+      parm.parm_data['DIHEDRAL_FORCE_CONSTANT'][self.idx] = self.phi_k
+      parm.parm_data['DIHEDRAL_PERIODICITY'][self.idx] = self.per
+      parm.parm_data['DIHEDRAL_PHASE'][self.idx] = self.phase
+   
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _AtomList(list):
+   """ Array of _Atoms """
+   #===================================================
+
+   def __init__(self, parm):
+      self.parm = parm
+      list.__init__(self, [_Atom(i,self.parm) for i in range(self.parm.ptr('natom'))])
+      self.changed = False
+
+   #===================================================
+
+   def __delitem__(self, idx):
+      """ Deletes this atom then re-indexes everybody else """
+      for atm in self:
+         atm.atom_deleted(self[idx])
+      list.__delitem__(self, idx)
+      self._reindex()
+      self.changed = True
+      # Now delete this item from all of our atomic property arrays in parm
+      del self.parm.parm_data['ATOM_NAME'][idx]
+      del self.parm.parm_data['CHARGE'][idx]
+      del self.parm.parm_data['MASS'][idx]
+      del self.parm.parm_data['ATOM_TYPE_INDEX'][idx]
+      del self.parm.parm_data['NUMBER_EXCLUDED_ATOMS'][idx]
+      del self.parm.parm_data['AMBER_ATOM_TYPE'][idx]
+      del self.parm.parm_data['JOIN_ARRAY'][idx]
+      del self.parm.parm_data['TREE_CHAIN_CLASSIFICATION'][idx]
+      del self.parm.parm_data['IROTAT'][idx]
+      del self.parm.parm_data['RADII'][idx]
+      del self.parm.parm_data['SCREEN'][idx]
+      # Adjust the NATOM pointer and broadcast that out
+      self.parm.parm_data['POINTERS'][NATOM] -= 1
+      self.parm.LoadPointers()
+
+   #===================================================
+   
+   def _reindex(self):
+      """ We have deleted an atom, so now we have to re-index everybody """
+      for i in range(len(self)): self[i].atnum = i
+
+   #===================================================
+
+   def append(self, item):
+      """ Don't allow this! """
+      raise exceptions.AmberParmError("Cannot add to an _AtomList!")
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _TypeList(list):
+   """ Base class for all type lists """
+
+   #===================================================
+
+   def __init__(self, parm):
+      """ Constructs a list of bond types from the topology file """
+      self.parm = parm
+      self._make_array()
+      self.changed = False
+
+   #===================================================
+
+   def __delitem__(self, idx):
+      """ Removes a bond from the bond type """
+      list.__delitem__(self, idx)
+      _TypeList._reindex(self)
+
+   #===================================================
+
+   def _reindex(self):
+      """ Re-indexes after a deleted item """
+      for i in range(len(self)): self[i].idx = i
+   
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _BondTypeList(_TypeList):
+   """ Bond type list """
+
+   #===================================================
+
+   def _make_array(self):
+      list.__init__(self, [_BondType(self.parm.parm_data['BOND_FORCE_CONSTANT'][i],
+                               self.parm.parm_data['BOND_EQUIL_VALUE'][i], i)
+                               for i in range(self.parm.ptr('numbnd')) ])
+      
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _AngleTypeList(_TypeList):
+   """ Angle type list """
+
+   #===================================================
+
+   def _make_array(self):
+      list.__init__(self, [_AngleType(self.parm.parm_data['ANGLE_FORCE_CONSTANT'][i],
+                                self.parm.parm_data['ANGLE_EQUIL_VALUE'][i], i)
+                                for i in range(self.parm.ptr('numang')) ])
+      
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _DihedralTypeList(_TypeList):
+   """ Dihedral type list """
+
+   #===================================================
+
+   def _make_array(self):
+      list.__init__(self, [_DihedralType(self.parm.parm_data['DIHEDRAL_FORCE_CONSTANT'][i],
+                                   self.parm.parm_data['DIHEDRAL_PERIODICITY'][i], 
+                                   self.parm.parm_data['DIHEDRAL_PHASE'][i], i)
+                                   for i in range(self.parm.ptr('nptra')) ])
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class _TrackedList(list):
+   """ This creates a list type that allows you to see if anything has changed """
+   def __init__(self, arg=[]):
+      self.changed = False
+      list.__init__(self, arg)
+
+   def __delitem__(self, idx):
+      self.changed = True
+      list.__delitem__(self, idx)
+
+   def append(self, stuff):
+      self.changed = True
+      list.append(self, stuff)
+
+   def extend(self, stuff):
+      self.changed = True
+      list.extend(self, stuff)
+
+   def __delslice__(self, i, j):
+      self.changed = True
+      list.__delslice__(self, i, j)
+
+   def __setitem__(self, i, y):
+      self.changed = True
+      list.__setitem__(self, i, y)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class AmberParm(object):
    """ Amber Topology (parm7 format) class. Gives low, and some high, level access to
-       topology data. """
+       topology data.
+   """
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    def __init__(self, prm_name='prmtop', rst7_name=''): # set up necessary variables
-      """ Instantiates an amberParm object from data in prm_name and establishes validity
+      """ Instantiates an AmberParm object from data in prm_name and establishes validity
           based on presence of POINTERS and CHARGE sections """
 
       # instance variables:
@@ -214,6 +659,9 @@ class amberParm:
       if rst7_name != '':
          self.LoadRst7(rst7_name)
 
+      # Load the structure arrays
+      AmberParm._load_structure(self)
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    
    def LoadPointers(self):
@@ -252,6 +700,81 @@ class amberParm:
       try:
          self.pointers["NCOPY"] = self.parm_data["POINTERS"][NCOPY]
       except: pass
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def _load_structure(self):
+      """ 
+      Loads all of the topology instance variables. This is necessary if we actually
+      want to modify the topological layout of our system (like deleting atoms)
+      """
+      ##### First create our atoms #####
+      self.atom_list = _AtomList(self)
+      ##### Next create our list of bonds #####
+      self.bond_type_list = _BondTypeList(self)
+      self.bonds_inc_h, self.bonds_without_h = _TrackedList(), _TrackedList()
+      # Array of bonds with hydrogen
+      for i in range(self.ptr('nbonh')):
+         self.bonds_inc_h.append(
+              _Bond(self.atom_list[self.parm_data['BONDS_INC_HYDROGEN'][3*i  ]/3],
+                    self.atom_list[self.parm_data['BONDS_INC_HYDROGEN'][3*i+1]/3],
+                    self.bond_type_list[self.parm_data['BONDS_INC_HYDROGEN'][3*i+2]-1]))
+      # Array of bonds without hydrogen
+      for i in range(self.ptr('mbona')):
+         self.bonds_without_h.append(
+              _Bond(self.atom_list[self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i  ]/3],
+                    self.atom_list[self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1]/3],
+                    self.bond_type_list[self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+2]-1]))
+      # We haven't changed yet...
+      self.bonds_inc_h.changed = self.bonds_without_h.changed = False
+      ##### Next create our list of angles #####
+      self.angle_type_list = _AngleTypeList(self)
+      self.angles_inc_h, self.angles_without_h = _TrackedList(), _TrackedList()
+      # Array of angles with hydrogen
+      for i in range(self.ptr('ntheth')):
+         self.angles_inc_h.append(
+              _Angle(self.atom_list[self.parm_data['ANGLES_INC_HYDROGEN'][4*i  ]/3],
+                     self.atom_list[self.parm_data['ANGLES_INC_HYDROGEN'][4*i+1]/3],
+                     self.atom_list[self.parm_data['ANGLES_INC_HYDROGEN'][4*i+2]/3],
+                     self.angle_type_list[self.parm_data['ANGLES_INC_HYDROGEN'][4*i+3]-1]))
+      # Array of angles without hydrogen
+      for i in range(self.ptr('mtheta')):
+         self.angles_without_h.append(
+              _Angle(self.atom_list[self.parm_data['ANGLES_WITHOUT_HYDROGEN'][4*i  ]/3],
+                     self.atom_list[self.parm_data['ANGLES_WITHOUT_HYDROGEN'][4*i+1]/3],
+                     self.atom_list[self.parm_data['ANGLES_WITHOUT_HYDROGEN'][4*i+2]/3],
+                     self.angle_type_list[self.parm_data['ANGLES_WITHOUT_HYDROGEN'][4*i+3]-1]))
+      # We haven't changed yet
+      self.angles_inc_h.changed = self.angles_without_h.changed = False
+      ##### Next create our list of dihedrals #####
+      self.dihedral_type_list = _DihedralTypeList(self)
+      self.dihedrals_inc_h, self.dihedrals_without_h = _TrackedList(), _TrackedList()
+      # Array of dihedrals with hydrogen
+      for i in range(self.ptr('nphih')):
+         signs = [1,1]
+         if self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+2] < 0: signs[0] = -1
+         if self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+3] < 0: signs[1] = -1
+         self.dihedrals_inc_h.append(
+              _Dihedral(self.atom_list[self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i  ]/3],
+                        self.atom_list[self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+1]/3],
+                        self.atom_list[abs(self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+2]/3)],
+                        self.atom_list[abs(self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+3]/3)],
+                        self.dihedral_type_list[self.parm_data['DIHEDRALS_INC_HYDROGEN'][5*i+4]-1],
+                        signs))
+      # Array of dihedrals without hydrogen
+      for i in range(self.ptr('mphia')):
+         signs = [1,1]
+         if self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+2] < 0: signs[0] = -1
+         if self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+3] < 0: signs[1] = -1
+         self.dihedrals_without_h.append(
+              _Dihedral(self.atom_list[self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i  ]/3],
+                        self.atom_list[self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+1]/3],
+                        self.atom_list[abs(self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+2]/3)],
+                        self.atom_list[abs(self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+3]/3)],
+                        self.dihedral_type_list[self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][5*i+4]-1],
+                        signs))
+      # We haven't changed yet
+      self.dihedrals_inc_h.changed = self.dihedrals_without_h.changed = False
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -355,8 +878,10 @@ class amberParm:
 
       # Load the bond[] list, so each Atom # references a list of bonded partners. Note
       # that the index into bond[] begins atom indexing at 0, and each atom located in
-      # the bonded list also starts from index 0. Start with bonds containing H
+      # the bonded list also starts from index 0. Start with bonds containing H. Also load
+      # all of the angles (for the excluded list)
       self.bonds = [[] for i in range(self.parm_data['POINTERS'][NATOM])]
+      self.angles = [[] for i in range(self.parm_data['POINTERS'][NATOM])]
       for i in range(self.parm_data['POINTERS'][NBONH]):
          at1 = self.parm_data['BONDS_INC_HYDROGEN'][3*i  ] / 3
          at2 = self.parm_data['BONDS_INC_HYDROGEN'][3*i+1] / 3
@@ -368,6 +893,28 @@ class amberParm:
          at2 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1] / 3
          self.bonds[at1].append(at2)
          self.bonds[at2].append(at1)
+      # Now do angles including hydrogen
+      for i in range(self.parm_data['POINTERS'][NTHETH]):
+         at1 = self.parm_data['ANGLES_INC_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['ANGLES_INC_HYDROGEN'][3*i+1] / 3
+         at3 = self.parm_data['ANGLES_INC_HYDROGEN'][3*i+2] / 3
+         if not at2 in self.bonds[at1]: self.angles[at1].append(at2)
+         if not at3 in self.bonds[at1]: self.angles[at1].append(at3)
+         if not at1 in self.bonds[at2]: self.angles[at2].append(at1)
+         if not at3 in self.bonds[at2]: self.angles[at2].append(at3)
+         if not at1 in self.bonds[at3]: self.angles[at3].append(at1)
+         if not at2 in self.bonds[at3]: self.angles[at3].append(at2)
+      # Now do angles without hydrogen
+      for i in range(self.parm_data['POINTERS'][MTHETA]):
+         at1 = self.parm_data['ANGLES_WITHOUT_HYDROGEN'][3*i  ] / 3
+         at2 = self.parm_data['ANGLES_WITHOUT_HYDROGEN'][3*i+1] / 3
+         at3 = self.parm_data['ANGLES_WITHOUT_HYDROGEN'][3*i+2] / 3
+         if not at2 in self.bonds[at1]: self.angles[at1].append(at2)
+         if not at3 in self.bonds[at1]: self.angles[at1].append(at3)
+         if not at1 in self.bonds[at2]: self.angles[at2].append(at1)
+         if not at3 in self.bonds[at2]: self.angles[at2].append(at3)
+         if not at1 in self.bonds[at3]: self.angles[at3].append(at1)
+         if not at2 in self.bonds[at3]: self.angles[at3].append(at2)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -444,23 +991,11 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def totMass(self):
-      """Returns total mass of the system"""
-      return fsum(self.parm_data["MASS"])
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-   def totCharge(self):
-      """Returns total charge of the system"""
-      return fsum(self.parm_data["CHARGE"])
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
    def frcmod(self, frcmod="frcmod"):
       """Prints an Frcmod file that contains every parameter found in prmtop"""
-      from math import pi, pow
+      from math import pi
 
-      print >> stderr, "Warning: amberParm.Frcmod() does not work for 10-12 non-bonded prmtops yet!"
+      print >> stderr, "Warning: AmberParm.Frcmod() does not work for 10-12 non-bonded prmtops yet!"
 
       self.fill_LJ()
 
@@ -855,6 +1390,8 @@ class amberParm:
       """ Fills the LJ_14_radius, LJ_14_depth arrays with data (LJ_types is identical)
           from LENNARD_JONES_14_ACOEF and LENNARD_JONES_14_BCOEF sections of the 
           prmtop files, by undoing the canonical combining rules. """
+      if not self.chamber:
+         raise TypeError('fill_14_LJ() only valid on a chamber prmtop!')
       self.LJ_14_radius = []  # empty LJ_radii so it can be re-filled
       self.LJ_14_depth = []   # empty LJ_depths so it can be re-filled
       one_sixth = 1.0 / 6.0 # we need to raise some numbers to the 1/6th power
@@ -890,8 +1427,27 @@ class amberParm:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+   def recalculate_14_LJ(self):
+      """ Takes the values of the LJ_radius and LJ_depth arrays and recalculates the 
+          LENNARD_JONES_A/BCOEF topology sections from the canonical combining rules
+          for the 1-4 LJ interactions (CHAMBER only)
+      """
+      if not self.chamber:
+         raise TypeError('recalculate_14_LJ() requires a CHAMBER prmtop!')
+      from math import sqrt
+
+      for i in range(self.pointers["NTYPES"]):
+         for j in range(i,self.pointers["NTYPES"]):
+            index = self.parm_data['NONBONDED_PARM_INDEX'][self.ptr('ntypes')*i + j] - 1
+            rij = self.LJ_14_radius[i] + self.LJ_14_radius[j]
+            wdij = sqrt(self.LJ_14_depth[i] * self.LJ_14_depth[j])
+            self.parm_data["LENNARD_JONES_14_ACOEF"][index] = wdij * pow(rij, 12)
+            self.parm_data["LENNARD_JONES_14_BCOEF"][index] = 2 * wdij * pow(rij, 6)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
    def LoadRst7(self, filename):
-      """ Loads coordinates into the amberParm class """
+      """ Loads coordinates into the AmberParm class """
       self.rst7 = rst7(filename)
       if not self.rst7.valid:
          return -1
@@ -902,6 +1458,29 @@ class amberParm:
          self.box = self.rst7.box
       if self.hasvels:
          self.vels = self.rst7.vels
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def addFlag(self, flag_name, flag_format, num_items=0, comments=[], data=None):
+      """ Adds a new flag with the given flag name and Fortran format string
+          and initializes the array with the values given, or as an array of 0s
+          of length num_items
+      """
+      self.flag_list.append(flag_name.upper())
+      self.formats[flag_name.upper()] = flag_format
+      if data:
+         self.parm_data[flag_name.upper()] = list(data)
+      else:
+         if num_items == 0:
+            raise exceptions.FlagError("If you do not supply prmtop data, num_items cannot be 0")
+         self.parm_data[flag_name.upper()] = [0 for i in range(num_items)]
+      if comments:
+         if type(comments).__name__ == 'str': comments = [comments]
+         elif type(comments).__name__ == 'tuple': comments = list(comments)
+         elif type(comments).__name__ == 'list': pass
+         else: raise TypeError('Comments are wrong type. Must be string, list, or tuple')
+         self.parm_comments[flag_name.upper()] = comments
+      else: self.parm_comments[flag_name.upper()] = []
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1005,10 +1584,6 @@ class rst7:
       except IndexError:
          self.time = 0.0
 
-      lineno = 2
-
-      numlines = len(lines)
-
       # Check to see if we have velocities or not and box or not
       if len(lines) == int(ceil(self.natom/2.0) + 2):
          self.hasbox = False
@@ -1065,29 +1640,6 @@ class rst7:
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def addFlag(self, flag_name, flag_format, num_items=0, comments=[], data=None):
-      """ Adds a new flag with the given flag name and Fortran format string
-          and initializes the array with the values given, or as an array of 0s
-          of length num_items
-      """
-      self.flag_list.append(flag_name.upper())
-      self.formats[flag_name.upper()] = flag_format
-      if data:
-         self.parm_data[flag_name.upper()] = list(data)
-      else:
-         if num_items == 0:
-            raise exceptions.FlagError("If you do not supply prmtop data, num_items cannot be 0")
-         self.parm_data[flag_name.upper()] = [0 for i in range(num_items)]
-      if comments:
-         if type(comments).__name__ == 'str': comments = [comments]
-         elif type(comments).__name__ == 'tuple': comments = list(comments)
-         elif type(comments).__name__ == 'list': pass
-         else: raise TypeError('Comments are wrong type. Must be string, list, or tuple')
-         self.parm_comments[flag_name.upper()] = comments
-      else: self.parm_comments[flag_name.upper] = []
-
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 def Element(mass):
    """ Determines what element the given atom is based on its mass """
 
@@ -1102,3 +1654,11 @@ def Element(mass):
    return best_guess
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# For backwards-compatibility
+class amberParm(AmberParm):
+   """ 
+   This equivalence is made to preserve backwards-compatibility. The standard for
+   creating class names is CapitalLettersSeparateWords, with the starting letter
+   being capital.
+   """

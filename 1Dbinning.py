@@ -123,7 +123,7 @@ if script_name != '':
 ttotend = time.time()
 
 print 'Binning Results:\n'
-print 'Time Taken:      {0:.3f} min.'.format((ttotend - ttotstart) / 60)
+print 'Time Taken:      {0:.3f} sec.'.format(ttotend - ttotstart)
 print 'Data file:       ' + data_file
 print 'Output file:     ' + output_file
 if script_name != '':

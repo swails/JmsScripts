@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from pbsjob import PBSjob
+from pbsjob import PBS_Script
 from os import path, getenv
 from optparse import OptionParser
 
@@ -43,7 +43,7 @@ if not path.exists(args[0]):
    sys.exit()
 
 # Create the gaussian PBSjob instance
-gaussjob = PBSjob(name=opt.name, template=opt.template)
+gaussjob = PBS_Script(name=opt.name, template=opt.template)
 
 # Source the resource file
 if not path.exists(path.join(opt.path, 'bsd', '%s.profile' % opt.version)):

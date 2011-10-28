@@ -311,6 +311,12 @@ class PBS_Script(object):
       else:
          self.name = name
 
+   # ==============================
+
+   def add_command(self, command_str):
+      """ Adds a command string to the commands """
+      self.commands += linesep + command_str + linesep
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 if __name__ == '__main__':

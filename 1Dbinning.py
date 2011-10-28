@@ -9,7 +9,7 @@ clopts = OptionParser()
 clopts.add_option('-f', '--file', dest="data_file", 
                   help="Input data file", default='none')
 clopts.add_option('-o', '--output', dest="output_file",
-                  help="Binned output file", default="binned_output.dat")
+                  help="Binned output file", default=None)
 clopts.add_option('-b', '--bins', dest="bins", help="Number of bins to use",
                   default=0, type="int")
 clopts.add_option('-r', '--binrange', dest="binrange",
@@ -23,6 +23,10 @@ clopts.add_option('-d', '--delimiter', dest="delimiter", default=None,
 clopts.add_option('-c', '--column', dest='column', default=1, type="int",
                   help="Which column to pull the data from")
 (opts, args) = clopts.parse_args()
+
+if not opts.output_file:
+   clopts.print_help()
+   sys.exit(1)
 
 # set variables with default values
 bins = opts.bins 
@@ -119,7 +123,7 @@ if script_name != '':
 ttotend = time.time()
 
 print 'Binning Results:\n'
-print 'Time Taken:      {0:.3f} min.'.format((ttotend - ttotstart) / 60)
+print 'Time Taken:      {0:.3f} sec.'.format(ttotend - ttotstart)
 print 'Data file:       ' + data_file
 print 'Output file:     ' + output_file
 if script_name != '':

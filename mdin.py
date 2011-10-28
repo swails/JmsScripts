@@ -73,6 +73,7 @@ class mdin:
       self.qmmm_nml_defaults = {}   # dictionary with default qmmm namelist vars
       self.valid_namelists = []     # array with valid namelists for each program
       self.title = 'mdin prepared by mdin.py'   # title for the mdin file
+      self.extra_lines = ''
 
 
       if self.program == "sander":
@@ -187,6 +188,8 @@ class mdin:
       if len(self.cards) != 0:
          file.write('END\n')
       
+      file.write(self.extra_lines + '\n')
+
       file.close()
 
 # =====================================================================================
@@ -425,3 +428,10 @@ class mdin:
       self.cards.append('%s\n%s\nEND' % (title, cardString))
 
 # =====================================================================================
+
+   def add_lines(self, add_str):
+      """ Add lines to the end of the mdin file """
+      self.extra_lines += add_str + '\n'
+
+# =====================================================================================
+

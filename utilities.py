@@ -33,7 +33,7 @@
 #
 ##########################################################################################
 
-from chemistry.amber.readparm import *
+from chemistry.amber.readparm import amberParm, AmberParm
 
 def which(program):
    import os

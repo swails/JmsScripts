@@ -27,7 +27,7 @@ class cntrl:
               'idecomp' : 0, 'temp0les' : -1.0, 'restraintmask' : '', 'restraint_wt' : 0,
               'bellymask' : '', 'noshakemask' : '', 'crgmask' : '', 'iwrap_mask' : '',
               'mmtsb_switch' : 0, 'mmtsb_iterations' : 100, 'rdt' : 0.0, 'icnstph' : 0, 'solvph' : 7.0,
-              'ntcnstph' : 10, 'ifqnt' : 0, 'ievb' : 0, 'ipimd' : 0, 'itimass' : 0, 'ineb' : 0,
+              'ntcnstph' : 10, 'ntrelax' : 500, 'ifqnt' : 0, 'ievb' : 0, 'ipimd' : 0, 'itimass' : 0, 'ineb' : 0,
               'profile_mpi' : 0, 'ilscivr' : 0, 'icorf_lsc' : 0, 'ipb' : 0, 'inp' : 1,
               'gbneckscale' : -999999.0, 'gbalphah' : 0.788440, 'gbbetah' : 0.798699, 'gbgammah' : 0.437334, 
               'gbalphac' : 0.733756, 'gbbetac' : 0.506378, 'gbgammac' : 0.205844, 'gbalphan' : 0.503364, 
@@ -55,4 +55,5 @@ class cntrl:
              'no_intermolecular_bonds' : 1, 'ene_avg_sampling' : -1,
              'mdinfo_flush_interval' : 60, 'mdout_flush_interval' : 300, 'dbg_atom_redistribution' : 0,
              'loadbal_verbose' : 0, 'es_cutoff' : 0.0, 'vdw_cutoff' : 0.0,
-             'dtemp' : 0, 'dxm' : 0, 'heat' : 0, 'alpb' : 0, 'arad' : 15.0 }
+             'dtemp' : 0, 'dxm' : 0, 'heat' : 0, 'alpb' : 0, 'arad' : 15.0, 'restraintmask' : '',
+             'restraint_wt' : 0, 'numexchg' : 0}

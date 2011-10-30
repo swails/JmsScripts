@@ -254,6 +254,7 @@ class Production(BaseType):
       self.mdin.change('cntrl', 'ntpr', ntpr)
       self.mdin.change('cntrl', 'ntwx', ntwx)
       self.mdin.change('cntrl', 'ntwr', ntwr)
+      self.mdin.change('cntrl', 'nstlim', nstlim)
       self.mdin.change('cntrl', 'dt', 0.002)
       if thermostat.lower() == 'langevin':
          self.mdin.change('cntrl', 'ntt', 3)

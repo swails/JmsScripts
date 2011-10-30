@@ -83,7 +83,7 @@ min_input = am_sim.Minimization(amsys, num_steps=opt.maxcyc, igb=opt.igb,
 prefix = os.path.splitext(args[0])[0]
 
 # Print the mdin file
-min_input.write_mdin('min.mdin')
+min_input.write_mdin('%s.min.mdin' % prefix)
 
 # Get the MPI command (mpiexec -n $NPROC, for example)
 mpi_cmd = am_sim.get_mpi_cmd()
@@ -124,9 +124,9 @@ if opt.pbs:
    # Set walltime
    pbs_job.set_walltime(opt.walltime)
    
-   cmd_str = ("%s -i min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout -inf" +
-              " %s.min.mdinfo") % (prog_str, args[0], args[1], prefix, prefix, 
-              prefix)
+   cmd_str = ("%s -i %s.min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout " +
+              "-inf %s.min.mdinfo -suffix %s") % (prog_str, prefix, args[0], 
+              args[1], prefix, prefix, prefix, prefix)
 
    if opt.rst_wt:
       cmd_str += " -ref %s" % args[1]
@@ -144,9 +144,9 @@ if opt.pbs:
       pbs_job.submit(after_job=opt.jobid)
 else:
    
-   cmd_str = ("%s -i min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout -inf" +
-              " %s.min.mdinfo") % (prog_str, args[0], args[1], prefix, prefix, 
-              prefix)
+   cmd_str = ("%s -i %s.min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout " +
+              "-inf %s.min.mdinfo -suffix %s") % (prog_str, prefix, args[0], 
+              args[1], prefix, prefix, prefix, prefix)
 
    if opt.rst_wt:
       cmd_str += " -ref %s" % args[1]

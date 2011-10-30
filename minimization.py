@@ -57,6 +57,8 @@ parser.add_option('--pbs-template', dest='pbs_template',
                   default=os.path.join(os.getenv('HOME'), '.pbsdefaults'),
                   help='PBS template file to use for job. Defaults to ' +
                   '~/.pbsdefaults')
+parser.add_option('--no-pbs', dest='pbs', default=True, action='store_false',
+                  help='Just run using os.system(), not via PBS')
 
 (opt, args) = parser.parse_args()
 
@@ -86,29 +88,9 @@ min_input.write_mdin('min.mdin')
 # Get the MPI command (mpiexec -n $NPROC, for example)
 mpi_cmd = am_sim.get_mpi_cmd()
 
-# Make the PBS_Script instance
-pbs_job = PBS_Script(template=opt.pbs_template)
-
-# Change the queue if desired
-pbs_job.queue = opt.pbs_queue
-
-# Set the PBS job name
-pbs_job.set_name(opt.job_name)
-
-# Determine processor count
+# Determine if we're doing parallel simulations
 nproc = opt.nproc.split(',')
 nproc = [int(i) for i in nproc]
-
-if not opt.pbs_nproc: pbs_nproc = nproc[:]
-else:
-   pbs_nproc = opt.pbs_nproc.split(',')
-   pbs_nproc = [int(i) for i in pbs_nproc]
-
-pbs_job.set_proc_count(pbs_nproc)
-
-# Set walltime
-pbs_job.set_walltime(opt.walltime)
-
 parallel = False
 for n in nproc:
    if n > 1: parallel = True
@@ -118,18 +100,55 @@ for n in nproc:
 if parallel: prog_str = '%s pmemd.MPI -O ' % mpi_cmd
 else: prog_str = 'pmemd -O '
 
-cmd_str = """
-%s -i min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout -inf %s.min.mdinfo
-""" % (prog_str, args[0], args[1], prefix, prefix, prefix)
+if opt.pbs:
+   # Make the PBS_Script instance
+   pbs_job = PBS_Script(template=opt.pbs_template)
+   
+   # Change the queue if desired
+   pbs_job.queue = opt.pbs_queue
+   
+   # Set the PBS job name
+   pbs_job.set_name(opt.job_name)
+   
+   # Determine processor count
+   nproc = opt.nproc.split(',')
+   nproc = [int(i) for i in nproc]
+   
+   if not opt.pbs_nproc: pbs_nproc = nproc[:]
+   else:
+      pbs_nproc = opt.pbs_nproc.split(',')
+      pbs_nproc = [int(i) for i in pbs_nproc]
+   
+   pbs_job.set_proc_count(pbs_nproc)
+   
+   # Set walltime
+   pbs_job.set_walltime(opt.walltime)
+   
+   cmd_str = ("%s -i min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout -inf" +
+              " %s.min.mdinfo") % (prog_str, args[0], args[1], prefix, prefix, 
+              prefix)
 
-pbs_job.add_command(cmd_str)
-
-# If we just want to print the jobfile
-if opt.jobfile:
-   pbs_job.print_submit(opt.jobfile)
-
-elif opt.ask:
-   pbs_job.submit_ask(after_job=opt.jobid)
-
+   if opt.rst_wt:
+      cmd_str += " -ref %s" % args[1]
+   
+   pbs_job.add_command(cmd_str)
+   
+   # If we just want to print the jobfile
+   if opt.jobfile:
+      pbs_job.print_submit(opt.jobfile)
+   
+   elif opt.ask:
+      pbs_job.submit_ask(after_job=opt.jobid)
+   
+   else:
+      pbs_job.submit(after_job=opt.jobid)
 else:
-   pbs_job.submit(after_job=opt.jobid)
+   
+   cmd_str = ("%s -i min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout -inf" +
+              " %s.min.mdinfo") % (prog_str, args[0], args[1], prefix, prefix, 
+              prefix)
+
+   if opt.rst_wt:
+      cmd_str += " -ref %s" % args[1]
+
+   os.system(cmd_str)

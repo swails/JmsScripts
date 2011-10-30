@@ -116,7 +116,10 @@ class mdin:
       # add any variable that is different from the default to the mdin file
       for var in self.cntrl_nml.keys():
          if self.cntrl_nml[var] != self.cntrl_nml_defaults[var]:
-            line = addOn(line, "%s=%s, " % (var, self.cntrl_nml[var]), file)
+            if 'mask' in var:
+               line = addOn(line, "%s='%s', " % (var, self.cntrl_nml[var]), file)
+            else:
+               line = addOn(line, "%s=%s, " % (var, self.cntrl_nml[var]), file)
 
       # flush any remaining items that haven't yet been printed to the mdin file
       if len(line.strip()) != 0:
@@ -172,7 +175,10 @@ class mdin:
             if (not has_been_printed):
                file.write('&qmmm\n')
                has_been_printed = True
-            line = addOn(line, '%s=%s, ' % (var, self.qmmm_nml[var]), file)
+            if 'mask' in var:
+               line = addOn(line, "%s='%s', " % (var, self.qmmm_nml[var]), file)
+            else:
+               line = addOn(line, '%s=%s, ' % (var, self.qmmm_nml[var]), file)
       
       # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:

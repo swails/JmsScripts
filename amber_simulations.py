@@ -136,6 +136,7 @@ class Minimization(BaseType):
             raise ValueError('For non-periodic systems, igb must be ' +
                              '1, 2, 5, 7, or 8')
          self.mdin.change('cntrl', 'igb', igb)
+         self.mdin.change('cntrl', 'cut', 1000.0)
       self.mdin.change('cntrl', 'imin', 1)
       self.mdin.change('cntrl', 'maxcyc', num_steps)
       self.mdin.change('cntrl', 'ntr', int(restrained))
@@ -174,6 +175,7 @@ class Heating(BaseType):
             raise ValueError('For non-periodic systems, igb must be ' +
                              '1, 2, 5, 7, or 8')
          self.mdin.change('cntrl', 'igb', igb)
+         self.mdin.change('cntrl', 'cut', 1000.0)
       self.mdin.change('cntrl', 'ioutfm', 1) # always NetCDF!
       if not slow: self.mdin.change('cntrl', 'tempi', tempi)
       self.mdin.change('cntrl', 'temp0', temp0)
@@ -242,6 +244,7 @@ class Production(BaseType):
             raise ValueError('For non-periodic systems, igb must be ' +
                              '1, 2, 5, 7, or 8')
          self.mdin.change('cntrl', 'igb', igb)
+         self.mdin.change('cntrl', 'cut', 1000.0)
       self.mdin.change('cntrl', 'ioutfm', 1) # always NetCDF!
       self.mdin.change('cntrl', 'ntr', int(restrained))
       self.mdin.change('cntrl', 'ig', -1)

@@ -58,7 +58,6 @@ class TemplateFile(object):
 
 def pbsline(option, value):
    if not value: return ''
-   print "#PBS %s %s" % (option, str(value).strip('"').strip("'"))
    return "#PBS %s %s" % (option, str(value).strip('"').strip("'")) + linesep
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

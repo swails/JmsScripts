@@ -58,7 +58,8 @@ class TemplateFile(object):
 
 def pbsline(option, value):
    if not value: return ''
-   return "#PBS %s %s" % (option, value) + linesep
+   print "#PBS %s %s" % (option, str(value).strip('"').strip("'"))
+   return "#PBS %s %s" % (option, str(value).strip('"').strip("'")) + linesep
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -123,19 +124,23 @@ class PBS_Script(object):
       if not path.exists(template):
          raise PBSClassError('Missing %s file. ' % template +
                              'Run pbsjob.py to create it')
-         default = open(template, 'r')
-         for line in default:
-            parts = line.split('=')
-            if len(parts) != 2:
-               raise PBSClassError('Corrupt ~/.pbsdefaults file! ' +
-                                   'Unrecognized line:\n  > %s' % line.strip())
-            parts[0], parts[1] = parts[0].strip(), parts[1].strip()
-            if not hasattr(self, parts[0]):
-               raise PBSClassError('Unknown attribute %s' % parts[0])
-            # The resource list has to be handled separately because it's a list
-            if parts[0] == 'resources': self.resources.append(parts[1])
-            else: setattr(self, parts[0], parts[1]) # parts[x] are all strings
-         default.close()
+      default = open(template, 'r')
+      for line in default:
+         parts = line.split('=')
+         if not len(parts) > 1:
+            raise PBSClassError('Corrupt ~/.pbsdefaults file! ' +
+                                'Unrecognized line:\n  > %s' % line.strip())
+         # If we have multiple parts, combine 1-numparts into the same part
+         if len(parts) > 2:
+            for i in range(2,len(parts)):
+               parts[1] += '=' + parts[i]
+         parts[0], parts[1] = parts[0].strip(), parts[1].strip()
+         if not hasattr(self, parts[0]):
+            raise PBSClassError('Unknown attribute %s' % parts[0])
+         # The resource list has to be handled separately because it's a list
+         if parts[0] == 'resources': self.resources.append(parts[1])
+         else: setattr(self, parts[0], parts[1]) # parts[x] are all strings
+      default.close()
 
    # ==============================
 
@@ -164,7 +169,7 @@ class PBS_Script(object):
 
    # ==============================
 
-   def set_proc_count(self, *args):
+   def set_proc_count(self, count):
       """ 
       Any arguments not provided necessary in the self.proc_format will be
       replaced with a 1. If too many are provided, an error is raised
@@ -174,13 +179,14 @@ class PBS_Script(object):
       # Use REs to find how many %s we can replace
       replace_fields = re.compile('%')
       num_fields = len(replace_fields.findall(remaining_format))
-      if num_fields < len(args):
-         raise PBSInputError('Too many arguments for processor count!')
-      if num_fields > len(args):
-         fields = list(args[:])
-         for i in range(num_fields - len(args)): fields.append(1)
+      if num_fields < len(count):
+         raise PBSInputError('Too many arguments for processor count! ' +
+                             'Expected %d, got %d' % (num_fields, len(count)))
+      if num_fields > len(count):
+         fields = list(count[:])
+         for i in range(num_fields - len(count)): fields.append(1)
       else:
-         fields = list(args[:])
+         fields = list(count[:])
 
       self.proc_count = self.proc_format % tuple(fields)
 
@@ -213,7 +219,7 @@ class PBS_Script(object):
 
    # ==============================
 
-   def submit(self, print_result=True):
+   def submit(self, print_result=True, after_job=None):
       """ Submits the job """
       import utilities
       qsub = utilities.which('qsub')
@@ -222,7 +228,26 @@ class PBS_Script(object):
 
       sub_script = self._get_sub_script()
 
-      process = Popen([qsub], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+      # Determine if we have to submit this with a dependency
+      if after_job:
+         # Make sure we have qstat, since that's how we check that the job
+         # we're depending on exists in the first place
+         if not qstat:
+            raise PBSMissingError('Cannot find qstat!')
+         process = Popen([qstat, after_job], stdin=PIPE, 
+                         stdout=PIPE, stderr=PIPE)
+         (output, error) = process.communicate('')
+         # If we get a non-zero exit status, that job doesn't exist!
+         if process.wait():
+            raise PBSDependError('Job %s does not exist. Bad dependency!' % 
+                                 after_job)
+      # If it does exist, 
+
+      if after_job:
+         process = Popen([qsub, '-W', 'depend=afterok:%s' % after_job], 
+                         stdin=PIPE, stdout=PIPE, stderr=PIPE)
+      else:
+         process = Popen([qsub], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
       (output, error) = process.communicate(sub_script)
 
@@ -245,11 +270,6 @@ class PBS_Script(object):
 
       sub_script = self._get_sub_script()
 
-      stdout.write('Going to submit the following script:' + linesep)
-      stdout.write('=============' + linesep + sub_script + linesep
-                 + '=============' + linesep + 'OK?  > ')
-      response = stdin.readline()
-
       # Determine if we have to submit this with a dependency
       if after_job:
          # Make sure we have qstat, since that's how we check that the job
@@ -263,9 +283,22 @@ class PBS_Script(object):
          if process.wait():
             raise PBSDependError('Job %s does not exist. Bad dependency!' % 
                                  after_job)
-         # If it does exist, 
+      # If it does exist, 
+
+      ending_prompt = 'OK?  > '
+      if after_job:
+         ending_prompt = 'with "qsub -W depend=afterok:%s", OK? > ' % after_job
+      stdout.write('Going to submit the following script:' + linesep)
+      stdout.write('=============' + linesep + sub_script + linesep
+                 + '=============' + linesep + ending_prompt)
+      response = stdin.readline()
+
       if response.lower() == 'yes':
-         process = Popen([qsub], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+         if after_job:
+            process = Popen([qsub, '-W', 'depend=afterok:%s' % after_job], 
+                            stdin=PIPE, stdout=PIPE, stderr=PIPE)
+         else:
+            process = Popen([qsub], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
          (output, error) = process.communicate(sub_script)
 

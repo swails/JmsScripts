@@ -8,8 +8,18 @@ from chemistry.amber.readparm import AmberParm
 from utilities import which
 from mdin import mdin
 from optparse import OptionParser
-from pbsjob import PBS_Script
-import sys, os
+import os, sys
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def get_mpi_cmd():
+   """ Returns the MPI command stored in ~/.mpiexec_cmd """
+   if not os.path.exists(os.path.join(os.getenv('HOME'), '.mpiexec_cmd')):
+      raise ProgramError('~/.mpiexec_cmd does not exist!')
+   mpi_file = open(os.path.join(os.getenv('HOME'), '.mpiexec_cmd'), 'r')
+   ret_str = mpi_file.read()
+   mpi_file.close()
+   return ret_str
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -284,91 +294,22 @@ class ConstantpH(Production):
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# Main part of the program here.
 if __name__ == '__main__':
-   
-   parser = OptionParser(usage="%prog [Options] <prmtop> <inpcrd>")
-   parser.add_option('-m', '--min', dest='min_cyc', default=0, type='int',
-                     help="Number of minimization steps to run. 0 means no " +
-                     'minimization. Default 0')
-   parser.add_option('-g', '--igb', dest='igb', default=5, type='int',
-                     help='GB model to use for implicit solvent calculations.' +
-                     ' Default is 5. Allowed 1, 2, 5, 7, or 8')
-   parser.add_option('--restrain-min', dest='min_rst_wt', default=0,
-                     type='float', help="Restraint weight for restrained " +
-                     'minimization. 0 means no restraints. Default 0')
-   parser.add_option('--min-mask', dest='min_mask', default='@CA,C,O,N',
-                     help='Restraint mask for minimization. ' +
-                     'Defaults to "@CA,C,O,N"')
-   parser.add_option('--heat', dest='heat_nstlim', default=0, type='int',
-                     help='Number of 2 fs time steps to heat your system. ' +
-                     '0 means no heating. Default 0')
-   parser.add_option('--heating-thermostat', dest='h_thermostat', 
-                     default='langevin', help='Which thermostat to use for ' +
-                     'heating step. Defaults to langevin. ' +
-                     'Allowed berendsen or langevin (case-insensitive)')
-   parser.add_option('--slow-heat', dest='slow_heat', default=False, 
-                     action='store_true', help='Use NMR coupling to TEMP0 to ' +
-                     'heat the system slowly. Default False.')
-   parser.add_option('--restrain-heat', dest='heat_rst_wt', default=0,
-                     type='float', help='Restraint weight for restrained ' +
-                     'heating. 0 means no restraining. Default 0')
-   parser.add_option('--heat-mask', dest='heat_mask', default='@CA,C,O,N',
-                     help='Restraint mask for heating. Defaults to "@CA,C,O,N"')
-   parser.add_option('--temp', dest='temp0', type='float', default=300.0,
-                     help='Target temperature to run simulations at. This is ' +
-                     'the temperature heated to during heating step ' +
-                     '(if present), and that production MD is run at')
-   parser.add_option('--equilibration', dest='equil_nstlim', default=0, 
-                     type='int', help='Number of 2 fs time steps to run ' +
-                     'constant pressure equilibration (for PBC)')
-   parser.add_option('--restrain-equil', dest='equil_rstwt', default=0, 
-                     type='float', help='Restraint weight for restrained ' +
-                     'equilibration. 0 means no restraints. Default 0')
-   parser.add_option('--equil-mask', dest='equil_mask', default='@CA,C,O,N',
-                   help='Restraint mask for equilibration. Default "@CA,C,O,N"')
-   parser.add_option('--prod-type', dest='prod_type', default='production',
-                     help='Type of production simulation to run. Options are ' +
-                     '"production" and "constant pH". Default "production"')
-   parser.add_option('--nstlim', dest='nstlim', type='int', default=1000,
-                     help='Number of 2 fs time steps to run production for. ' +
-                     '0 means no production. Default 1000')
-   parser.add_option('--ntpr', dest='ntpr', type='int', default=1000,
-                     help='How frequently to print to mdout. Default 1000.')
-   parser.add_option('--ntwr', dest='ntwr', type='int', default=10000,
-                     help='How frequently to dump a restrt. Default 10000.')
-   parser.add_option('--ntwx', dest='ntwx', type='int', default=1000,
-                     help='How frequently to print to mdcrd. Default 1000.')
-   parser.add_option('--ntcnstph', dest='ntcnstph', type='int', default=5,
-                     help='How frequently to attempt protonation MC. Default 5')
-   parser.add_option('--solvph', dest='solvph', type='float', default=7,
-                     help='How frequently to attempt protonation MC. Default 5')
-   parser.add_option('--thermostat',dest='prod_thermostat', default='berendsen',
-                     help='Which thermostat to use for production MD. Allowed' +
-                     ' berendsen, langevin, or none')
-   parser.add_option('--t-couple', dest='temp_param', type='float', default=10,
-                     help='Value of temperature coupling parameter. Default 10')
-   parser.add_option('--barostat', dest='prod_barostat', default='none',
-                     help='Barostat to use for production MD. Allowed ' +
-                     'berendsen or none. Default none.')
-   parser.add_option('--p-couple', dest='pres_param', type='float', default=10,
-                     help='Value of pressure coupling parameter. Default 10')
-   parser.add_option('--restrain-prod', dest='prod_rstwt', default=0, 
-                     type='float', help='Restraint weight for restrained ' +
-                     'production. 0 means no restraints. Default 0')
-   parser.add_option('--prod-mask', dest='prod_mask', default='@CA,C,O,N',
-                     help='Restraint mask for production. Default "@CA,C,O,N"')
-   parser.add_option('--ask', dest='ask', action='store_true', default=True,
-                     help='Print submission command and ask prior to ' +
-                     'submitting. Default behavior. Overrides --force')
-   parser.add_option('--force', dest='ask', action='store_false', default=True,
-                     help='Do not ask for permission before submitting job')
 
+   parser = OptionParser(epilog='This program sets up a ~/.mpiexec_cmd file' +
+          ' that is used to define how an MPI program is run on this computer')
+   
+   parser.add_option('--mpiexec-string', dest='mpi_string', default=None,
+                     help='mpiexec string to run MPI programs. Written to ' +
+                     '~/.mpiexec_cmd')
+   
    (opt, args) = parser.parse_args()
 
-   if len(args) != 2:
-      print >> sys.stderr, 'Bad command-line arguments.'
+   if len(args) != 0 or not opt.mpi_string:
+      print 'Bad command-line arguments!'
       parser.print_help()
       sys.exit(1)
 
-   # First set up the minimization
+   mpi_file = open(os.path.join(os.getenv('HOME'), '.mpiexec_cmd'), 'w')
+   mpi_file.write(opt.mpi_string)
+   mpi_file.close()

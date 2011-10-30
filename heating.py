@@ -4,7 +4,7 @@
 This program will launch a minimization job to the local PBS server. The
 convention followed is to strip the suffix from the topology file and use
 that as the prefix for all other output files. This program will append
-".min.xxxxx" for each file name, respectively. All trajectories are NetCDF
+".heat.xxxxx" for each file name, respectively. All trajectories are NetCDF
 """
 
 from pbsjob import PBS_Script
@@ -12,18 +12,38 @@ import amber_simulations as am_sim
 from optparse import OptionParser
 import os, sys
 
-class MinimizationError(Exception): pass
+class HeatingError(Exception): pass
 
 parser = OptionParser(usage='%prog [options] <prmtop> <inpcrd>')
 
-parser.add_option('--maxcyc', dest='maxcyc', default=1000, type='int',
-                  help='Number of minimization steps to run. Default 1000.')
+parser.add_option('--nstlim', dest='nstlim', default=50000, type='int',
+                  help='Number of minimization steps to run. Default 50000')
 parser.add_option('--igb', dest='igb', default=5, type='int',
                   help='GB model to run for non-periodic systems. Must be ' +
                   '1, 2, 5, 7, or 8. Default 5')
 parser.add_option('--restrain', dest='rst_wt', default=0, type='float',
                   help='Restraint weight to put on restraint mask. 0 means ' +
                   'no restraint. Default 0.')
+parser.add_option('--slow-heat', dest='slow', default=False,action='store_true',
+                  help='Use NMR restraints to heat slowly to the target ' +
+                  'temperature over 2/3 of the simulation. Default is no.')
+parser.add_option('--normal-heat', dest='slow', action='store_false',
+                  help='Do not use NMR restraints to heat slowly. Default ' +
+                  'behavior. Will override previous --slow-heat.')
+parser.add_option('--initial-temp', dest='tempi', type='float', default=10.0,
+                  help='Temperature to begin heating from. Default 10.0')
+parser.add_option('--final-temp', dest='temp0', type='float', default=300.0,
+                  help='Final target temperature. Default 300.0')
+parser.add_option('--thermostat', dest='thermostat', default='langevin',
+                  help="Thermostat to use. Allowed values are 'berendsen' " +
+                  "and 'langevin'. Default 'langevin'.")
+parser.add_option('--t-couple', dest='t_couple', default=5.0,
+                  help='Temperature coupling parameter (tautp for berendsen, ' +
+                  'gamma_ln for langevin). Default 5.0')
+parser.add_option('--print-frequency', dest='print_frequency', default=1000,
+                  type='int', help='How frequently to print energies to ' +
+                  'mdout, coordinates to trajectory, and 1/10th of the ' +
+                  'frequency to print a restart file.')
 parser.add_option('--restraint-mask', dest='rst_mask', default='@CA,C,O,N',
                   help='Restraint mask for restrained minimization. Default ' +
                   '"@CA,C,O,N"')
@@ -70,20 +90,26 @@ if len(args) != 2:
 amsys = am_sim.AmberSystem(args[0], args[1])
 
 if not amsys.periodic() and not opt.igb in [1,2,5,7,8]:
-   raise MinimizationError('Bad igb value (%d)' % opt.igb)
+   raise HeatingError('Bad igb value (%d)' % opt.igb)
 
 if opt.maxcyc < 0:
-   raise MinimizationError('Bad maxcyc value (%d)' % opt.maxcyc)
+   raise HeatingError('Bad maxcyc value (%d)' % opt.maxcyc)
 
-min_input = am_sim.Minimization(amsys, num_steps=opt.maxcyc, igb=opt.igb,
-                                restrained=bool(opt.rst_wt), rst_wt=opt.rst_wt,
-                                rst_mask=opt.rst_mask)
+heat_input = am_sim.Heating(amsys, nstlim=opt.nstlim, igb=opt.igb,
+                            restrained=bool(opt.rst_wt), rst_wt=opt.rst_wt,
+                            rst_mask=opt.rst_mask, temp0=opt.temp0, 
+                            tempi=opt.tempi, slow=opt.slow,
+                            thermostat=opt.thermostat,
+                            thermostat_param=opt.t_copule,
+                            ntpr=opt.print_frequency,
+                            ntwx=opt.print_frequency,
+                            ntwr=opt.print_frequency * 10)
 
 # Get the prefix
 prefix = os.path.splitext(args[0])[0]
 
 # Print the mdin file
-min_input.write_mdin('%s.min.mdin' % prefix)
+min_input.write_mdin('%s.heat.mdin' % prefix)
 
 # Get the MPI command (mpiexec -n $NPROC, for example)
 mpi_cmd = am_sim.get_mpi_cmd()
@@ -124,9 +150,9 @@ if opt.pbs:
    # Set walltime
    pbs_job.set_walltime(opt.walltime)
    
-   cmd_str = ("%s -i %s.min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout " +
-              "-inf %s.min.mdinfo -suffix %s") % (prog_str, prefix, args[0], 
-              args[1], prefix, prefix, prefix, prefix)
+   cmd_str = ("%s -i %s.heat.mdin -p %s -c %s -r %s.heat.rst7 -o %s.heat." +
+              "mdout -inf %s.heat.mdinfo -x %s.heat.nc -suffix %s") % (prog_str,
+              prefix, args[0], args[1], prefix, prefix, prefix, prefix, prefix)
 
    if opt.rst_wt:
       cmd_str += " -ref %s" % args[1]
@@ -144,9 +170,9 @@ if opt.pbs:
       pbs_job.submit(after_job=opt.jobid)
 else:
    
-   cmd_str = ("%s -i %s.min.mdin -p %s -c %s -r %s.min.rst7 -o %s.min.mdout " +
-              "-inf %s.min.mdinfo -suffix %s") % (prog_str, prefix, args[0], 
-              args[1], prefix, prefix, prefix, prefix)
+   cmd_str = ("%s -i %s.heat.mdin -p %s -c %s -r %s.heat.rst7 -o %s.heat." +
+              "mdout -inf %s.heat.mdinfo -x %s.heat.nc -suffix %s") % (prog_str,
+              prefix, args[0], args[1], prefix, prefix, prefix, prefix, prefix)
 
    if opt.rst_wt:
       cmd_str += " -ref %s" % args[1]

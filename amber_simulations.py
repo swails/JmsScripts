@@ -186,6 +186,7 @@ class Heating(BaseType):
       self.mdin.change('cntrl', 'ntpr', ntpr)
       self.mdin.change('cntrl', 'ntwx', ntwx)
       self.mdin.change('cntrl', 'ntwr', ntwr)
+      self.mdin.change('cntrl', 'nstlim', nstlim)
       self.mdin.change('cntrl', 'dt', 0.002)
       if thermostat.lower() == 'langevin': 
          self.mdin.change('cntrl', 'ntt', 3) 
@@ -200,10 +201,10 @@ class Heating(BaseType):
          self.mdin.change('cntrl', 'restraintmask', rst_mask)
 
       if slow:
-         self.add_lines("&wt\n   TYPE='TEMP0', ISTEP1=0, ISTEP2=%d" %
+         self.mdin.add_lines("&wt\n   TYPE='TEMP0', ISTEP1=0, ISTEP2=%d" %
                         ((nstlim * 2) // 3))
-         self.add_lines("   VALUE1=%.2f, VALUE2=%.2f,\n/\n&wt TYPE='END' /" % (
-                        tempi, temp0))
+         self.mdin.add_lines(("   VALUE1=%.2f, VALUE2=%.2f,\n/\n" +
+                              "&wt TYPE='END' /") % (tempi, temp0))
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

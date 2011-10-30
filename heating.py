@@ -92,15 +92,15 @@ amsys = am_sim.AmberSystem(args[0], args[1])
 if not amsys.periodic() and not opt.igb in [1,2,5,7,8]:
    raise HeatingError('Bad igb value (%d)' % opt.igb)
 
-if opt.maxcyc < 0:
-   raise HeatingError('Bad maxcyc value (%d)' % opt.maxcyc)
+if opt.nstlim < 0:
+   raise HeatingError('Bad nstlim value (%d)' % opt.nstlim)
 
 heat_input = am_sim.Heating(amsys, nstlim=opt.nstlim, igb=opt.igb,
                             restrained=bool(opt.rst_wt), rst_wt=opt.rst_wt,
                             rst_mask=opt.rst_mask, temp0=opt.temp0, 
                             tempi=opt.tempi, slow=opt.slow,
                             thermostat=opt.thermostat,
-                            thermostat_param=opt.t_copule,
+                            thermostat_param=opt.t_couple,
                             ntpr=opt.print_frequency,
                             ntwx=opt.print_frequency,
                             ntwr=opt.print_frequency * 10)
@@ -109,7 +109,7 @@ heat_input = am_sim.Heating(amsys, nstlim=opt.nstlim, igb=opt.igb,
 prefix = os.path.splitext(args[0])[0]
 
 # Print the mdin file
-min_input.write_mdin('%s.heat.mdin' % prefix)
+heat_input.write_mdin('%s.heat.mdin' % prefix)
 
 # Get the MPI command (mpiexec -n $NPROC, for example)
 mpi_cmd = am_sim.get_mpi_cmd()

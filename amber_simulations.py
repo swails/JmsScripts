@@ -41,7 +41,9 @@ class AmberSystem(object):
    # ==============================
 
    def __init__(self, prmtop, inpcrd):
-      self.prmtop = AmberParm(prmtop, inpcrd)
+      # Only load the inpcrd file if it actually exists.
+      if os.path.exists(inpcrd): self.prmtop = AmberParm(prmtop, inpcrd)
+      else: self.prmtop = AmberParm(prmtop)
       self.inpcrd = inpcrd
 
    # ==============================

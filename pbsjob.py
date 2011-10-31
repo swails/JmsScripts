@@ -453,7 +453,7 @@ if __name__ == '__main__':
    if opt.mail_options: template.write("mail_ops = '%s'" % opt.mail_options)
    if opt.addresses: template.write("email = '%s'" % opt.addresses)
    if opt.shell: template.write("shell = '%s'" % opt.shell)
-   if opt.queue: template.write("queue = '%s'" % opt.shell)
+   if opt.queue: template.write("queue = '%s'" % opt.queue)
    if opt.proc_cnt_fmt: template.write("proc_format = '%s'" % opt.proc_cnt_fmt)
    if opt.resources: 
       template.write("resources = '%s'" % opt.resources.split(','))

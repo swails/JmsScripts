@@ -134,7 +134,7 @@ else:
 prefix = os.path.splitext(args[0])[0]
 
 # Print the mdin file
-prod_input.write_mdin('%s.prod.mdin' % prefix)
+prod_input.write_mdin('%s.%s.mdin' % (prefix, opt.label))
 
 # Get the MPI command (mpiexec -n $NPROC, for example)
 mpi_cmd = am_sim.get_mpi_cmd()

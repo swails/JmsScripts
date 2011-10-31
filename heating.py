@@ -17,7 +17,7 @@ class HeatingError(Exception): pass
 parser = OptionParser(usage='%prog [options] <prmtop> <inpcrd>')
 
 parser.add_option('--nstlim', dest='nstlim', default=50000, type='int',
-                  help='Number of minimization steps to run. Default 50000')
+                  help='Number of heating steps to run. Default 50000')
 parser.add_option('--igb', dest='igb', default=5, type='int',
                   help='GB model to run for non-periodic systems. Must be ' +
                   '1, 2, 5, 7, or 8. Default 5')
@@ -43,7 +43,7 @@ parser.add_option('--t-couple', dest='t_couple', default=5.0,
 parser.add_option('--print-frequency', dest='print_frequency', default=1000,
                   type='int', help='How frequently to print energies to ' +
                   'mdout, coordinates to trajectory, and 1/10th of the ' +
-                  'frequency to print a restart file.')
+                  'frequency to print a restart file. Default 1000')
 parser.add_option('--restraint-mask', dest='rst_mask', default='@CA,C,O,N',
                   help='Restraint mask for restrained minimization. Default ' +
                   '"@CA,C,O,N"')

@@ -105,7 +105,7 @@ if opt.pbs:
    pbs_job = PBS_Script(template=opt.pbs_template)
    
    # Change the queue if desired
-   pbs_job.queue = opt.pbs_queue
+   if opt.pbs_queue: pbs_job.queue = opt.pbs_queue
    
    # Set the PBS job name
    pbs_job.set_name(opt.job_name)

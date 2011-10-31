@@ -351,6 +351,17 @@ class PBS_Script(object):
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+def submit_multiple_jobs(job_list, method, dependent=True,
+                         previous_job=None):
+   """ 
+   This submits multiple jobs using the given function/method, which
+   determines whether or not we ask for permission to submit the job.
+   This method should either be PBS_Script.submit or PBS_Script.submit_ask
+   """
+   for job in job_list: previous_job = method(job, after_job=previous_job)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 if __name__ == '__main__':
    # If this program is executed, it's to set up a skeleton file to load
    parser = OptionParser()

@@ -203,7 +203,7 @@ class PBS_Script(object):
                 + pbsline('-M', self.email) + pbsline('-N', self.name)
                 + pbsline('-p', self.priority) + pbsline('-q', self.queue)
                 + pbsline('-S', self.shell) + pbsline('-l', self.proc_count)
-                + pbsline('-l', self.walltime))
+                + pbsline('-l', 'walltime=%s' % self.walltime))
       for item in self.resources:
          my_header += pbsline('-l', item)
 

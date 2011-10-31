@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from os import getenv, path, linesep
 from sys import stderr, stdout, stdin, exit
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 from subprocess import Popen, PIPE
 import re
 
@@ -362,46 +362,85 @@ def submit_multiple_jobs(job_list, method, dependent=True,
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+def submit_jobfiles(job_list, dependent=True, previous_job=None):
+   """ Submits multiple job files one after another """
+   import utilities
+   qsub = utilities.which('qsub')
+   if not qsub: raise PBSMissingError('Cannot find qsub!')
+
+   for job in job_list:
+      cl_array = [qsub]
+      if dependent and previous_job:
+         cl_array.extend(['-W', 'depend=afterok:%s' % previous_job])
+      cl_array.append(job)
+      process = Popen(cl_array, stdout=PIPE, stderr=PIPE)
+      (previous_job, error) = process.communicate('')
+      if process.wait():
+         raise QsubError('Problem submitting job file %s:\n%s' % (job, error))
+      print previous_job
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 if __name__ == '__main__':
    # If this program is executed, it's to set up a skeleton file to load
-   parser = OptionParser()
-   parser.add_option('-A', '--account', dest='account', default=None,
-                     help='Default account to charge jobs to')
-   parser.add_option('-e', '--error', dest='error', default=None,
-                     help='Default name for stderr dump')
-   parser.add_option('-o', '--output', dest='output', default=None,
-                     help='Default name for stdout dump')
-   parser.add_option('-j', '--join', dest='join', default=None,
-                     help='Join output/error streams. Allowed oe, eo, n')
-   parser.add_option('-k', '--keep', dest='keep', default=None,
-                     help='Whether error/output streams kept on host. ' +
-                          'Allowed e, o, eo, oe, n')
-   parser.add_option('-m', '--mail-options', dest='mail_options', default=None,
-                     help='Send email notification if job (a)borts, when it ' +
-                          '(b)egins, and/or when it (e)nds.')
-   parser.add_option('-M', '--emails', dest='addresses', default=None,
-                     help='Where email notifications are sent')
-   parser.add_option('-S', '--shell', dest='shell', default='/bin/bash',
-                     help='Default shell to use to execute script. ' +
-                          'Default /bin/bash')
-   parser.add_option('-q', '--queue', dest='queue', default=None,
-                     help='Default queue to set job to')
-   parser.add_option('-l', '--resources', dest='resources', default=None,
-                     help='Comma-delimited list of resource lines')
-   parser.add_option('-p', '--proc-cnt-fmt', dest='proc_cnt_fmt', 
-                     default='nodes=%d:ppn=%d',
-                     help='Format of the node/processor count resource ' +
-                          'option. Default [nodes=%d:ppn=%d]. %d is a ' +
-                          'specifiable number')
-   parser.add_option('-t', '--template', dest='template', 
-                     default=path.join(getenv('HOME'), '.pbsdefaults'),
-                     help='Name of the template file to create. ' +
-                          'Default ~/.pbsdefaults')
+   usage = ('%prog [Template options] || %prog [PBS job options] [jobfile1] ' +
+            '[jobfile2] [jobfile3] ...')
+   epilog = ('If you provide a list of PBS scripts, it will submit those ' +
+             'in order, each depending on the last if desired. Otherwise, it ' +
+             'will set up a template file for all automated programs to ' +
+             'interact with the PBS scheduler.')
+   parser = OptionParser(usage=usage, epilog=epilog)
+   group = OptionGroup(parser, "Template file setup options", "These will only "
+                       "be used if no jobfile's are given")
+   group.add_option('-A', '--account', dest='account', default=None,
+                    help='Default account to charge jobs to')
+   group.add_option('-e', '--error', dest='error', default=None,
+                    help='Default name for stderr dump')
+   group.add_option('-o', '--output', dest='output', default=None,
+                    help='Default name for stdout dump')
+   group.add_option('-j', '--join', dest='join', default=None,
+                    help='Join output/error streams. Allowed oe, eo, n')
+   group.add_option('-k', '--keep', dest='keep', default=None,
+                    help='Whether error/output streams kept on host. ' +
+                         'Allowed e, o, eo, oe, n')
+   group.add_option('-m', '--mail-options', dest='mail_options', default=None,
+                    help='Send email notification if job (a)borts, when it ' +
+                         '(b)egins, and/or when it (e)nds.')
+   group.add_option('-M', '--emails', dest='addresses', default=None,
+                    help='Where email notifications are sent')
+   group.add_option('-S', '--shell', dest='shell', default='/bin/bash',
+                    help='Default shell to use to execute script. ' +
+                         'Default /bin/bash')
+   group.add_option('-q', '--queue', dest='queue', default=None,
+                    help='Default queue to set job to')
+   group.add_option('-l', '--resources', dest='resources', default=None,
+                    help='Comma-delimited list of resource lines')
+   group.add_option('-p', '--proc-cnt-fmt', dest='proc_cnt_fmt', 
+                    default='nodes=%d:ppn=%d',
+                    help='Format of the node/processor count resource ' +
+                         'option. Default [nodes=%d:ppn=%d]. %d is a ' +
+                         'specifiable number')
+   group.add_option('-t', '--template', dest='template', 
+                    default=path.join(getenv('HOME'), '.pbsdefaults'),
+                    help='Name of the template file to create. ' +
+                         'Default ~/.pbsdefaults')
+   parser.add_option_group(group)
+   # Add the PBS submission options to the last group
+   group = OptionGroup(parser, 'PBS Script submission options', 'These are used'
+                      ' if a list of Job files are given on the command-line')
+   group.add_option('--dependent', dest='dependent', default=False,
+                    action='store_true', help='If you are submitting jobs, ' +
+                    'this flag will make each job held until the previous ' +
+                    'one finishes. Otherwise, they will all be submitted at ' +
+                    'once.')
+   group.add_option('--previous-job', dest='previous_job', default=None,
+                    help='Job ID to have the first job start after.')
+   parser.add_option_group(group)
    (opt, args) = parser.parse_args()
 
    if len(args) != 0: 
-      print >> stderr, 'Error: Unknown command-line argument(s) %s' % args
-      parser.print_help()
+      print 'Submitting jobs %s' % args
+      submit_jobfiles(args, opt.dependent, opt.previous_job)
       exit()
 
    template = TemplateFile(open(opt.template, 'w'))

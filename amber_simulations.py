@@ -234,7 +234,7 @@ class Production(BaseType):
             self.mdin.change('cntrl', 'ntb', 2)
             self.mdin.change('cntrl', 'ntp', 1)
             self.mdin.change('cntrl', 'taup', barostat_param)
-         elif barostat:
+         elif barostat.lower() != 'none':
             raise ValueError('barostat must be "berendsen" or None/False')
          else:
             self.mdin.change('cntrl', 'ntb', 1)

@@ -31,7 +31,7 @@ parser.add_option('--restrain', dest='rst_wt', default=0, type='float',
                   'no restraint. Default 0.')
 parser.add_option('--temp', dest='temp0', type='float', default=300.0,
                   help='Final target temperature. Default 300.0')
-parser.add_option('--thermostat', dest='thermostat', default='berensen',
+parser.add_option('--thermostat', dest='thermostat', default='berendsen',
                   help="Thermostat to use. Allowed values are 'berendsen' " +
                   "and 'langevin'. Default 'berensen'.")
 parser.add_option('--t-couple', dest='t_couple', default=10.0, type='float',

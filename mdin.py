@@ -194,7 +194,7 @@ class mdin:
       if len(self.cards) != 0:
          file.write('END\n')
       
-      file.write(self.extra_lines + '\n')
+      if self.extra_lines: file.write(self.extra_lines + '\n')
 
       file.close()
 

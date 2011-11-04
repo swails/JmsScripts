@@ -292,7 +292,7 @@ class PBS_Script(object):
                  + '=============' + linesep + ending_prompt)
       response = stdin.readline()
 
-      if response.lower() == 'yes':
+      if response.strip().lower() == 'yes' or response.strip().lower() == 'y':
          if after_job:
             process = Popen([qsub, '-W', 'depend=afterok:%s' % after_job], 
                             stdin=PIPE, stdout=PIPE, stderr=PIPE)

@@ -54,7 +54,7 @@ parser.add_option('--constpH', dest='ph', default=7.0, type='float',
 parser.add_option('--ntcnstph', dest='ntcnstph', default=5, type='int',
                   help='Frequency of protonation change attempts. Default ' +
                   'every 5 time steps.')
-parser.add_option('--ntrelax', dest='relax', default=500, type='int',
+parser.add_option('--ntrelax', dest='ntrelax', default=500, type='int',
                   help='The number of steps to relax explicit solvent after ' +
                   'a protonation change. Default 500.')
 parser.add_option('--nproc', dest='nproc', default='1',

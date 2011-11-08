@@ -49,7 +49,7 @@ parser.add_option('--print-frequency', dest='print_frequency', default=1000,
 parser.add_option('--restraint-mask', dest='rst_mask', default='@CA,C,O,N',
                   help='Restraint mask for restrained minimization. Default ' +
                   '"@CA,C,O,N"')
-parser.add_option('--constpH', dest='ph', default=7.0, type='float',
+parser.add_option('--constpH', dest='solvph', default=7.0, type='float',
                   help='pH value to run constant pH simulation. Default 7.0.')
 parser.add_option('--ntcnstph', dest='ntcnstph', default=5, type='int',
                   help='Frequency of protonation change attempts. Default ' +

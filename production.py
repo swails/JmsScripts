@@ -148,8 +148,12 @@ for n in nproc:
 
 # Set up the command string
 
-if parallel: prog_str = '%s pmemd.MPI -O ' % mpi_cmd
-else: prog_str = 'pmemd -O '
+if parallel: 
+   if len(args) == 2: prog_str = '%s pmemd.MPI -O ' % mpi_cmd
+   else: prog_str = '%s sander.MPI -O ' % mpi_cmd
+else: 
+   if len(args) == 2: prog_str = 'pmemd -O '
+   else: prog_str = 'sander -O'
 
 if opt.pbs:
    # Make the PBS_Script instance

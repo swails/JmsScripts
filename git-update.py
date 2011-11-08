@@ -50,6 +50,11 @@ def pull_only():
       if process.wait():
          raise GitError('Problem pulling on branch ' + branch)
 
+   process = Popen(['git', 'checkout', 'master'], stdout=PIPE, stderr=PIPE)
+   out, err = process.communicate('')
+   if process.wait():
+      raise GitError('Could not change to branch master')
+
 def merge(pushto=None):
    """ Merges everything with "master" and pushes to a repo if given """
    for branch in get_branch_names():
@@ -67,10 +72,26 @@ def merge(pushto=None):
          raise GitError('Problem merging branch %s with master' % branch)
       
       if pushto:
+         print 'Pushing to', pushto
          process = Popen(['git', 'push', pushto], stdout=PIPE, stderr=PIPE)
          out, err = process.communicate('')
          if process.wait():
             raise GitError('Problem pushing to ' + pushto)
+
+   print 'Checking out master'
+   process = Popen(['git', 'checkout', 'master'], stdout=PIPE, stderr=PIPE)
+   out, err = process.communicate('')
+   if process.wait():
+      raise GitError('Could not change to branch master')
+
+   if not pushto: return
+
+   print 'Pushing to', pushto
+   process = Popen(['git', 'push', pushto], stdout=PIPE, stderr=PIPE)
+   out, err = process.communicate('')
+   if process.wait():
+      raise GitError('Problem pushing to ' + pushto)
+
 
 def main():
 

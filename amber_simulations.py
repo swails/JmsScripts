@@ -296,7 +296,7 @@ class ConstantpH(Production):
          self.mdin.change('cntrl', 'icnstph', 2)
          self.mdin.change('cntrl', 'ntrelax', ntrelax)
       else:
-         self.mdin.change('cntrl', 'icnstph', 2)
+         self.mdin.change('cntrl', 'icnstph', 1)
 
       self.mdin.change('cntrl', 'ntcnstph', ntcnstph)
       self.mdin.change('cntrl', 'solvph', solvph)

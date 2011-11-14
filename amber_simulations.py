@@ -300,6 +300,7 @@ class ConstantpH(Production):
 
       self.mdin.change('cntrl', 'ntcnstph', ntcnstph)
       self.mdin.change('cntrl', 'solvph', solvph)
+      self.mdin.change('cntrl', 'saltcon', 0.1)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

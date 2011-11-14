@@ -1,38 +1,64 @@
 #!/usr/bin/env python
 
 import sys
-from pbsjob import PBSjob
-from os import path, environ
+from pbsjob import PBS_Script
+from os import path, getenv
+from optparse import OptionParser
 
-if len(sys.argv) != 2 and len(sys.argv) != 3:
-   print 'gaussjobs.py <gaussian_input> {<job name>}'
+parser = OptionParser(usage="%prog [Options] <gaussian_input>")
+parser.add_option('-n', '--name', dest='name', default=None,
+                  help='Name given to PBS job')
+parser.add_option('-v', '--gaussian-version', dest='version', default='g09',
+                  help='Which Gaussian version to use. Default = g09. ' +
+                  'Allowed g03 or g09')
+parser.add_option('-w', '--walltime', dest='walltime', default='5:00:00',
+                  help='Time for job to run in time format. Default is ' +
+                  '5 hours ("5:00:00")')
+parser.add_option('-f', '--force', dest='force', action='store_true', 
+                  default=False, help='Do not ask before submitting job. ' +
+                  'Default = False')
+parser.add_option('-a', '--ask', dest='force', action='store_false',
+                help='Ask before submitting job. Overrides previous -f/--force')
+parser.add_option('-t', '--template', dest='template', default=path.join(
+                  getenv('HOME'), '.pbsdefaults'), help='PBS template file ' +
+                  'to set up default PBS options. Default = ~/.pbsdefaults')
+parser.add_option('-p', '--path-to-root', dest='path', default=None,
+                  help='Path to Gaussian executable directory. Defaults ' +
+                  'to $g09root/g09 or $g03root/g03, depending on version')
+(opt, args) = parser.parse_args()
+
+if len(args) != 1:
+   parser.print_help()
+   sys.exit(1)
+
+if not opt.version in ('g09', 'g03'):
+   print >> sys.stderr, 'Error: Gaussian version must be g03 or g09!'
+   sys.exit(1)
+
+if not opt.path:
+   opt.path = path.join(getenv('%sroot' % opt.version), opt.version)
+
+if not path.exists(args[0]):
+   print >> sys.stderr, "Error: Gaussian input file %s doesn't exist!" % args[1]
    sys.exit()
 
-gaussian_version = "g09"
+# Create the gaussian PBSjob instance
+gaussjob = PBS_Script(name=opt.name, template=opt.template)
 
-try:
-   l = open(sys.argv[1],'r')
-except IOError:
-   print >> sys.stderr, "Error: Gaussian input file %s does not exist!" % sys.argv[1]
-   sys.exit()
+# Source the resource file
+if not path.exists(path.join(opt.path, 'bsd', '%s.profile' % opt.version)):
+   print >> sys.stderr, 'Error: Missing %sprofile script! Looked in %s' % (
+            opt.version, path.join(opt.path, 'bsd'))
+   sys.exit(1)
 
-if len(sys.argv) == 3:
-   gaussjob.name = sys.argv[2]
+gaussjob.add_command('source %s' % (path.join(opt.path, 'bsd', '%s.profile' % 
+                     opt.version)))
 
-l.close()
+gaussjob.add_command(opt.version + ' ' + args[0])
 
-gaussjob = PBSjob()
+# Set a random name if no name had been set
+if not opt.name: gaussjob.set_name()
 
-gaussjob.workdir = environ["PWD"]
-
-if gaussian_version == "g03":
-   gaussjob.addCommand("source $%sroot/em64t/%s/bsd/%s.profile" % (gaussian_version, gaussian_version, gaussian_version))
-else:
-   gaussjob.addCommand("source $%sroot/em64t/bsd/%s.profile" % (gaussian_version, gaussian_version))
-gaussjob.addCommand(gaussian_version + " " + path.split(sys.argv[1])[1])
-
-if len(sys.argv) != 3:
-   gaussjob.randomName()
-
-print gaussjob.preview()
-gaussjob.submit()
+# Do we ask permission before submitting the job or just submit it?
+if not opt.force: gaussjob.submit_ask()
+else: gaussjob.submit()

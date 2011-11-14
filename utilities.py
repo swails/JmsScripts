@@ -33,7 +33,7 @@
 #
 ##########################################################################################
 
-from chemistry.amber.readparm import *
+from chemistry.amber.readparm import amberParm, AmberParm
 
 def which(program):
    import os
@@ -49,8 +49,7 @@ def which(program):
          exe_file = os.path.join(path, program)
          if is_exe(exe_file):
             return exe_file
-# return 'none' if program isn't failed. Otherwise, the absolute path of executable is returned
-   return 'none'
+   return None
 
 def average(list):
    from math import fsum

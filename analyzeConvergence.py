@@ -24,13 +24,14 @@ try:
    if not os.path.exists(opt.prmtop): raise IOError('mdcrd doesn\'t exist')
 except IOError:
    print >> sys.stderr, "Error: mdout, prmtop, and/or mdcrd files don't exist!"
-   printusage()
+   clparser.print_help()
+   sys.exit(1)
 
 ptraj = utilities.which('ptraj')
 
 if ptraj == "none":
    print "Error: ptraj is needed to analyze coordinate files!"
-   printusage()
+   sys.exit(1)
 
 mdoutlines = mdout.readlines()
 mdout.close()

@@ -73,6 +73,7 @@ class mdin:
       self.qmmm_nml_defaults = {}   # dictionary with default qmmm namelist vars
       self.valid_namelists = []     # array with valid namelists for each program
       self.title = 'mdin prepared by mdin.py'   # title for the mdin file
+      self.extra_lines = ''
 
 
       if self.program == "sander":
@@ -115,7 +116,10 @@ class mdin:
       # add any variable that is different from the default to the mdin file
       for var in self.cntrl_nml.keys():
          if self.cntrl_nml[var] != self.cntrl_nml_defaults[var]:
-            line = addOn(line, "%s=%s, " % (var, self.cntrl_nml[var]), file)
+            if 'mask' in var:
+               line = addOn(line, "%s='%s', " % (var, self.cntrl_nml[var]), file)
+            else:
+               line = addOn(line, "%s=%s, " % (var, self.cntrl_nml[var]), file)
 
       # flush any remaining items that haven't yet been printed to the mdin file
       if len(line.strip()) != 0:
@@ -171,7 +175,10 @@ class mdin:
             if (not has_been_printed):
                file.write('&qmmm\n')
                has_been_printed = True
-            line = addOn(line, '%s=%s, ' % (var, self.qmmm_nml[var]), file)
+            if 'mask' in var:
+               line = addOn(line, "%s='%s', " % (var, self.qmmm_nml[var]), file)
+            else:
+               line = addOn(line, '%s=%s, ' % (var, self.qmmm_nml[var]), file)
       
       # flush any remaining items that haven't been printed to the mdin file
       if len(line.strip()) != 0:
@@ -187,6 +194,8 @@ class mdin:
       if len(self.cards) != 0:
          file.write('END\n')
       
+      if self.extra_lines: file.write(self.extra_lines + '\n')
+
       file.close()
 
 # =====================================================================================
@@ -425,3 +434,10 @@ class mdin:
       self.cards.append('%s\n%s\nEND' % (title, cardString))
 
 # =====================================================================================
+
+   def add_lines(self, add_str):
+      """ Add lines to the end of the mdin file """
+      self.extra_lines += add_str + '\n'
+
+# =====================================================================================
+

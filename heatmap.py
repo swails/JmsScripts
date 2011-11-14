@@ -132,8 +132,8 @@ except UnicodeDecodeError:
 	except UnicodeDecodeError:
 		print >> sys.stderr, "Can't encode axis labels using " + \
 		"either default or fallback character encodings."
-		print >> sys.stderr, "Translation: Basically, you're " + \
-		"screwed. How did you enter these labels anyway?"
+		print >> sys.stderr, "Translation: You're up the creek. " + \
+		"How did you enter these labels anyway?"
 		sys.exit(1)
 
 try:
@@ -326,6 +326,7 @@ if (options.freeEnergy == True):
 				h2d[i,j] = math.log(h2d[i,j]/maxfreq) * convfact
 			else:
 				h2d[i,j] = None
+	barLabel = r'$\Delta\mathit{G}$ (kcal mol$^{-1}$)'
 	pyplot.imshow(h2d, extent=extent, interpolation='nearest',
 		origin='lower')
 # If we're not plotting the free-energy (and are just doing frequencies,
@@ -347,12 +348,14 @@ else:
 				(0.05,0.0,0.0),
 				(1.0,0.0,0.0)] }
 	hm = colours.LinearSegmentedColormap('heatmap', hmdict, 256)
+	barLabel = "Frequency"
 	pyplot.imshow(h2d, extent=extent, interpolation='nearest',
 		origin='lower', cmap=hm)
 
 pyplot.xlabel(uxlabel)
 pyplot.ylabel(uylabel)
-pyplot.colorbar()
+colourBar = pyplot.colorbar()
+colourBar.set_label(barLabel)
 defaultres = pyplot.gcf().get_dpi()
 if (options.resolution != None):
 	pyplot.gcf().set_dpi(options.resolution)

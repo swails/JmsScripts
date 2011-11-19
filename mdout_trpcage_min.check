@@ -1,0 +1,79 @@
+Testing get_properties() (Check with mdout file)
+---------------------
+    gbbetaC | 0.50638
+       gbsa | 0
+    gbbetaH | 0.7987
+   gbalphaP | 1.0
+   gbalphaC | 0.73376
+      dielc | 1.0
+   gbbetaOS | 0.87664
+        dx0 | 0.01
+     ntwprt | 0
+   gbalphaH | 0.78844
+      iwrap | 0
+   gbalphaN | 0.50336
+       ncyc | 100
+    gbbetaP | 0.8
+       ntwx | 0
+       ntrx | 1
+     ibelly | 0
+     maxcyc | 500
+       alpb | 0
+     nmropt | 0
+       nsnb | 25
+       imin | 1
+       ntxo | 1
+     rgbmax | 25.0
+        igb | 8
+        ntx | 1
+       ipol | 0
+    saltcon | 0.0
+       ntwe | 0
+   gbgammaH | 0.43733
+        ntr | 0
+   gbgammaN | 0.19292
+    surften | 0.005
+       iesp | 0
+       ntwr | 500
+   gbgammaP | 4.851
+        cut | 1000.0
+       ntwv | 0
+     offset | 0.19514
+        ntb | 0
+  rbornstat | 0
+   gbgammaC | 0.20584
+        ntf | 1
+        rdt | 0.0
+    idecomp | 0
+  gbalphaOS | 0.86781
+    gbbetaN | 0.31683
+      irest | 0
+       drms | 0.0001
+    intdiel | 1.0
+      ntmin | 1
+       ntpr | 50
+    extdiel | 78.5
+     ioutfm | 0
+  gbgammaOS | 0.38788
+
+This mdout file is a MINIMIZATION calculation
+This mdout file is NOT a restarted simulation
+Testing get_data()
+Found data keys: RMS, ANGLE, GMAX, RESTRAINT, ENERGY, NUMBER, DIHED, VDWAALS, 1-4 VDW, 1-4 EEL, EEL, EGB, NSTEP, BOND
+Averages of each are:
+      1-4 EEL :        873.7302
+      1-4 VDW :         59.2570
+        ANGLE :         45.5574
+         BOND :         14.4818
+        DIHED :        171.8730
+          EEL :      -1271.6105
+          EGB :       -612.6774
+       ENERGY :     346811.8864
+         GMAX :    5382469.8663
+        NSTEP :        250.0909
+       NUMBER :        165.0909
+    RESTRAINT :          0.0000
+          RMS :     331819.7809
+      VDWAALS :     347532.3609
+
+Done testing.

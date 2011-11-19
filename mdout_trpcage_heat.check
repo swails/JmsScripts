@@ -1,0 +1,88 @@
+Testing get_properties() (Check with mdout file)
+---------------------
+    gbbetaC | 0.50638
+     nstlim | 1000000
+       gbsa | 0
+    gbbetaH | 0.7987
+   gbalphaP | 1.0
+   gbalphaC | 0.73376
+      dielc | 1.0
+   gbbetaOS | 0.87664
+      temp0 | 280.0
+     ntwprt | 0
+   gbalphaH | 0.78844
+      iwrap | 0
+   gbalphaN | 0.50336
+         ig | 981538
+    gbbetaP | 0.8
+       ntwx | 500
+       ntrx | 1
+     ibelly | 0
+     nrespa | 1
+       alpb | 0
+     nmropt | 0
+       nsnb | 25
+       imin | 0
+       ntxo | 1
+     rgbmax | 25.0
+        ntc | 2
+        igb | 8
+        tol | 1e-05
+      tempi | 0.0
+     jfastw | 0
+        ntx | 1
+       ipol | 0
+    saltcon | 0.0
+       nscm | 1000
+       ntwe | 0
+   gbgammaH | 0.43733
+        ntr | 0
+   gbgammaN | 0.19292
+    surften | 0.005
+       iesp | 0
+       ntwr | 500
+   gbgammaP | 4.851
+        cut | 1000.0
+       ntwv | 0
+     offset | 0.19514
+         dt | 0.002
+        ntb | 0
+  rbornstat | 0
+   gbgammaC | 0.20584
+        ntf | 2
+        rdt | 0.0
+    idecomp | 0
+  gbalphaOS | 0.86781
+    gbbetaN | 0.31683
+      irest | 0
+    intdiel | 1.0
+       ntpr | 500
+    extdiel | 78.5
+          t | 0.0
+   gamma_ln | 1.0
+     ioutfm | 1
+  gbgammaOS | 0.38788
+
+This mdout file is a MOLECULAR DYNAMICS calculation
+This mdout file is NOT a restarted simulation
+Testing get_data()
+Found data keys: EGB, EKtot, RESTRAINT, Etot, 1-4 NB, TEMP(K), TIME(PS), DIHED, VDWAALS, EPtot, 1-4 EEL, PRESS, ANGLE, EELEC, NSTEP, BOND
+Averages of each are:
+      1-4 EEL :        886.8609
+       1-4 NB :         61.7301
+        ANGLE :        153.7319
+         BOND :         58.6609
+        DIHED :        207.7414
+        EELEC :      -1282.5012
+          EGB :       -615.7809
+        EKtot :        211.8188
+        EPtot :       -613.3143
+         Etot :       -401.4955
+        NSTEP :     500000.0000
+        PRESS :          0.0000
+    RESTRAINT :          0.0000
+      TEMP(K) :        279.7691
+     TIME(PS) :       1000.0000
+      VDWAALS :        -83.7572
+
+Done testing.

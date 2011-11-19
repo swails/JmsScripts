@@ -200,3 +200,24 @@ validateCpinData.py
    given residue (i.e., adding a proton increases the net charge by 1).  It alerts the user to any
    problem it finds.  It takes no arguments.
    Written in Python by Jason
+
+mdout.py
+   This utility supplies the AmberMdout class and MdoutError class (for when exceptions are
+   raised during the course of mdout parsing). It exposes all of the data _except_ decomp
+   data and A V E R A G E S / R M S  F L U C T U A T I O N S (which is really only applicable
+   if ntave != 0, but these sections are just skipped). Data are available in numpy arrays
+   referenced by
+
+   mdout_object.data['DATA KEY']
+
+   where 'DATA KEY' is the energy term in front of the '=' on each line. So for instance, common
+   keys will be "EPtot", "VDWAALS", and "1-4 EEL".  Spaces between words in the terms are
+   preserved (but there are no spaces before or after the words).
+
+   To concatenate mdout files, use IN PLACE ADDITION ONLY (regular addition will NOT give you
+   this desired effect).  That is, use 
+   
+   mdout_object += AmberMdout('next.mdout')
+
+   Regular addition has no defined behavior (nor does subtraction or in-place subtraction)
+   Written in Python by Jason

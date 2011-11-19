@@ -207,6 +207,36 @@ class AmberMdout(object):
       # arrays to remove extra zeros
       if num_record != self.num_terms:
          for key in self.data: self.data[key] = self.data[key][:num_record]
+         # Update the number of terms and the number of steps
+         self.num_terms = num_record
+         if 'ntpr' in self.properties: 
+            self.num_steps = self.num_terms * self.properties['ntpr']
+
+   #================================================
+
+   def __iadd__(self, other):
+      """ In-place addition -- concatenate data from one mdout to another """
+      # Compare the keys to make sure they're the same
+      selfkeys, otherkeys = self.data.keys(), other.data.keys()
+      selfkeys.sort()
+      otherkeys.sort()
+      # Find out how many terms we have (it's not always num_terms...)
+      size1, size2 = len(self.data[selfkeys[0]]), len(other.data[otherkeys[0]])
+      if selfkeys != otherkeys:
+         raise TypeError('Mismatch in data keys. Incompatible AmberMdouts!')
+      # Create a new array that's as big as the other 2 together, then copy
+      # them both into that new array one after another. Then put it into
+      # self.data[key] to complete the in-place addition
+      for key in selfkeys:
+         tmp = np.zeros(size1 + size2)
+         for i, j in enumerate(self.data[key]): tmp[i] = j
+         for i, j in enumerate(other.data[key]): tmp[i+size1] = j
+         self.data[key] = tmp
+      # Update or num_terms
+      self.num_terms += other.num_terms
+      self.num_steps += other.num_steps
+
+      return self
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
@@ -219,6 +249,8 @@ if __name__ == '__main__':
    parser = OptionParser()
    parser.add_option('--mdout', dest='mdout', help='Input mdout to analyze',
                      default=None)
+   parser.add_option('--next-mdout', dest='mdout2', default=None,
+                     help='A second mdout to test in-place addition')
    parser.add_option('--check-file', dest='check', default=None,
                      help='Output file to check diff against.')
    opt, args = parser.parse_args()
@@ -253,6 +285,15 @@ if __name__ == '__main__':
    keys.sort()
    for key in keys:
       print '   %10s : %15.4f' % (key, np.average(my_mdout.data[key]))
+
+   # Test the in-place addition
+   if opt.mdout2:
+      print 'Testing __iadd__:'
+      my_mdout += AmberMdout(opt.mdout2)
+
+      for key in keys:
+         print '   %10s : %15.4f' % (key, np.average(my_mdout.data[key]))
+
    print '\nDone testing.'
 
    # Close our stdout if we opened something in its place
@@ -269,3 +310,4 @@ if __name__ == '__main__':
    else:
       print 'TEST PASSED. yay'
       os.remove('__mdoutcheck__')
+

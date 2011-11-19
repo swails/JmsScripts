@@ -8,9 +8,17 @@ It does NOT do:
    o  Store decomp data when idecomp != 0
 """
 
-from optparse import OptionParser
 import numpy as np
+import os
 import re
+
+#~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
+
+class MdoutError(Exception):
+   def __init__(self, msg='Mdout error!'):
+      self.msg = msg
+   def __str__(self):
+      return self.msg
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
@@ -24,6 +32,9 @@ class AmberMdout(object):
    #================================================
 
    def __init__(self, filename):
+      # Make sure our file exists first of all
+      if not os.path.exists(filename):
+         raise MdoutError('%s does not exist!' % filename)
       self.filename = filename # File name of mdout file
       self.data = {}           # Dict that matches mdout term names to arrays
       self.properties = {}     # List of input variables with their values
@@ -158,7 +169,6 @@ class AmberMdout(object):
                for i, term in enumerate(terms):
                   # Skip over NAME again (see above)
                   if term == 'NAME': continue
-#                 print num_record, len(self.data[term]), 'vs.', i, len(term_vals)
                   if not ignore_this_record:
                      self.data[term][num_record] = float(term_vals[i])
                # Eat the next line (it's blank)
@@ -187,18 +197,37 @@ class AmberMdout(object):
             ignore_this_record = False
             rawline = fl.readline()
          # end while rawline and rawline[:14] != '   5.  TIMINGS':
+         # Once we get here, we're done.
+         break
+      # end while rawline
+      # Our num_record has been incremented past the last entry, so it should
+      # be accurate if we're indexing from 1 (i.e. it should reflect the full
+      # size of each data array). In cases where we didn't know how many terms
+      # to start with, or when simulations didn't finish, we resize/reshape the
+      # arrays to remove extra zeros
+      if num_record != self.num_terms:
+         for key in self.data: self.data[key] = self.data[key][:num_record]
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
 if __name__ == '__main__':
    """ Test our code """
+   from optparse import OptionParser
+   from subprocess import Popen, PIPE
+   from os.path import exists
+   import sys
    parser = OptionParser()
    parser.add_option('--mdout', dest='mdout', help='Input mdout to analyze',
                      default=None)
+   parser.add_option('--check-file', dest='check', default=None,
+                     help='Output file to check diff against.')
    opt, args = parser.parse_args()
    if not opt.mdout:
       parser.print_help()
       quit()
+
+   # Redirect all stdout to here
+   if opt.check: sys.stdout = open('__mdoutcheck__', 'w')
 
    my_mdout = AmberMdout(opt.mdout)
    longest_option = max([len(it) for it in my_mdout.properties.keys()])
@@ -225,3 +254,18 @@ if __name__ == '__main__':
    for key in keys:
       print '   %10s : %15.4f' % (key, np.average(my_mdout.data[key]))
    print '\nDone testing.'
+
+   # Close our stdout if we opened something in its place
+   if sys.stdout != sys.__stdout__: sys.stdout.close()
+
+   # Now we diff the checks, but only if we were given a check file
+   if not opt.check: sys.exit(0)
+   # First restore stdout
+   sys.stdout = sys.__stdout__
+   # Next, open a diff process
+   process = Popen(['diff', '__mdoutcheck__', opt.check])
+   if process.wait():
+      print 'TEST FAILED'
+   else:
+      print 'TEST PASSED. yay'
+      os.remove('__mdoutcheck__')

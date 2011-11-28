@@ -221,3 +221,9 @@ mdout.py
 
    Regular addition has no defined behavior (nor does subtraction or in-place subtraction)
    Written in Python by Jason
+
+collect_pH_stats.py
+   This utility will analyze the output of calcpka (and calcpka.pl, I think) and it will arrange
+   the desired data in a CSV file easily imported into a spreadsheet.
+
+   Written in Python by Jason

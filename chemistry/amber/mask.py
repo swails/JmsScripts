@@ -5,7 +5,7 @@ a selected atom is 1 and one that's not is 0.
 from chemistry.exceptions import MaskError
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-class AmberMask:
+class AmberMask(object):
    """ 
    What is hopefully a fully-fledged Amber mask parser implemented in Python.
 

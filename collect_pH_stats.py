@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import csv, sys, re
+import csv, sys, re, math
 from optparse import OptionParser
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +111,7 @@ def _get_residues(ph_setlist):
    
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def _individual_info(lines, outfile, data_type, data_desc):
+def _individual_info(lines, outfile, data_type, data_desc, hill=False):
    # Write the fraction protonated
 
    ph_setlist = set_list(lines)
@@ -136,7 +136,16 @@ def _individual_info(lines, outfile, data_type, data_desc):
             line += ['-----', '', '']
             continue
          myres = phset.residue_list[phset.residue_list.index(res)]
-         line += [phset.pH, getattr(myres, data_type), '']
+         if not hill:
+            line += [phset.pH, getattr(myres, data_type), '']
+         else:
+            if myres.frac_prot == 1:
+               line += [phset.pH, '-inf', '']
+            elif myres.frac_prot == 0:
+               line += [phset.pH, 'inf', '']
+            else:
+               line += [phset.pH, 
+                        math.log10((1-myres.frac_prot)/myres.frac_prot), '']
       outfile.writerow(line)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,6 +158,10 @@ def pka_info(lines, outfile):
 def frac_info(lines, outfile):
    _individual_info(lines, outfile, 'frac_prot', 'Fraction Protonated')
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def hill_info(lines, outfile):
+   _individual_info(lines, outfile, 'frac_prot', 'Hill plot', hill=True)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def trans_info(lines, outfile):
@@ -196,7 +209,9 @@ def main():
    parser.add_option('-o', '--output', dest='output', default='results.csv',
                 help='Final CSV file with total statistics. [Default %default]')
    parser.add_option('-i', '--info', dest='info', default=None,
-                     help='What info do you want printed out?')
+                   help='What info do you want printed out?. Available ' +
+                   'options are [pKa, frac_prot, transitions, offset, hill]. ' +
+                   'Default: full description')
    opt, args = parser.parse_args()
 
    if not opt.output.endswith('.csv'): opt.output += '.csv'
@@ -211,6 +226,8 @@ def main():
       run_method = trans_info
    elif opt.info.lower() == 'offset':
       run_method = offset_info
+   elif opt.info.lower() == 'hill':
+      run_method = hill_info
    else:
       run_method = full_info
 

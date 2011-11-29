@@ -38,3 +38,6 @@ class BondError(ChemError):
 
 class AmberParmError(ChemError):
    """ This is a generic AmberParmError """
+
+class MoleculeError(ChemError):
+   """ This occurs when there's a problem determining molecularity """

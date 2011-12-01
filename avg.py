@@ -4,7 +4,7 @@
 
 from optparse import OptionParser, OptionGroup
 from os.path import exists
-import sys
+import sys, math
 
 parser = OptionParser(usage='%prog [Options] file1 [file2 [file3 [... ] ] ]',
                       epilog='Calculates some statistics for a given column ' +
@@ -62,13 +62,14 @@ else: # read from stdin
       except ValueError: continue
       except IndexError: continue
       else:
+         if abs(val) == float('inf'): continue
          run_sum += val
          run_sum2 += val
          num_vals += 1
 
 # Compute avg, stdev
-ave = run_sum / number_entries
-ave2 = run_sum2 / number_entries
+ave = run_sum / num_vals
+ave2 = run_sum2 / num_vals
 std = math.sqrt(ave2 - ave * ave)
       
 if opt.verbose:

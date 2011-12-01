@@ -4,7 +4,7 @@
 
 from optparse import OptionParser, OptionGroup
 from os.path import exists
-import sys, math
+import sys, math, re
 
 parser = OptionParser(usage='%prog [Options] file1 [file2 [file3 [... ] ] ]',
                       epilog='Calculates some statistics for a given column ' +
@@ -13,6 +13,8 @@ parser.add_option('-c', '--column', dest='col', type='int', default=1,
                   help='Which column of data to analyze (Default %default)')
 parser.add_option('-d', '--delimiter', dest='delim', default=' ',
                   help='What to consider a column delimiter. Default is a space')
+parser.add_option('-e', '--exclude-inf', default=False, action='store_true',
+                  dest='exclude_inf', help='Exclude Infinities from average.')
 group = OptionGroup(parser, 'Verbose options', 'These options control how ' +
                     'much is printed as output.')
 group.add_option('-l', '--loud', dest='verbose', default=False,
@@ -29,6 +31,8 @@ run_sum = 0
 num_vals = 0
 run_sum2 = 0
 
+is_inf = re.compile(r'[Ii]nf')
+
 if args:
    exist_array = [exists(fname) for fname in args]
    if False in exist_array:
@@ -43,6 +47,8 @@ if args:
       for line in datafile:
          words = line.split(opt.delim)
          try:
+            if opt.exclude_inf and is_inf.search(words[opt.col-1]):
+               raise ValueError('Infinity found (this should be caught)')
             val = float(words[opt.col - 1])
          except ValueError: continue
          except IndexError: continue
@@ -58,11 +64,12 @@ else: # read from stdin
    for line in sys.stdin:
       words = line.split(opt.delim)
       try:
+         if opt.exclude_inf and is_inf.search(words[opt.col-1]):
+            raise ValueError('Infinity found (this should be caught)')
          val = float(words[opt.col - 1])
       except ValueError: continue
       except IndexError: continue
       else:
-         if abs(val) == float('inf'): continue
          run_sum += val
          run_sum2 += val
          num_vals += 1

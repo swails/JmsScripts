@@ -15,7 +15,7 @@ def get_branch_names():
       if path.isdir(path.join(parent, '.git')):
          found_git_dir = True
          break
-      if parent == '.': parent == '..'
+      if parent == '.': parent = '..'
       else: parent = path.join(parent, '..')
    
    if not found_git_dir:

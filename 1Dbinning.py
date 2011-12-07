@@ -31,8 +31,8 @@ if not opts.output_file:
 # set variables with default values
 bins = opts.bins 
 if opts.binrange:
-   binrange = [int(opts.binrange.split('-')[0].strip()),
-               int(opts.binrange.split('-')[1].strip())]
+   binrange = [float(opts.binrange.split('-')[0].strip()),
+               float(opts.binrange.split('-')[1].strip())]
 else:
    binrange = [0,0]
 data_file = opts.data_file

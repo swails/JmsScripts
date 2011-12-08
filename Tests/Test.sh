@@ -59,5 +59,22 @@ test_cleanup $? rama.3.bin.diff
 
 /bin/rm -f _PHIPSI_* rama.?.gnu rama.?.dat rama.?.bin.dat
 echo "============================================================"
+echo "Testing 1Dbinning.py"
+../1Dbinning.py -f rama.2.dat.check -o rama_1dbinned.dat \
+                -b 30 -n -c 1 > /dev/null
 
+printf "   Checking binning of 1D data set: "
+diff rama_1dbinned.dat.check rama_1dbinned.dat > rama_1dbinned.dat.diff
+test_cleanup $? rama_1dbinned.dat.diff
+/bin/rm -f rama_1dbinned.dat
+echo "============================================================"
+echo "Testing 2Dbinning.py"
+../2Dbinning.py -f rama.2.dat.check -o rama_2dbinned.dat \
+                -bins 50x50 -normalize > /dev/null
+
+printf "   Checking binning of 2D data set: "
+diff rama_2dbinned.dat.check rama_2dbinned.dat.check > rama_2dbinned.dat.diff
+test_cleanup $? rama_2dbinned.dat.diff
+/bin/rm -f rama_2dbinned.dat
+echo "============================================================"
 /bin/rm -f tmp

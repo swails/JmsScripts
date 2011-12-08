@@ -70,10 +70,10 @@ test_cleanup $? rama_1dbinned.dat.diff
 echo "============================================================"
 echo "Testing 2Dbinning.py"
 ../2Dbinning.py -f rama.2.dat.check -o rama_2dbinned.dat \
-                -bins 50x50 -normalize > /dev/null
+                -b 50x50 -n -c 1,2 -x "-176.0-180" > /dev/null
 
 printf "   Checking binning of 2D data set: "
-diff rama_2dbinned.dat.check rama_2dbinned.dat.check > rama_2dbinned.dat.diff
+diff rama_2dbinned.dat rama_2dbinned.dat.check > rama_2dbinned.dat.diff
 test_cleanup $? rama_2dbinned.dat.diff
 /bin/rm -f rama_2dbinned.dat
 echo "============================================================"

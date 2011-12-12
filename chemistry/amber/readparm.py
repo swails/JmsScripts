@@ -5,7 +5,7 @@
 # prmtop object. It will also extract parameters and write a frcmod.   #
 # See readparm.README for more detailed description                    #
 #                                                                      #
-#          Last updated: 07/20/2011                                    #
+#          Last updated: 12/01/2011                                    #
 #                                                                      #
 ########################################################################
 
@@ -33,6 +33,7 @@ from datetime import datetime
 from chemistry import exceptions
 from chemistry import periodic_table
 from math import ceil
+from os import path
 
 # Global constants
 AMBER_ELECTROSTATIC = 18.2223
@@ -280,6 +281,20 @@ class _Atom(object):
       
    #===================================================
 
+   def exclude(self, other):
+      """
+      Add one atom to my exclusion list, even if it's not bonded to, angled to, or
+      dihedraled to it
+      """
+      if self == other:
+         raise exceptions.BondError("Cannot exclude an atom from itself")
+      if (other in self.bond_partners or other in self.angle_partners or
+          other in self.dihedral_partners or other in self.exclusion_partners):
+         return
+      self.exclusion_partners.append(other)
+
+   #===================================================
+
    def __eq__(self, other):
       return id(self) == id(other)
       
@@ -307,6 +322,9 @@ class _Bond(object):
 
    def __init__(self, atom1, atom2, bond_type):
       """ Bond constructor """
+      # Make sure we're not bonding me to myself
+      if atom1 == atom2:
+         raise exceptions.BondError('Cannot bond atom to itself!')
       # Order the atoms so the lowest atom # is first
       self.atom1 = atom1
       self.atom2 = atom2
@@ -324,12 +342,12 @@ class _Bond(object):
       parm.parm_data[key][3*idx+1] = 3*(self.atom2.idx)
       parm.parm_data[key][3*idx+2] = self.bond_type.idx + 1
       # Now have this bond type write its info
-      self.bond_type.write_info(parm)
+#     self.bond_type.write_info(parm)
 
    #===================================================
    
    def __contains__(self, thing):
-      """ Quick and easy way to see if an _BondType or _Atom is in this _Bond """
+      """ Quick and easy way to see if an _Atom is in this _Bond """
       return id(thing) == id(self.atom1) or id(thing) == id(self.atom2)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -357,7 +375,7 @@ class _BondType(object):
    #===================================================
 
    def __eq__(self, other):
-      return id(self) == id(other)
+      return self.k == other.k and self.req == other.req
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -368,6 +386,9 @@ class _Angle(object):
 
    def __init__(self, atom1, atom2, atom3, angle_type):
       """ Angle constructor """
+      # Make sure we're not angling me to myself
+      if atom1 == atom2 or atom1 == atom3 or atom2 == atom3:
+         raise exceptions.BondError('Cannot angle atom to itself!')
       self.atom1 = atom1
       self.atom2 = atom2
       self.atom3 = atom3
@@ -390,7 +411,7 @@ class _Angle(object):
       parm.parm_data[key][4*idx+2] = 3*(self.atom3.idx)
       parm.parm_data[key][4*idx+3] = self.angle_type.idx + 1
       # Now have this bond type write its info
-      self.angle_type.write_info(parm)
+#     self.angle_type.write_info(parm)
 
    #===================================================
    
@@ -422,7 +443,7 @@ class _AngleType(object):
    #===================================================
 
    def __eq__(self, other):
-      return id(self) == id(other)
+      return self.k == other.k and self.theteq == other.theteq
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -433,6 +454,13 @@ class _Dihedral(object):
 
    def __init__(self, atom1, atom2, atom3, atom4, dihed_type, signs):
       """ _Dihedral constructor. idx must start from 0!!! """
+      # Make sure we're not dihedraling me to myself
+      atmlist = [atom1, atom2, atom3, atom4]
+      for i in range(len(atmlist)):
+         for j in range(i+1, len(atmlist)):
+            if atmlist[i] == atmlist[j]:
+               raise exceptions.BondError('Cannot dihedral atom to itself!')
+      # Set up instances
       self.atom1 = atom1
       self.atom2 = atom2
       self.atom3 = atom3
@@ -463,7 +491,7 @@ class _Dihedral(object):
       parm.parm_data[key][5*idx+3] = 3*(self.atom4.idx) * self.signs[1]
       parm.parm_data[key][5*idx+4] = self.dihed_type.idx + 1
       # Now have this bond type write its info
-      self.dihed_type.write_info(parm)
+#     self.dihed_type.write_info(parm)
 
    #===================================================
 
@@ -500,11 +528,22 @@ class _DihedralType(object):
       parm.parm_data['DIHEDRAL_FORCE_CONSTANT'][self.idx] = self.phi_k
       parm.parm_data['DIHEDRAL_PERIODICITY'][self.idx] = self.per
       parm.parm_data['DIHEDRAL_PHASE'][self.idx] = self.phase
-      if self.scee != None:
+      try:
          parm.parm_data['SCEE_SCALE_FACTOR'][self.idx] = self.scee
-      if self.scnb != None:
+      except KeyError:
+         pass
+      try:
          parm.parm_data['SCNB_SCALE_FACTOR'][self.idx] = self.scnb
+      except KeyError:
+         pass
    
+   #===================================================
+
+   def __eq__(self, other):
+      return (self.phi_k == other.phi_k and self.per == other.per and 
+              self.phase == other.phase and self.scee == other.scee and
+              self.scnb == other.scnb)
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class _Residue(object):
@@ -690,7 +729,7 @@ class _DihedralTypeList(_TypeList):
          not 'SCNB_SCALE_FACTOR' in self.parm.parm_data.keys():
          list.__init__(self, [_DihedralType(self.parm.parm_data['DIHEDRAL_FORCE_CONSTANT'][i],
                                       self.parm.parm_data['DIHEDRAL_PERIODICITY'][i], 
-                                      self.parm.parm_data['DIHEDRAL_PHASE'][i], None, None, -1)
+                                      self.parm.parm_data['DIHEDRAL_PHASE'][i], 1.2, 2.0, -1)
                                       for i in range(self.parm.ptr('nptra')) ])
       else:
          list.__init__(self, [_DihedralType(self.parm.parm_data['DIHEDRAL_FORCE_CONSTANT'][i],
@@ -1099,8 +1138,8 @@ class AmberParm(object):
       global AMBER_ELECTROSTATIC
 
       # make sure we want to write the new prmtop file
-      if not self.overwrite and name == self.prm_name:
-         print >> stderr, 'Error: Object\'s overwrite set to False! Will not overwrite original prmtop.'
+      if not self.overwrite and path.exists(name):
+         print >> stderr, 'Error: Object\'s overwrite set to False! Will not overwrite existing file %s' % name
          return
       elif self.version == '':
          print >> stderr, 'Error: Version string missing! Load prmtop data before writing new prmtop.'
@@ -1195,10 +1234,12 @@ class AmberParm(object):
       # the bond types that will be used. To do this, we need a couple counters.
       # Different bond types will have an index of -1 until we find out they are
       # needed. Then we assign them an index and write out that bond info. We also
-      # assume that all of the parm_data arrays are big enough already (or
-      # IndexError's will ensue!)
+      # have to make sure that every array is at least large enough, so give it
+      # enough elements to cover every bond in the list, which will be reduced in
+      # size if not every bond is actually added
       bond_num = 0
       bond_type_num = 0
+      self.parm_data['BONDS_INC_HYDROGEN'] = [0 for i in range(len(self.bonds_inc_h)*3)]
       for i in range(len(self.bonds_inc_h)):
          holder = self.bonds_inc_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx): continue
@@ -1215,6 +1256,8 @@ class AmberParm(object):
       # to indexing from 0, so it's just right now. So is the bond_type index, but
       # that is applicable for the bonds_without_h as well.
       bond_num = 0
+      self.parm_data['BONDS_WITHOUT_HYDROGEN'] = \
+               [0 for i in range(len(self.bonds_without_h)*3)]
       for i in range(len(self.bonds_without_h)):
          holder = self.bonds_without_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx): continue
@@ -1223,6 +1266,9 @@ class AmberParm(object):
             bond_type_num += 1
          holder.write_info(self, 'BONDS_WITHOUT_HYDROGEN', bond_num)
          bond_num += 1
+      # Make sure BOND_FORCE_CONSTANT and BOND_EQUIL_VALUE is at least large enough
+      self.parm_data['BOND_FORCE_CONSTANT'] = [0 for i in range(bond_type_num)]
+      self.parm_data['BOND_EQUIL_VALUE'] = [0 for i in range(bond_type_num)]
       # Now we can write all of the bond types out
       self.bond_type_list.write_to_parm()
       # Now we know how many bonds without H we have and our # of bond types
@@ -1231,14 +1277,12 @@ class AmberParm(object):
       self.parm_data['POINTERS'][NUMBND] = bond_type_num
       self.parm_data['BONDS_WITHOUT_HYDROGEN'] = \
                self.parm_data['BONDS_WITHOUT_HYDROGEN'][:3*bond_num]
-      self.parm_data['BOND_FORCE_CONSTANT'] = \
-               self.parm_data['BOND_FORCE_CONSTANT'][:bond_type_num]
-      self.parm_data['BOND_EQUIL_VALUE'] = \
-               self.parm_data['BOND_EQUIL_VALUE'][:bond_type_num]
 
       # Now do all of the angle arrays
       angle_num = 0
       angle_type_num = 0
+      # Make sure we have enough ANGLES_INC_HYDROGEN
+      self.parm_data['ANGLES_INC_HYDROGEN'] = [0 for i in range(len(self.angles_inc_h)*4)]
       for i in range(len(self.angles_inc_h)):
          holder = self.angles_inc_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx, holder.atom3.idx):
@@ -1253,6 +1297,8 @@ class AmberParm(object):
                self.parm_data['ANGLES_INC_HYDROGEN'][:4*angle_num]
       # Time for Angles without H
       angle_num = 0
+      self.parm_data['ANGLES_WITHOUT_HYDROGEN'] = \
+               [0 for i in range(len(self.angles_without_h)*4)]
       for i in range(len(self.angles_without_h)):
          holder = self.angles_without_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx, holder.atom3.idx):
@@ -1262,6 +1308,10 @@ class AmberParm(object):
             angle_type_num += 1
          holder.write_info(self, 'ANGLES_WITHOUT_HYDROGEN', angle_num)
          angle_num += 1
+      # Make sure BOND_FORCE_CONSTANT and BOND_EQUIL_VALUE is at least large enough
+      self.parm_data['ANGLE_FORCE_CONSTANT'] = [0 for i in range(angle_type_num)]
+      self.parm_data['ANGLE_EQUIL_VALUE'] = [0 for i in range(angle_type_num)]
+      # Write angle type info to parm
       self.angle_type_list.write_to_parm()
       self.parm_data['POINTERS'][NTHETA] = angle_num
       self.parm_data['POINTERS'][MTHETA] = angle_num
@@ -1272,6 +1322,7 @@ class AmberParm(object):
       # Now do all of the dihedral arrays
       dihedral_num = 0
       dihedral_type_num = 0
+      self.parm_data['DIHEDRALS_INC_HYDROGEN'] = [0 for i in range(len(self.dihedrals_inc_h)*5)]
       for i in range(len(self.dihedrals_inc_h)):
          holder = self.dihedrals_inc_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx, holder.atom3.idx, holder.atom4.idx):
@@ -1286,6 +1337,8 @@ class AmberParm(object):
                self.parm_data['DIHEDRALS_INC_HYDROGEN'][:5*dihedral_num]
       # Time for dihedrals without H
       dihedral_num = 0
+      self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'] = \
+                  [0 for i in range(len(self.dihedrals_without_h)*5)]
       for i in range(len(self.dihedrals_without_h)):
          holder = self.dihedrals_without_h[i]
          if -1 in (holder.atom1.idx, holder.atom2.idx, holder.atom3.idx, holder.atom4.idx):
@@ -1300,13 +1353,14 @@ class AmberParm(object):
       self.parm_data['POINTERS'][NPTRA] = dihedral_type_num
       self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'] = \
                self.parm_data['DIHEDRALS_WITHOUT_HYDROGEN'][:5*dihedral_num]
-      self.dihedral_type_list.write_to_parm()
-      
-      # Adjust the lengths of the dihedral arrays
+
+      # Adjust the lengths of the dihedral arrays to make sure they're long enough
       for key in ('DIHEDRAL_FORCE_CONSTANT', 'DIHEDRAL_PERIODICITY', 'DIHEDRAL_PHASE',
                   'SCEE_SCALE_FACTOR', 'SCNB_SCALE_FACTOR'):
          if not key in self.parm_data.keys(): continue
-         self.parm_data[key] = self.parm_data[key][:dihedral_type_num]
+         self.parm_data[key] = [0 for i in range(dihedral_type_num)]
+      
+      self.dihedral_type_list.write_to_parm()
       
       # Load the pointers now
       self.LoadPointers()

@@ -95,7 +95,10 @@ def merge(pushto=None):
 
 def main():
 
-   parser = OptionParser()
+   epilog = 'If you supply an <ending branch>, then I will check that ' + \
+            'ending branch out after I\'m done with everything else.'
+   parser = OptionParser(usage='%prog [Options] [<ending branch>]',
+                         epilog=epilog)
    group = OptionGroup(parser, 'Operating Modes',
                        'All operating modes are mutually exclusive')
    group.add_option('--pull-only', dest='pull_only', default=False, 
@@ -110,7 +113,7 @@ def main():
    
    opt, arg = parser.parse_args()
    
-   if len(arg) != 0:
+   if len(arg) > 1:
       print 'Bad command-line flags!'
       parser.print_help()
       sys.exit(1)
@@ -127,6 +130,15 @@ def main():
    if opt.pull_only: pull_only()
    elif opt.merge_only: merge()
    elif opt.push_to: merge(opt.push_to)
-
+   
+   # If we defined an ending branch
+   if arg:
+      process = Popen(['git', 'checkout', arg[0]], stdout=PIPE, stderr=PIPE)
+      out, err = process.communicate('')
+      if process.wait():
+         print 'Error checking out %s' % arg[0]
+         print err
+      else:
+         print 'All done. Now on branch %s' % arg[0]
 
 if __name__ == '__main__': main()

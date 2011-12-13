@@ -14,29 +14,29 @@
 
 # Definition of included utilities. Add descriptions to whatever function(s) you add!
 
-########################################################################################## 
+################################################################################
 #
 # which: searches the path for a given executable
+# linecount: count number of lines in a file
 # average: returns the average of a given list
-# stdev: returns the standard deviation of a given list and average (a non-number value for
-#        average will make the function call 'average' to compute it
-# digit: returns the given digit (power of 10, so it starts 0 for 1's place) of a given number
-# round: rounds a given floating point number to a given decimal point *deprecated*
+# stdev: returns the standard deviation of a given list and average (a non-float
+#        value for average will make the function call 'average' to compute it
+# digit: returns the given digit (power of 10, so it starts 0 for 1's place) of
+#        a given number
 # resnum: returns the number of residues in a given amber topology file
-# getresinfo: gets residue information based on prmtop flag from a given prmtop file
-# getallresinfo: gets info for all residues from given flag name for a given prmtop
-# fileexists: checks for the existence of a file and prints out a warning if it's not there
+# getallresinfo: prints all values for a given prmtop FLAG in a given topology
+# fileexists: alias for os.path.exists (didn't know about that at first)
 # getresindex: returns the rank in alphabetical order of a given amino acid
-# getresdecmp: returns the amino acid decomposition of a given prmtop in an alphabetical
-#              ordered array
+# getresdecmp: returns the amino acid decomposition of a given prmtop in an
+#              alphabeitcal ordered array
 # minmax: returns the maximum and minimum of a data set
 #
-##########################################################################################
+################################################################################
 
-from chemistry.amber.readparm import amberParm, AmberParm
+from chemistry.amber.readparm import AmberParm
+import os
 
 def which(program):
-   import os
    def is_exe(fpath):
       return os.path.exists(fpath) and os.access(fpath, os.X_OK)
 
@@ -50,6 +50,13 @@ def which(program):
          if is_exe(exe_file):
             return exe_file
    return None
+
+def linecount(fname):
+   if type(fname).__name__ != 'str':
+      raise TypeError('linecount: Expected a string!')
+   fl = open(fname, 'r')
+   for i, l in enumerate(fl): pass
+   return i+1
 
 def average(list):
    from math import fsum
@@ -109,31 +116,26 @@ def round(number, decimals):
 
 def resnum(topfile):
 
-   parm = amberParm(topfile)
+   parm = AmberParm(topfile)
    return parm.ptr("NRES")
 
 def natom(topfile):
    
-   parm = amberParm(topfile)
+   parm = AmberParm(topfile)
    return parm.ptr("NATOM")
 
 def getresinfo(res, topname, flag):
 
-   parm = amberParm(topname)
+   parm = AmberParm(topname)
    return parm.parm_data[flag][res-1] # and simply return the residue of interest
 
 def getallresinfo(prmtop, flag):
-   parm = amberParm(topname)
+   parm = AmberParm(topname)
    return parm.parm_data[flag]
 
 def fileexists(file):
-   try:
-      f = open(file,'r')
-   except IOError:
-      print 'Error: Specified file (' + file + ') does not exist!'
-      return -1
-   f.close()
-   return 0
+   if os.path.exists(file): return 0
+   else: return -1
 
 def getresindex(resname):
 # return the amino acid's rank in terms of alpabetical order

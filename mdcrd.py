@@ -18,6 +18,10 @@ class TrajError(Exception):
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
+class RMSError(Exception): pass
+
+#~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
+
 class AmberTraj(object):
    " This is a class to analyze trajectory files (a series of them, or just 1) "
    
@@ -170,6 +174,33 @@ class AmberTraj(object):
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
+class RmsdData(object):
+   """ 
+   Collects the RMSD data from a cpptraj-generated data file and loads it into
+   numpy arrays
+   """
+   def __init__(self, fname, col=1):
+      from utilities import linecount
+      if not os.path.exists(fname):
+         raise RMSError('RmsdData: Non-existent file %s' % fname)
+      data_re = re.compile(r'\s*(\d+)')
+      nums_re = re.compile(r'([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)')
+      # Find the number of lines in the 
+      numframes = linecount(fname)
+      # Load the numpy array
+      self.data = np.empty(numframes)
+      idx = 0
+      for line in open(fname, 'r'):
+         if not data_re.match(line): continue
+         # The header line doesn't match
+         cols = nums_re.findall(line)
+         # cols is every number in the line, separated by column. The first
+         # number is the frame number
+         self.data[idx] = float(cols[col])
+         idx += 1
+
+#~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
+
 if __name__ == '__main__':
    # Test suite
    from optparse import OptionParser
@@ -191,7 +222,21 @@ if __name__ == '__main__':
    for traj in mytraj.traj_name_list:
       print 'Trajectory %20s has %10d frames.' % (traj, mytraj.traj_list[traj])
 
+   # separator
+   print ''
+
    # Test the RMSd
    mytraj.rmsd(outfile='AmberTraj_RMSD.dat')
 
    mytraj.run()
+
+   # Now test the RMSd class
+
+   my_rmsd = RmsdData('AmberTraj_RMSD.dat.check')
+
+   # Print out some statistics about the RMSD data
+   print 'The average RMSD is ', np.average(my_rmsd.data)
+   print 'The minimum RMSD is ', my_rmsd.data.min()
+   print 'The maximum RMSD is ', my_rmsd.data.max()
+   print 'The stdev of the RMSD is ', my_rmsd.data.std()
+

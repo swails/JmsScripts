@@ -70,11 +70,9 @@ class AmberTraj(object):
       if type(logfile).__name__ == 'str':
          if os.path.exists(logfile) and not self.overwrite:
             raise TrajError('Cannot overwrite %s' % logfile)
-         self.logfile = open(logfile, 'w')
-      elif not logfile:
-         self.logfile = sys.stdout
+         self.logfile = open(logfile, 'w', 0)
       else:
-         self.logfile = logfile
+         self.logfile = sys.stdout
 
       # Start keeping track of the commands we want to run
       self._cpptraj_commands = ''
@@ -163,8 +161,8 @@ class AmberTraj(object):
          cmd_str += 'trajin %s %d %d %d \n' % (traj, self.start[i], self.end[i],
                                                self.stride[i])
       
-      process = Popen([self.cpptraj, self.parm], stdin=PIPE)
-#                     stdout=self.logfile, stderr=self.logfile)
+      process = Popen([self.cpptraj, self.parm], stdin=PIPE,
+                      stdout=self.logfile, stderr=self.logfile)
       
       print >> self.logfile, 'Running cpptraj:'
       process.communicate(cmd_str + self._cpptraj_commands)

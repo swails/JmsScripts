@@ -1,3 +1,4 @@
+Running cpptraj:
 
 CPPTRAJ: Trajectory Analysis. V2.3.5b
     ___  ___  ___  ___
@@ -72,5 +73,4 @@ DATASETS:
 DATAFILE OUTPUT:
   AmberTraj_RMSD.dat: rmsd
 
-Running cpptraj:
 cpptraj ran successfully!

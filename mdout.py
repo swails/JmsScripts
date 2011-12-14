@@ -148,6 +148,9 @@ class AmberMdout(object):
             # want future misses of this re.match to turn this to False. All
             # is set well for the next record by setting ignore_this_record to
             # False at the end of the while loop
+            if rawline[0] == '|':
+               rawline = fl.readline()
+               continue
             ignore_this_record = ignore_this_record or \
                                  bool(ignore_record.match(rawline))
             # See if we found the start of the record

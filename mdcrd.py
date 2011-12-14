@@ -26,7 +26,7 @@ class AmberTraj(object):
    " This is a class to analyze trajectory files (a series of them, or just 1) "
    
    def __init__(self, parm, traj_list, start=1, stride=1, end=99999999,
-                logfile=sys.stdout, overwrite=False):
+                logfile=None, overwrite=False):
       # Get cpptraj
       self.cpptraj = which('cpptraj')
       if not self.cpptraj:
@@ -71,6 +71,8 @@ class AmberTraj(object):
          if os.path.exists(logfile) and not self.overwrite:
             raise TrajError('Cannot overwrite %s' % logfile)
          self.logfile = open(logfile, 'w')
+      elif not logfile:
+         self.logfile = sys.stdout
       else:
          self.logfile = logfile
 
@@ -161,8 +163,8 @@ class AmberTraj(object):
          cmd_str += 'trajin %s %d %d %d \n' % (traj, self.start[i], self.end[i],
                                                self.stride[i])
       
-      process = Popen([self.cpptraj, self.parm], stdin=PIPE, 
-                      stdout=self.logfile, stderr=self.logfile)
+      process = Popen([self.cpptraj, self.parm], stdin=PIPE)
+#                     stdout=self.logfile, stderr=self.logfile)
       
       print >> self.logfile, 'Running cpptraj:'
       process.communicate(cmd_str + self._cpptraj_commands)

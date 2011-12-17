@@ -1,0 +1,76 @@
+Running cpptraj:
+
+CPPTRAJ: Trajectory Analysis. V2.3.5b
+    ___  ___  ___  ___
+     | \/ | \/ | \/ | 
+    _|_/\_|_/\_|_/\_|_
+
+INPUT: Reading Input from STDIN, type "go" to run, "quit" to exit:
+>   [trajin trpcage.solv5.1_remd12.nc 1 163 1 ]
+	[trpcage.solv5.1_remd12.nc] contains 163 frames.
+	Warning: Box info present in trajectory trpcage.solv5.1_remd12.nc but not in
+	         associated parm trpcage.nowat.parm7
+	[trpcage.solv5.1_remd12.nc] Box type is NonOrthorhombic.
+	Warning: Setting parm trpcage.nowat.parm7 box information from trajectory trpcage.solv5.1_remd12.nc.
+>   [trajin trpcage.solv5.2_remd12.nc 1 62 1 ]
+	[trpcage.solv5.2_remd12.nc] contains 62 frames.
+>   [trajin trpcage.solv5.3_remd12.nc 1 2000 1 ]
+	[trpcage.solv5.3_remd12.nc] contains 2000 frames.
+>   [trajin trpcage.solv5.4_remd12.nc 1 2000 1 ]
+	[trpcage.solv5.4_remd12.nc] contains 2000 frames.
+>   [trajin trpcage.solv5.5_remd12.nc 1 2000 1 ]
+	[trpcage.solv5.5_remd12.nc] contains 2000 frames.
+>   [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
+> 
+INPUT TRAJECTORIES:
+  [trpcage.solv5.1_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 163 of 163)
+  [trpcage.solv5.2_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 62 of 62)
+  [trpcage.solv5.3_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
+  [trpcage.solv5.4_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
+  [trpcage.solv5.5_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
+  Coordinate processing will occur on 6225 frames.
+
+PARAMETER FILES:
+ 0: trpcage.nowat.parm7, 304 atoms, 20 res, non-ortho. box, 6225 frames
+
+REFERENCE COORDS:
+  No reference coordinates.
+  No frames defined.
+
+OUTPUT TRAJECTORIES:
+  No files.
+
+ACTIONS: Initializing 1 actions:
+  0: [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
+    RMSD: (:*), reference is first frame (:*), with fitting.
+          Geometric center will be used.
+
+BEGIN TRAJECTORY PROCESSING:
+----- [trpcage.solv5.1_remd12.nc] (1-163, 1) -----
+  ...... Setting up 1 actions for trpcage.nowat.parm7 ....
+  0: [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
+  .....................................................
+ 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
+
+----- [trpcage.solv5.2_remd12.nc] (1-62, 1) -----
+ 0% 11% 21% 31% 41% 51% 61% 70% 80% 90% 100% Complete.
+
+----- [trpcage.solv5.3_remd12.nc] (1-2000, 1) -----
+ 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
+
+----- [trpcage.solv5.4_remd12.nc] (1-2000, 1) -----
+ 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
+
+----- [trpcage.solv5.5_remd12.nc] (1-2000, 1) -----
+ 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
+
+Read 6225 frames and processed 6225 frames.
+
+ACTION OUTPUT:
+
+DATASETS:
+  There is 1 data set: rmsd
+DATAFILE OUTPUT:
+  AmberTraj_RMSD.dat: rmsd
+
+cpptraj ran successfully!

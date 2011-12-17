@@ -1,0 +1,10 @@
+Trajectory trpcage.solv5.1_remd12.nc has        163 frames.
+Trajectory trpcage.solv5.2_remd12.nc has         62 frames.
+Trajectory trpcage.solv5.3_remd12.nc has       2000 frames.
+Trajectory trpcage.solv5.4_remd12.nc has       2000 frames.
+Trajectory trpcage.solv5.5_remd12.nc has       2000 frames.
+
+The average RMSD is  13.09245
+The minimum RMSD is  0.0
+The maximum RMSD is  16.3371
+The stdev of the RMSD is  2.88987532856

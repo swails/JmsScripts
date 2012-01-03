@@ -222,6 +222,7 @@ class PBS_Script(object):
       """ Submits the job """
       import utilities
       qsub = utilities.which('qsub')
+      qstat = utilities.which('qstat')
 
       if not qsub: raise PBSMissingError('Cannot find qsub!')
 

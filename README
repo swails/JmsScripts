@@ -220,7 +220,7 @@ mdout.py
    mdout_object += AmberMdout('next.mdout')
 
    Regular addition has no defined behavior (nor does subtraction or in-place subtraction)
-   Written in Python by Jason
+   Written in Python by Jason Swails
 
 collect_pH_stats.py
    This utility will analyze the output of calcpka (and calcpka.pl, I think) and it will arrange

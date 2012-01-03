@@ -11,6 +11,7 @@
 from cpin_data import getData
 from chemistry.amber.readparm import amberParm
 from utilities import which
+from subprocess import Popen, PIPE
 
 from math import fsum
 from time import time
@@ -111,7 +112,7 @@ sander = which("sander.MPI")
 sandermin = which("sander")
 tleap = which("tleap")
 if igb == 8:
-   changerad = which("ChangeParmRadii.py")
+   changerad = which("parmed.py")
 if tleap == "none":
    tleap = which("sleap")
 
@@ -138,7 +139,12 @@ file.write(tleap_script)
 file.close()
 os.system(tleap + " -f tleap.in > tleap.log")
 if igb == 8:
-   os.system(changerad + ' -p {0}0.prmtop -r mbondi3'.format(resname.lower()))
+   change_rad_str = "changeRadii mbondi3\nsetOverwrite True\nparmout %s0.prmtop" % (resname.lower())
+   process = Popen([changerad, '%s0.prmtop' % (resname.lower())], stdin=PIPE)
+   process.communicate(change_rad_str)
+   if process.wait():
+      print >> sys.stderr, 'parmed.py failed!'
+      sys.exit(1)
 
 # Get the data for the residue and load the amberParm object
 charges = getData(resname, igb)

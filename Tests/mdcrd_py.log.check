@@ -1,6 +1,6 @@
 Running cpptraj:
 
-CPPTRAJ: Trajectory Analysis. V2.3.5b
+CPPTRAJ: Trajectory Analysis. V2.3.7b
     ___  ___  ___  ___
      | \/ | \/ | \/ | 
     _|_/\_|_/\_|_/\_|_
@@ -49,6 +49,7 @@ BEGIN TRAJECTORY PROCESSING:
 ----- [trpcage.solv5.1_remd12.nc] (1-163, 1) -----
   ...... Setting up 1 actions for trpcage.nowat.parm7 ....
   0: [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
+	304 atoms selected.
   .....................................................
  0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
 

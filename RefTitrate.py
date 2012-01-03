@@ -60,15 +60,15 @@ if options.res == None or options.pH == None:
 # Now determine where required programs are
 sander = which('sander')
 tleap = which('tleap')
-cpinutil = which('cpinutil')
+cpinutil = which('cpinutil.py')
 converter = which('parmed.py')
 
 if 'none' in [sander, tleap, cpinutil]:
-   print >> sys.stderr, 'sander, tleap, and cpinutil are all necessary!'
+   print >> sys.stderr, 'sander, tleap, and cpinutil.py are all necessary!'
    commworld.Abort()
 
 if options.igb == 8 and converter == 'none':
-   print >> sys.stderr, 'ChangeParmRadii.py is needed for igb = 8!'
+   print >> sys.stderr, 'parmed.py is needed for igb = 8!'
    commworld.Abort()
 
 print " Found necessary programs!"
@@ -153,7 +153,7 @@ if master:
    # Create the cpin
    print "\n Creating cpin file"
    cpin = open(options.res + '.cpin', 'w')
-   proc_return = Popen(['cpinutil', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb, '--ignore-warnings'],
+   proc_return = Popen(['cpinutil.py', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb, '--ignore-warnings'],
                        executable=cpinutil, stdout=cpin, stderr=log).wait()
    cpin.close()
    print " Finished making cpin file"

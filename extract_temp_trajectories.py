@@ -45,7 +45,7 @@ group.add_option('--rmsd-output', dest='rmsout', default='rms',
 parser.add_option_group(group)
 opt,trajs = parser.parse_args()
 
-if not opt.temp_list or not opt.prefix or not opt.prmtop:
+if not opt.temp_list or not opt.prefix or not opt.prmtop or not trajs:
    parser.print_help()
    sys.exit(1)
 
@@ -68,7 +68,7 @@ for temp in temps:
       cpptraj_str += 'rmsd data %s reference out %s_%s.dat\n' % (opt.rmsmask,
                       opt.rmsout, temp)
 
-   cpptraj_str += 'trajout %s.%f.nc' % (opt.prefix, temp)
+   cpptraj_str += 'trajout %s.%f.nc netcdf' % (opt.prefix, temp)
 
    process = Popen([cpptraj, opt.prmtop], stdin=PIPE)
 
@@ -77,4 +77,4 @@ for temp in temps:
    process.wait()
 
 
-print '\n\nThis took %f min.' % (time.time() - start_time)
+print '\n\nThis took %f min.' % ((time.time() - start_time) / 60)

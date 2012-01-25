@@ -7,6 +7,15 @@ a text file with a given delimiter
 
 from optparse import OptionParser
 import sys
+import signal
+
+# Set up signal handler
+def interrupt_handler(*args):
+   print ''
+   parser.print_help()
+   sys.exit(1)
+
+signal.signal(signal.SIGINT, interrupt_handler)
 
 parser = OptionParser(usage='%prog [Options] column1 [column2 [column3 [...] ] ]',
                       epilog="This program effectively works like 'awk' and " +

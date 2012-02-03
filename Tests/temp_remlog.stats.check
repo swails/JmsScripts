@@ -1,0 +1,22 @@
+NUMEXCHG = 1000
+There are 8 replicas
+
+The final success rates are:
+Val 3:  0.150
+Val 8:  0.000
+Val 6:  0.210
+Val 5:  0.160
+Val 1:  0.150
+Val 2:  0.160
+Val 4:  0.160
+Val 7:  0.200
+
+The final resting positions are:
+Rep 1: 341.000K
+Rep 2: 540.000K
+Rep 3: 494.000K
+Rep 4: 412.000K
+Rep 5: 280.000K
+Rep 6: 309.000K
+Rep 7: 376.000K
+Rep 8: 452.000K

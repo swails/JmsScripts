@@ -1,0 +1,26 @@
+NUMEXCHG = 10000
+There are 10 replicas
+
+The final success rates are:
+Val 8:  0.495
+Val 2:  1.000
+Val 9:  0.574
+Val 10:  0.989
+Val 1:  0.858
+Val 6:  0.965
+Val 5:  0.936
+Val 7:  0.852
+Val 3:  0.999
+Val 4:  0.998
+
+The final resting positions are:
+Rep 1: pH 4.250
+Rep 2: pH 2.000
+Rep 3: pH 7.000
+Rep 4: pH 5.500
+Rep 5: pH 1.000
+Rep 6: pH 3.750
+Rep 7: pH 4.000
+Rep 8: pH 5.000
+Rep 9: pH 3.250
+Rep 10: pH 2.500

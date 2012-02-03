@@ -100,5 +100,17 @@ diff -Nru mdcrd_py.log.check mdcrd_py.log > mdcrd_py.log.diff
 test_cleanup $? mdcrd_py.log.diff
 /bin/rm -f AmberTraj_RMSD.dat mdcrd_py.log
 echo "============================================================"
+echo "Testing remd.py"
+python ../remd.py -l rem1.log -t TEMP -o tmp
+
+printf "   Checking T-REM log analysis:  "
+diff -Nru temp_remlog.stats.check tmp > temp_remlog.stats.diff
+test_cleanup $? temp_remlog.stats.diff
+
+python ../remd.py -l phrem.log -t pH -o tmp
+printf "   Checking pH-REM log analysis: "
+diff -Nru ph_remlog.stats.check tmp > ph_remlog.stats.diff
+test_cleanup $? ph_remlog.stats.diff
+echo "============================================================"
 
 /bin/rm -f tmp

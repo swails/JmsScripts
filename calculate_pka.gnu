@@ -11,5 +11,5 @@ set xl "pH" font 'calibri,20'
 set yl "Fraction Protonated" font 'calibri,20'
 #unset key
 
-plot 'ASP_titration_curve.dat' w p pt 4 ps 2 title '', f(x) w l lw 2 lt -1 title sprintf('pK_a = %.4g',-log10(a))
+plot 'ASP_titration_curve.dat' w p pt 4 ps 2 title '', f(x) w l lw 2 lt -1 title sprintf('pK_a = %.4f',-log10(a))
 

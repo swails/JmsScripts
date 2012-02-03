@@ -108,8 +108,8 @@ end if
 NUM_TRIALS = 0
 i = 1
 do
-	read(7,FMT='(F8.5)',eor=100,advance='NO') holder
 	NUM_TRIALS = NUM_TRIALS + 1
+	read(7,FMT='(F8.5)',eor=100,advance='NO') holder
 	i = i + 1
 end do
 100 rewind(7)

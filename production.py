@@ -9,7 +9,7 @@ that as the prefix for all other output files. This program will append
 
 from pbsjob import PBS_Script
 import amber_simulations as am_sim
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 import os, sys
 
 class ProductionError(Exception): pass
@@ -18,77 +18,105 @@ usage = '%prog [options] <prmtop> <inpcrd> [<cpin>]'
 
 parser = OptionParser(usage=usage)
 
-parser.add_option('--label', dest='label', default='prod',
-                  help='Label to apply after the prefix to output files. ' +
-                  'Default "prod".')
-parser.add_option('--nstlim', dest='nstlim', default=50000, type='int',
-                  help='Number of MD steps to run. Default 50000')
-parser.add_option('--igb', dest='igb', default=5, type='int',
-                  help='GB model to run for non-periodic systems. Must be ' +
-                  '1, 2, 5, 7, or 8. Default 5')
-parser.add_option('--restrain', dest='rst_wt', default=0, type='float',
-                  help='Restraint weight to put on restraint mask. 0 means ' +
-                  'no restraint. Default 0.')
-parser.add_option('--temp', dest='temp0', type='float', default=300.0,
+group = OptionGroup(parser, 'Timing Options',
+                    'These options control how long the simulation is run')
+group.add_option('--nstlim', dest='nstlim', default=50000, type='int',
+                 help='Number of MD steps to run. Default 50000')
+group.add_option('--print-frequency', dest='print_frequency', default=1000,
+                 type='int', help='How frequently to print energies to ' +
+                 'mdout, coordinates to trajectory, and 1/10th of the ' +
+                 'frequency to print a restart file. Default 1000')
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'Temperature/Pressure Control',
+                    'These options control the barostat and thermostat options')
+group.add_option('--temp', dest='temp0', type='float', default=300.0,
                   help='Final target temperature. Default 300.0')
-parser.add_option('--thermostat', dest='thermostat', default='berendsen',
+group.add_option('--thermostat', dest='thermostat', default='berendsen',
                   help="Thermostat to use. Allowed values are 'berendsen' " +
                   "and 'langevin'. Default 'berendsen'.")
-parser.add_option('--t-couple', dest='t_couple', default=10.0, type='float',
+group.add_option('--t-couple', dest='t_couple', default=10.0, type='float',
                   help='Temperature coupling parameter (tautp for berendsen, ' +
                   'gamma_ln for langevin). Default 10.0')
-parser.add_option('--barostat', dest='barostat', default='none',
+group.add_option('--barostat', dest='barostat', default='none',
                   help="Barostat to use. Allowed values are 'berendsen' and " +
                   "'none'. Default 'none'.")
-parser.add_option('--p-couple', dest='p_couple', default=10.0, type='float',
+group.add_option('--p-couple', dest='p_couple', default=10.0, type='float',
                   help='Pressure coupling parameter (taup). Default 10.0')
-parser.add_option('--print-frequency', dest='print_frequency', default=1000,
-                  type='int', help='How frequently to print energies to ' +
-                  'mdout, coordinates to trajectory, and 1/10th of the ' +
-                  'frequency to print a restart file. Default 1000')
-parser.add_option('--restraint-mask', dest='rst_mask', default='@CA,C,O,N',
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'Implicit Solvent Options',
+                    'These are the implicit solvation options')
+group.add_option('--igb', dest='igb', default=5, type='int',
+                 help='GB model to run for non-periodic systems. Must be ' +
+                 '1, 2, 5, 7, or 8. Default 5')
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'Restraint Options',
+                    'These options control cartesian restraints to be applied')
+group.add_option('--restrain', dest='rst_wt', default=0, type='float',
+                  help='Restraint weight to put on restraint mask. 0 means ' +
+                  'no restraint. Default 0.')
+group.add_option('--restraint-mask', dest='rst_mask', default='@CA,C,O,N',
                   help='Restraint mask for restrained minimization. Default ' +
                   '"@CA,C,O,N"')
-parser.add_option('--constpH', dest='solvph', default=7.0, type='float',
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'Constant pH Options', 'These options control ' +
+                    'the constant pH MD settings if a CPIN is provided')
+group.add_option('--constpH', dest='solvph', default=7.0, type='float',
                   help='pH value to run constant pH simulation. Default 7.0.')
-parser.add_option('--ntcnstph', dest='ntcnstph', default=5, type='int',
+group.add_option('--ntcnstph', dest='ntcnstph', default=5, type='int',
                   help='Frequency of protonation change attempts. Default ' +
                   'every 5 time steps.')
-parser.add_option('--ntrelax', dest='ntrelax', default=500, type='int',
+group.add_option('--ntrelax', dest='ntrelax', default=500, type='int',
                   help='The number of steps to relax explicit solvent after ' +
                   'a protonation change. Default 500.')
-parser.add_option('--nproc', dest='nproc', default='1',
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'File Naming Options', 'These options control ' +
+                    'the file names generated by the simulation')
+group.add_option('--label', dest='label', default='prod',
+                  help='Label to apply after the prefix to output files. ' +
+                  'Default "prod".')
+parser.add_option_group(group)
+
+group = OptionGroup(parser, 'PBS Options', 'These are the options given to ' +
+                    'the scheduler when the job is submitted or the jobfile ' +
+                    'is written')
+group.add_option('--nproc', dest='nproc', default='1',
                   help='Number of processors to use. Fields are ,-delimited ' +
                   'and must fit into the processor-count format required by ' +
                   'the local PBS configuration')
-parser.add_option('--walltime', dest='walltime', default='30:00',
+group.add_option('--walltime', dest='walltime', default='30:00',
                   help='How long to ask PBS for resources. Default 30:00')
-parser.add_option('--name', dest='job_name', default=None,
+group.add_option('--name', dest='job_name', default=None,
                   help='Name to give to PBS job. None will give a random ' +
                   'Final Fantasy character name.')
-parser.add_option('--delay', dest='jobid', default=None,
+group.add_option('--delay', dest='jobid', default=None,
                   help='If present, will delay the present job until after ' +
                   'the give job ID is complete successfully')
-parser.add_option('--force', dest='ask', default=True, action='store_false',
+group.add_option('--force', dest='ask', default=True, action='store_false',
                   help='Do not ask confirmation before submitting.')
-parser.add_option('--ask', dest='ask', action='store_true',
+group.add_option('--ask', dest='ask', action='store_true',
                   help='Ask confirmation before submitting. Overrides ' +
                   'previous --force. Default behavior.')
-parser.add_option('--print-jobfile', dest='jobfile', default=None,
+group.add_option('--print-jobfile', dest='jobfile', default=None,
                   help='Print the PBS jobfile instead of submitting it ' +
                   'directly to the queue. Providing no name will bypass this ' +
                   'step.')
-parser.add_option('--pbs-nproc', dest='pbs_nproc', default=None,
+group.add_option('--pbs-nproc', dest='pbs_nproc', default=None,
                   help='In the case that --nproc is not applicable to allowed' +
                   ' resource requests, this will be used for PBS instead.')
-parser.add_option('--queue', dest='pbs_queue', default=None,
+group.add_option('--queue', dest='pbs_queue', default=None,
                   help='To override the default queue in ~/.pbsdefaults')
-parser.add_option('--pbs-template', dest='pbs_template',
+group.add_option('--pbs-template', dest='pbs_template',
                   default=os.path.join(os.getenv('HOME'), '.pbsdefaults'),
                   help='PBS template file to use for job. Defaults to ' +
                   '~/.pbsdefaults')
-parser.add_option('--no-pbs', dest='pbs', default=True, action='store_false',
+group.add_option('--no-pbs', dest='pbs', default=True, action='store_false',
                   help='Just run using os.system(), not via PBS')
+parser.add_option_group(group)
 
 (opt, args) = parser.parse_args()
 

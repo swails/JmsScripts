@@ -120,7 +120,7 @@ group.add_option('--pbs-template', dest='pbs_template',
                   '~/.pbsdefaults')
 group.add_option('--no-pbs', dest='pbs', default=True, action='store_false',
                   help='Just run using os.system(), not via PBS')
-group.add_option_group(group)
+parser.add_option_group(group)
 
 (opt, args) = parser.parse_args()
 

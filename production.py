@@ -28,6 +28,8 @@ group.add_option('--print-frequency', dest='print_frequency', default=1000,
                  'frequency to print a restart file. Default 1000')
 group.add_option('--dt', dest='dt', default=0.002, type='float',
                  help='Time step in fs. Default %default')
+group.add_option('--cuda', dest='cuda', default=False, action='store_true',
+                  help='Run this on pmemd.CUDA')
 parser.add_option_group(group)
 
 group = OptionGroup(parser, 'Temperature/Pressure Control',
@@ -118,7 +120,7 @@ group.add_option('--pbs-template', dest='pbs_template',
                   '~/.pbsdefaults')
 group.add_option('--no-pbs', dest='pbs', default=True, action='store_false',
                   help='Just run using os.system(), not via PBS')
-parser.add_option_group(group)
+group.add_option_group(group)
 
 (opt, args) = parser.parse_args()
 
@@ -178,11 +180,15 @@ for n in nproc:
 
 # Set up the command string
 
-if parallel: 
-   if len(args) == 2: prog_str = '%s pmemd.MPI -O ' % mpi_cmd
+if parallel:
+   if len(args) == 2:
+      if opt.cuda: prog_str = '%s pmemd.cuda.MPI -O' % mpi_cmd
+      else: prog_str = '%s pmemd.MPI -O ' % mpi_cmd
    else: prog_str = '%s sander.MPI -O ' % mpi_cmd
 else: 
-   if len(args) == 2: prog_str = 'pmemd -O '
+   if len(args) == 2:
+      if opt.cuda: 'pmemd.cuda -O'
+      else: prog_str = 'pmemd -O '
    else: prog_str = 'sander -O'
 
 if opt.pbs:

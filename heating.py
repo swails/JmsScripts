@@ -20,6 +20,8 @@ group = OptionGroup(parser, 'Timing Options',
                     'These options control how long the simulation is run')
 group.add_option('--nstlim', dest='nstlim', default=50000, type='int',
                   help='Number of heating steps to run. Default 50000')
+group.add_option('--dt', dest='dt', default=0.002, type='float',
+                 help='Time step in fs. Default %default')
 parser.add_option_group(group)
 
 group.add_option('--igb', dest='igb', default=5, type='int',
@@ -121,7 +123,8 @@ heat_input = am_sim.Heating(amsys, nstlim=opt.nstlim, igb=opt.igb,
                             thermostat_param=opt.t_couple,
                             ntpr=opt.print_frequency,
                             ntwx=opt.print_frequency,
-                            ntwr=opt.print_frequency * 10)
+                            ntwr=opt.print_frequency * 10,
+                            dt=opt.dt)
 
 # Get the prefix
 prefix = os.path.splitext(args[0])[0]

@@ -26,6 +26,8 @@ group.add_option('--print-frequency', dest='print_frequency', default=1000,
                  type='int', help='How frequently to print energies to ' +
                  'mdout, coordinates to trajectory, and 1/10th of the ' +
                  'frequency to print a restart file. Default 1000')
+group.add_option('--dt', dest='dt', default=0.002, type='float',
+                 help='Time step in fs. Default %default')
 parser.add_option_group(group)
 
 group = OptionGroup(parser, 'Temperature/Pressure Control',
@@ -143,7 +145,7 @@ if len(args) == 2:
                                   barostat_param=opt.p_couple,
                                   ntpr=opt.print_frequency,
                                   ntwx=opt.print_frequency,
-                                  ntwr=opt.print_frequency * 10)
+                                  ntwr=opt.print_frequency * 10, dt=opt.dt)
 else:
    prod_input = am_sim.ConstantpH(amsys, nstlim=opt.nstlim, igb=opt.igb,
                                   restrained=bool(opt.rst_wt),rst_wt=opt.rst_wt,
@@ -156,7 +158,7 @@ else:
                                   ntwx=opt.print_frequency,
                                   ntwr=opt.print_frequency * 10,
                                   ntcnstph=opt.ntcnstph, ntrelax=opt.ntrelax,
-                                  solvph=opt.solvph)
+                                  solvph=opt.solvph, dt=opt.dt)
 
 # Get the prefix
 prefix = os.path.splitext(args[0])[0]

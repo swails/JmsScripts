@@ -1,12 +1,10 @@
 
-module string_manip
-
-! make everything in this module private
-private
+module string_module
 
 implicit none
 
-! Define those subroutines that can be used publicly
+private
+
 public get_num_tokens, get_token
 
 contains
@@ -129,4 +127,4 @@ subroutine get_token(string, num, token)
 
 end subroutine get_token
 
-end module string_manip
+end module string_module

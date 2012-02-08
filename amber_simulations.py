@@ -159,7 +159,7 @@ class Heating(BaseType):
    def __init__(self, amber_sys, nstlim=1000, igb=5, restrained=True,
                 rst_wt=2.0, rst_mask='@CA,C,O,N', temp0=300.0, tempi=10.0,
                 slow=False, thermostat='langevin', thermostat_param=5.0,
-                ntpr=1000, ntwx=1000, ntwr=10000):
+                ntpr=1000, ntwx=1000, ntwr=10000, dt=0.002):
       """ Sets up a heating input file """
       # Type checking
       if type(nstlim).__name__ != 'int':
@@ -190,7 +190,7 @@ class Heating(BaseType):
       self.mdin.change('cntrl', 'ntwx', ntwx)
       self.mdin.change('cntrl', 'ntwr', ntwr)
       self.mdin.change('cntrl', 'nstlim', nstlim)
-      self.mdin.change('cntrl', 'dt', 0.002)
+      self.mdin.change('cntrl', 'dt', dt)
       if thermostat.lower() == 'langevin': 
          self.mdin.change('cntrl', 'ntt', 3) 
          self.mdin.change('cntrl', 'gamma_ln', thermostat_param)
@@ -222,7 +222,7 @@ class Production(BaseType):
                 rst_wt=2.0, rst_mask='@CA,C,O,N', temp0=300.0,
                 thermostat='langevin', thermostat_param=5.0, barostat=None,
                 barostat_param=5.0, ntpr=1000, ntwr=10000, ntwx=1000,
-                restart=True):
+                restart=True, dt=0.002):
       # Create the mdin instance
       self.mdin = mdin(self.program) 
       # Do we have velocities?
@@ -260,7 +260,7 @@ class Production(BaseType):
       self.mdin.change('cntrl', 'ntwx', ntwx)
       self.mdin.change('cntrl', 'ntwr', ntwr)
       self.mdin.change('cntrl', 'nstlim', nstlim)
-      self.mdin.change('cntrl', 'dt', 0.002)
+      self.mdin.change('cntrl', 'dt', dt)
       if thermostat.lower() == 'langevin':
          self.mdin.change('cntrl', 'ntt', 3)
          self.mdin.change('cntrl', 'gamma_ln', thermostat_param)
@@ -286,12 +286,13 @@ class ConstantpH(Production):
                 rst_wt=2.0, rst_mask='@CA,C,O,N', temp0=300.0,
                 thermostat='langevin', thermostat_param=5.0, barostat=None,
                 barostat_param=5.0, ntpr=1000, ntwr=10000, ntwx=1000,
-                restart=True, ntcnstph=5, ntrelax=500, solvph=7.0):
+                restart=True, ntcnstph=5, ntrelax=500, solvph=7.0, dt=0.002):
 
 
       Production.__init__(self, amber_sys, nstlim, igb, restrained, rst_wt, 
                           rst_mask, temp0, thermostat, thermostat_param,
-                          barostat, barostat_param, ntpr, ntwr, ntwx, restart)
+                          barostat, barostat_param, ntpr, ntwr, ntwx, restart,
+                          dt)
       
       if amber_sys.periodic():
          self.mdin.change('cntrl', 'icnstph', 2)

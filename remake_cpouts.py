@@ -101,7 +101,7 @@ def main():
 
    while records[0]:
       for rec in records:
-         rec.write_to(files[rec.pH])
+         if rec: rec.write_to(files[rec.pH])
       records = [cpout.get_next_record() for cpout in cpout_list]
 
    print 'Done!'

@@ -24,6 +24,8 @@ group.add_option('--dt', dest='dt', default=0.002, type='float',
                  help='Time step in fs. Default %default')
 parser.add_option_group(group)
 
+group = OptionGroup(parser, 'Implicit solvent options',
+                    'These options control the Implicit Solvent model used')
 group.add_option('--igb', dest='igb', default=5, type='int',
                   help='GB model to run for non-periodic systems. Must be ' +
                   '1, 2, 5, 7, or 8. Default 5')

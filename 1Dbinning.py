@@ -63,10 +63,10 @@ normalize = opts.normalize
 script_name = opts.script_name
 delimiter = opts.delimiter
 column = opts.column
-phipsibins = []                    # the list of all bins in both directions (dimension bins)
-data = []                          # array of 2-element arrays that contains every pair of points
-discarded = 0                      # count number of points that have been discarded
-pointweight = 1.0                  # how much a single point is worth. 1 if not normalized.
+phipsibins = []   # the list of all bins in both directions (dimension bins)
+data = []         # array of 2-element arrays that contains every pair of points
+discarded = 0     # count number of points that have been discarded
+pointweight = 1.0 # how much a single point is worth. 1 if not normalized.
 
 # read in data, check for existing file
 if data_file == 'none':
@@ -99,7 +99,7 @@ if (binrange[0] == 0 and binrange[1] == 0):
 
 # Set up default number of bins according to "Scott's Choice"
 if bins == 0:
-   inttmp = 3.5 * utilities.stdev(data,'no') / float(len(data)) ** (1/3)
+   inttmp = 3.5 * utilities.stdev(data,'no') / float(len(data)) ** (1/3.0)
    bins = int(math.ceil(binrange[1] - binrange[0]/inttmp))
 
 if normalize: 

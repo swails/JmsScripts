@@ -11,8 +11,8 @@ parser = OptionParser(usage='%prog [Options] file1 [file2 [file3 [... ] ] ]',
                              'of data. No input file means read from STDIN')
 parser.add_option('-c', '--column', dest='col', type='int', default=1,
                   help='Which column of data to analyze (Default %default)')
-parser.add_option('-d', '--delimiter', dest='delim', default=' ',
-                  help='What to consider a column delimiter. Default is a space')
+parser.add_option('-d', '--delimiter', dest='delim', default=None,
+              help='What to consider a column delimiter. Default is whitespace')
 parser.add_option('-e', '--exclude-inf', default=False, action='store_true',
                   dest='exclude_inf', help='Exclude Infinities from average.')
 group = OptionGroup(parser, 'Verbose options', 'These options control how ' +
@@ -45,34 +45,34 @@ if args:
       datafile = open(fname, 'r')
       
       for line in datafile:
-         words = line.split(opt.delim)
+         if opt.delim: words = line.split(opt.delim)
+         else: words = line.split()
          try:
             if opt.exclude_inf and is_inf.search(words[opt.col-1]):
                raise ValueError('Infinity found (this should be caught)')
             val = float(words[opt.col - 1])
          except ValueError: continue
          except IndexError: continue
-         else:
-            run_sum += val
-            run_sum2 += val * val
-            num_vals += 1
+         run_sum += val
+         run_sum2 += val * val
+         num_vals += 1
       
       datafile.close()
 
 else: # read from stdin
 
    for line in sys.stdin:
-      words = line.split(opt.delim)
+      if opt.delim: words = line.split(opt.delim)
+      else: words = line.split()
       try:
          if opt.exclude_inf and is_inf.search(words[opt.col-1]):
             raise ValueError('Infinity found (this should be caught)')
          val = float(words[opt.col - 1])
       except ValueError: continue
       except IndexError: continue
-      else:
-         run_sum += val
-         run_sum2 += val
-         num_vals += 1
+      run_sum += val
+      run_sum2 += val * val
+      num_vals += 1
 
 # Compute avg, stdev
 ave = run_sum / num_vals

@@ -205,6 +205,7 @@ def full_info(lines, outfile):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def main():
+   import signal
    parser = OptionParser(usage='%prog [Options] stat_file1 [stat_file2 ...]')
    parser.add_option('-o', '--output', dest='output', default='results.csv',
                 help='Final CSV file with total statistics. [Default %default]')
@@ -214,6 +215,14 @@ def main():
                    'Default: full description')
    opt, args = parser.parse_args()
 
+   # Interrupt handler
+   def sigint_handle(*args, **kwargs):
+      print ''
+      parser.print_help()
+      sys.exit(1)
+
+   signal.signal(signal.SIGINT, sigint_handle)
+   
    if not opt.output.endswith('.csv'): opt.output += '.csv'
 
    if opt.info == None:

@@ -23,8 +23,8 @@ def excepthook(exception_type, exception_value, tb):
    """
    import traceback
    if debug_printlevel > 0: traceback.print_tb(tb)
-   sys.stderr.write('%s: %s\n' % (exception_type.__name__, exception_value))
-   sys.stderr.write('Goodbye.\n')
+   sys.stderr.write('# %s: %s\n' % (exception_type.__name__, exception_value))
+   sys.stderr.write('# Goodbye.\n')
    sys.exit(1)
 
 sys.excepthook = excepthook # replace sys.excepthook with my definition above
@@ -52,15 +52,15 @@ group.add_option('-n', '--no-normalize', default=False, action='store_true',
                  help='Do not normalize the data', dest='normalize')
 group.add_option('--min', dest='min', default=None, metavar='FLOAT',
                  help='Minimum value for histogram -- defaults to minimum of ' +
-                 'data set')
+                 'data set', type='float')
 group.add_option('--max', dest='max', default=None, metavar='FLOAT',
                  help='Maximum value for histogram -- defaults to maximum of ' +
-                 'data set')
+                 'data set', type='float')
 group.add_option('-s', '--spacing', dest='spacing', metavar='FLOAT',
-                 default=None, help='Spacing between histograms.')
+                 default=None, help='Spacing between histograms.', type='float')
 group.add_option('-b', '--number-of-bins', dest='bins', metavar='FLOAT',
                  default=None, help='Number of bins. Cannot be used with ' +
-                 '--spacing')
+                 '--spacing', type='int')
 parser.add_option_group(group)
 
 group = OptionGroup(parser, 'Output Options', 'Specify output variables')
@@ -92,6 +92,7 @@ if opt.temp <= 0.0:
    raise WeightedHistogramError('No (or bad) temperature specified! ' +
          'Temperature must be > 0 K')
 KbT = KB * opt.temp
+beta = 1.0 / KbT
 
 # Make sure our histogramming defaults are OK
 if opt.spacing and opt.bins:
@@ -111,6 +112,8 @@ density = open(opt.density, 'r')
 num_density_bins = 0
 while density.readline(): num_density_bins += 1
 density.seek(0)
+if opt.debug:
+   print >> sys.stderr, '# I found %d density bins' % num_density_bins
 
 # Initialize our numpy arrays
 density_of_states = np.zeros((num_density_bins,2))
@@ -121,10 +124,12 @@ for i, line in enumerate(density):
    words = line.split()
    density_of_states[i][0] = float(words[0])
    density_of_states[i][1] = float(words[1])
-density_of_states.minE = density_of_states[0][0]
-density_of_states.maxE = density_of_states[num_density_bins-1][0]
-density_of_states.interval = ((density_of_states.maxE - density_of_states.maxE)/
-                               num_density_bins)
+minE = density_of_states[0][0]
+maxE = density_of_states[num_density_bins-1][0]
+intervalE = ((maxE - minE)/float(num_density_bins))
+if opt.debug:
+   print >> sys.stderr, '# Max is %f\n# Min is %f\n# Interval is %f' % (
+         minE, maxE, intervalE)
 
 # Now read in all of the properties and load them into numpy arrays
 property = open(opt.property, 'r')
@@ -150,7 +155,7 @@ for i in range(1,len(density_of_states)):
    sum2 += math.exp( density_of_states[i][1]-density_of_states[0][1] )
 denominator = log_a0 + math.log(1+sum2)
 
-if opt.debug: print >> sys.stderr, 'Log of denominator is: %f' % denominator
+if opt.debug: print >> sys.stderr, '# Log of denominator is: %f' % denominator
 
 # Now we have to set up the property's histograms. We will define the ranges
 # using defaults if the user didn't provide us information
@@ -168,11 +173,11 @@ if opt.debug: print >> sys.stderr, 'Log of denominator is: %f' % denominator
 # property histogram
 
 # Determine the max/min
-if opt.min:
+if opt.min != None:
    mymin = opt.min
 else:
    mymin = min([prop[1] for prop in property_data])
-if opt.max:
+if opt.max != None:
    mymax = opt.max
 else:
    mymax = max([prop[1] for prop in property_data])
@@ -180,12 +185,12 @@ else:
 # Make the max and min nice if we set the defaults
 power = int(math.log10(abs(mymax)))
 if power > 1: power = 1
-if not opt.min:
+if opt.min != None:
    mymin = math.floor(mymin*10**power) / 10**power
-   if opt.debug: print >> sys.stderr, 'Default minimum is %f' % mymin
-if not opt.max:
+   if opt.debug: print >> sys.stderr, '# Default minimum is %f' % mymin
+if opt.max != None:
    mymax = math.ceil(mymin*10**power) / 10**power
-   if opt.debug: print >> sys.stderr, 'Default maximum is %f' % mymax
+   if opt.debug: print >> sys.stderr, '# Default maximum is %f' % mymax
 
 binrange = mymax - mymin
 
@@ -216,32 +221,33 @@ omitted_nums = 0
 for i, item in enumerate(property_data):
    # Determine which energy bin we are (add lower than minimum to 0 bin and
    # higher than maximum to last bin)
-   if item[0] < density_of_states.minE:
+   if item[0] < minE:
       energy_bin = density_of_states[0]
-   elif item[0] > density_of_states.maxE:
+   elif item[0] > maxE:
       energy_bin = density_of_states[len(density_of_states)-1]
    else:
-      energy_bin = density_of_states[int((item[0]-density_of_states.minE)/
-                                          density_of_states.interval)]
-   if opt.debug:
-      print >> sys.stderr, 'Energy diff is %f' % (energy_bin[0]-item[0])
-   wt = math.exp(energy_bin[1] + KbT*energy_bin[0] - denominator)
+      energy_bin = density_of_states[int((item[0]-minE)/intervalE)]
+   wt = math.exp(energy_bin[1] - beta*energy_bin[0] - denominator)
    normal_fac += wt
 
    # Now add this to the property histogram
    if item[1] > mymax or item[1] < mymin:
+      if opt.debug: print >> sys.stderr, '# Omitting point %f' % item[1]
       omitted_nums += 1
       continue
-   prop_bin = (item[1]-mymin)//spacing
+   try:
+      prop_bin = (item[1]-mymin)//spacing
+   except IndexError:
+      print 'Energy is ', item[1]
    prop_hist[prop_bin] += wt
 
 print >> sys.stderr, '# Done histogramming! Normalization factor is %f' % (
          normal_fac)
 if opt.normalize:
    print >> sys.stderr, '# Normalizing...'
-   for i, val in enumerate(prop_bin): prop_bin[i] = val / normal_fac
+   for i, val in enumerate(prop_hist): prop_hist[i] = val / normal_fac
 else:
    print >> sys.stderr, '# Not normalizing'
 
-for i, val in range(prop_bin):
+for i, val in enumerate(prop_hist):
    output.write('%f %f\n' % (mymin+i*spacing, val))

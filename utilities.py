@@ -30,11 +30,12 @@
 # getresdecmp: returns the amino acid decomposition of a given prmtop in an
 #              alphabeitcal ordered array
 # minmax: returns the maximum and minimum of a data set
+# add_log: adds logs of two numbers and stores it as the log of the sum
 #
 ################################################################################
 
 from chemistry.amber.readparm import AmberParm
-import os
+import os, math
 
 def which(program):
    def is_exe(fpath):
@@ -274,3 +275,9 @@ def getresdecmp_pdb(file):
 
 def minmax(list):
    return [min(list),max(list)]
+
+def add_log(a, b):
+   """ Adds log(a) + log(b) and returns log(a+b) """
+   # Make sure a is the largest and b is the smallest
+   a, b = max(a,b), min(a,b)
+   return a + math.log(1 + math.exp(b-a))

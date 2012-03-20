@@ -9,6 +9,7 @@ based on the input temperature.
 from optparse import OptionParser, OptionGroup
 import os, sys, math
 import numpy as np
+from utilities import add_log
 
 KB = 0.0019872041
 debug_printlevel = 0
@@ -48,7 +49,7 @@ group.add_option('--debug', default=False, dest='debug', action='store_true',
 parser.add_option_group(group)
 
 group = OptionGroup(parser, 'Histogram Options', 'Specify histogram settings')
-group.add_option('-n', '--no-normalize', default=False, action='store_true',
+group.add_option('-n', '--no-normalize', default=True, action='store_false',
                  help='Do not normalize the data', dest='normalize')
 group.add_option('--min', dest='min', default=None, metavar='FLOAT',
                  help='Minimum value for histogram -- defaults to minimum of ' +
@@ -184,11 +185,11 @@ else:
 
 # Make the max and min nice if we set the defaults
 power = int(math.log10(abs(mymax)))
-if power > 1: power = 1
-if opt.min != None:
+if power > 1: power = 0
+if opt.min == None:
    mymin = math.floor(mymin*10**power) / 10**power
    if opt.debug: print >> sys.stderr, '# Default minimum is %f' % mymin
-if opt.max != None:
+if opt.max == None:
    mymax = math.ceil(mymin*10**power) / 10**power
    if opt.debug: print >> sys.stderr, '# Default maximum is %f' % mymax
 
@@ -211,6 +212,10 @@ else:
 
 # Load the property histogram with energies as the first element in each row
 prop_hist = np.zeros(nbins)
+if opt.debug:
+   print >> sys.stderr, '# Property statistics:'
+   print >> sys.stderr, '#       Max: %f\n#       Min: %f\n#  Interval: %f' % (
+         mymax, mymin, spacing)
 
 normal_fac = 0 # normalization factor
 omitted_nums = 0
@@ -227,8 +232,8 @@ for i, item in enumerate(property_data):
       energy_bin = density_of_states[len(density_of_states)-1]
    else:
       energy_bin = density_of_states[int((item[0]-minE)/intervalE)]
-   wt = math.exp(energy_bin[1] - beta*energy_bin[0] - denominator)
-   normal_fac += wt
+   wt = energy_bin[1] - beta*energy_bin[0] - denominator
+   normal_fac = add_log(normal_fac, wt)
 
    # Now add this to the property histogram
    if item[1] > mymax or item[1] < mymin:
@@ -239,15 +244,17 @@ for i, item in enumerate(property_data):
       prop_bin = (item[1]-mymin)//spacing
    except IndexError:
       print 'Energy is ', item[1]
-   prop_hist[prop_bin] += wt
+   prop_hist[prop_bin] = add_log(wt, prop_hist[prop_bin])
 
 print >> sys.stderr, '# Done histogramming! Normalization factor is %f' % (
          normal_fac)
+# Right now, we have the normal factor and the prop_hist both in log-format
 if opt.normalize:
    print >> sys.stderr, '# Normalizing...'
-   for i, val in enumerate(prop_hist): prop_hist[i] = val / normal_fac
+   for i, val in enumerate(prop_hist): prop_hist[i] = math.exp(val - normal_fac)
 else:
    print >> sys.stderr, '# Not normalizing'
+   for i, val in enumerate(prop_hist): prop_hist[i] = math.exp(val)
 
 for i, val in enumerate(prop_hist):
    output.write('%f %f\n' % (mymin+i*spacing, val))

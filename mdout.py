@@ -31,7 +31,7 @@ class AmberMdout(object):
 
    #================================================
 
-   def __init__(self, filename):
+   def __init__(self, filename, numexchg=0):
       # Make sure our file exists first of all
       if not os.path.exists(filename):
          raise MdoutError('%s does not exist!' % filename)
@@ -57,7 +57,12 @@ class AmberMdout(object):
       # Determine how many steps we've done
       if (self.is_min and 'maxcyc' in keys)or(self.is_md and 'nstlim' in keys):
          if self.is_min: self.num_steps = self.properties['maxcyc']
-         if self.is_md: self.num_steps = self.properties['nstlim']
+         if self.is_md:
+            self.num_steps = self.properties['nstlim']
+            if 'numexchg' in keys:
+               self.num_steps *= self.properties['numexchg']
+            elif numexchg:
+               self.num_steps *= numexchg
          # If maxcyc and nstlim are in properties, then ntpr HAS to be
          self.num_terms = self.num_steps / self.properties['ntpr'] + 1
          # For restart, we don't have that extra term at the beginning

@@ -95,13 +95,15 @@ class pHStatFile(object):
 
 def curve_with_hillcoef(ph, pka, hillcoef):
    """ Callable function with a variable Hill coefficient """
-   return hillcoef * ph - pka
+#  return hillcoef * ph - pka
+   return 1-1/(1+10**(hillcoef*(pka-ph)))
 
 #-------------------------------------------------------------------------------
 
 def curve_no_hillcoef(ph, pka):
    """ Callable function with a fixed Hill coefficient of 1 """
-   return ph - pka
+#  return ph - pka
+   return 1-1/(10**(pka-ph)+1)
 
 #-------------------------------------------------------------------------------
 
@@ -116,20 +118,23 @@ def hillize(frac_prot):
 
 #-------------------------------------------------------------------------------
 
-def main(file_list, outname, fit_func):
+def main(file_list, outname, fit_func, starting_guess):
    """
    This function is the main driver. It fits the data to the given fit_func (it
    should be one of the Callable functions defined above).
    
    Variable explanations:
-      file_list:     List of input files with running titration data
-      outname:       File prefix to dump all of the statistics to
-      fit_func:      The function we're fitting to
+      file_list:      List of input files with running titration data
+      outname:        File prefix to dump all of the statistics to
+      fit_func:       The function we're fitting to
+      starting_guess: The starting guess for the parameters
 
    All error checking should be done on this input before calling main, or
    suffer the exceptions! Output files are named "outname_RES_NUM.dat"
    """
    
+   class StopWhile(Exception): pass
+
    xdata = np.zeros(len(file_list))
    ydata = np.zeros(len(file_list))
    # Convert the file_list into a list of pHStatFile objects if it's not yet
@@ -140,7 +145,7 @@ def main(file_list, outname, fit_func):
    # Build the list of output files
    output_files = {}
    for resid in file_list[0].list_of_residues:
-      output_files[resid] = open('%s_%s.dat' % (outname, resid), 'w')
+      output_files[resid] = open('%s_%s.dat' % (outname, resid), 'w', 0)
   
    # Generate the x-data (the pHs). This never changes
    for i, frec in enumerate(file_list): xdata[i] = frec.pH
@@ -148,42 +153,50 @@ def main(file_list, outname, fit_func):
    # Now loop through all of our data
    numres = 0      # Number of residues we've looped through so far
    numframes = 0   # Number of frames we've looped through so far
-   while True:
-      numres += 1
-      # If we've looped through all of our residues, then we know we've hit the
-      # next frame, so update our counters accordingly
-      if numres % len(output_files) == 0:
-         numframes += 1
-         numres = 1
-      # Zero out the y-data, because we're about to fill it up
-      ydata = np.zeros(len(file_list))
-      for i, frec in enumerate(file_list):
-         stuff = frec.get_next_residue()
-         if not stuff: break
-         resname, resnum, ydata[i] = stuff
-         # Make the y-data into a hill-plottable form
-         ydata[i] = hillize(ydata[i])
-      if not stuff: break
-      try:
-         params, covariance = optimize.curve_fit(fit_func, xdata, ydata)
-      except (RuntimeError, ValueError):
-         # If we can't fit the data (expected at the very beginning), just go on
-         continue
-      # Now write out the data as: Frame # pKa1 std.dev. [hill.coef. std.dev.]
-      # but only write out if we actually got a pKa this time around
-      ofile = output_files['%s_%d' % (resname, resnum)]
-      line = '%d ' % numframes
-      try:
-         for i, param in enumerate(params):
-            line += '%.4f %.4f ' % (param, math.sqrt(covariance[i][i]))
-         ofile.write(line + os.linesep)
-      except ValueError:
-         continue
 
+   # This is the easiest way to bust out of an infinite loop -- Engulf the whole
+   # thing in a big try-except, and catch a specialized exception.
+   try:
+      while True:
+         numres += 1
+         # If we've looped through all of our residues, then we know we've hit
+         # the next frame, so update our counters accordingly
+         if numres % len(output_files) == 0:
+            numframes += 1
+            numres = 1
+         # Zero out the y-data, because we're about to fill it up
+         ydata = np.zeros(len(file_list))
+         for i, frec in enumerate(file_list):
+            stuff = frec.get_next_residue()
+            if not stuff or stuff == (None,None,None): raise StopWhile
+            resname, resnum, ydata[i] = stuff
+            # Make the y-data into a hill-plottable form
+         try:
+            params, cov = optimize.curve_fit(fit_func, xdata, ydata, starting_guess)
+         except (RuntimeError, ValueError):
+            # If we can't fit the data (expected at the very beginning), just go on
+            continue
+         # Now write out the data as: Frame # pKa1 std.dev. [hill.coef. std.dev.]
+         # but only write out if we actually got a pKa this time around
+         ofile = output_files['%s_%d' % (resname, resnum)]
+         line = '%d ' % numframes
+         try:
+            for i, param in enumerate(params):
+               try:
+                  line += '%.4f %.4f ' % (param, math.sqrt(cov[i][i]))
+               except TypeError: # Catch if covariance is infinite
+                  line += '%.4f %.4f ' % (param, cov)
+            ofile.write(line + os.linesep)
+         except ValueError:
+            continue
+   except StopWhile: pass
+   
 if __name__ == '__main__':
    """ Main program """
    from optparse import OptionParser, OptionGroup
+   from time import time
    
+   start = time()
    usage = '%prog [Options] <pH_data1> <pH_data2> ... <pH_dataN>'
    epilog = ('This program will generate running pKa values with error bars ' +
              'taken from the quality of the fit.')
@@ -223,7 +236,10 @@ if __name__ == '__main__':
          sys.exit(1)
    # Select our fitting function
    fit_func = curve_no_hillcoef
+   starting_guess = 1
    if opt.hill:
       fit_func = curve_with_hillcoef
+      starting_guess = (1,1)
    # Now call our main function
-   main(args, opt.outprefix, fit_func)
+   main(args, opt.outprefix, fit_func, starting_guess)
+   print 'Finished: I took %.3f minutes' % ((time()-start)/60)

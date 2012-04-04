@@ -152,9 +152,14 @@ for i, line in enumerate(property):
 
 log_a0 = density_of_states[0][1]
 sum2 = 0
+#for i in range(1,len(density_of_states)):
+#   sum2 += math.exp( density_of_states[i][1]-density_of_states[0][1] )
+#denominator = log_a0 + math.log(1+sum2)
+
 for i in range(1,len(density_of_states)):
-   sum2 += math.exp( density_of_states[i][1]-density_of_states[0][1] )
-denominator = log_a0 + math.log(1+sum2)
+   log_a0 = add_log(log_a0, density_of_states[i][1])
+
+denominator = log_a0
 
 if opt.debug: print >> sys.stderr, '# Log of denominator is: %f' % denominator
 
@@ -244,7 +249,12 @@ for i, item in enumerate(property_data):
       prop_bin = (item[1]-mymin)//spacing
    except IndexError:
       print 'Energy is ', item[1]
-   prop_hist[prop_bin] = add_log(wt, prop_hist[prop_bin])
+   try:
+      prop_hist[prop_bin] = add_log(wt, prop_hist[prop_bin])
+   except IndexError:
+      print 'Could not add to bin %d. Adding to last bin %d' % (
+         prop_bin, len(prop_hist)-1)
+      prop_hist[len(prop_hist)-1] = add_log(wt, prop_hist[len(prop_hist)-1])
 
 print >> sys.stderr, '# Done histogramming! Normalization factor is %f' % (
          normal_fac)

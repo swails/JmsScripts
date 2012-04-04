@@ -59,7 +59,6 @@ def merge(pushto=None):
    """ Merges everything with "master" and pushes to a repo if given """
    for branch in get_branch_names():
       if branch.endswith('-with-patches'): continue
-      if branch == 'sander-remd': continue
       if branch == 'master': continue
       print 'Changing to branch', branch
       process = Popen(['git', 'checkout', branch], stdout=PIPE, stderr=PIPE)

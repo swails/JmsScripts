@@ -60,10 +60,10 @@ class pHStatFile(object):
       this file)
       """
       list_of_residues = []
-      resname, resnum, frac_prot = self.get_next_residue()
+      resname,resnum,offset,pred,frac_prot,trans = self.get_next_residue()
       while not '%s_%d' % (resname, resnum) in list_of_residues:
          list_of_residues.append('%s_%d' % (resname, resnum))
-         resname, resnum, frac_prot = self.get_next_residue()
+         resname,resnum,offset,pred,frac_prot,trans = self.get_next_residue()
       return list_of_residues
 
    def get_next_residue(self):
@@ -76,7 +76,8 @@ class pHStatFile(object):
          rematch = self.reslinere.match(rawline)
          if rematch:
             return (rematch.groups()[0], int(rematch.groups()[1]),
-                    float(rematch.groups()[4]))
+                    float(rematch.groups()[2]), float(rematch.groups()[3]),
+                    float(rematch.groups()[4]), int(rematch.groups()[5]))
          # If we make it to a blank line, keep skipping forward until we hit
          # another CUMULATIVE record
          elif not rawline.strip():
@@ -84,12 +85,12 @@ class pHStatFile(object):
             while not rematch2:
                rawline = self.f.readline()
                # Check if we hit EOF
-               if not rawline: return (None, None, None)
+               if not rawline: return None
                rematch2 = self.cumulativere.match(rawline)
             # end while not rematch2
          rawline = self.f.readline()
       # If we hit here, we are out of lines, or something
-      return (None, None, None)
+      return None
 
 #-------------------------------------------------------------------------------
 
@@ -104,17 +105,6 @@ def curve_no_hillcoef(ph, pka):
    """ Callable function with a fixed Hill coefficient of 1 """
 #  return ph - pka
    return 1-1/(10**(pka-ph)+1)
-
-#-------------------------------------------------------------------------------
-
-def hillize(frac_prot):
-   """
-   This function converts a fraction protonated into the value plotted in a Hill
-   plot. A fraction protonated of 1 is -infinity, whereas 0 is +infinity
-   """
-   if frac_prot == 1: return '-inf'
-   if frac_prot == 0: return 'inf'
-   return math.log10((1-frac_prot)/frac_prot)
 
 #-------------------------------------------------------------------------------
 
@@ -165,30 +155,55 @@ def main(file_list, outname, fit_func, starting_guess):
             numframes += 1
             numres = 1
          # Zero out the y-data, because we're about to fill it up
-         ydata = np.zeros(len(file_list))
+         ydata = np.zeros(len(file_list))           # fraction protonated
+         offset = np.zeros(len(file_list))          # Offset for pKa
+         pred = np.zeros(len(file_list))            # Predicted pKas
+         trans = [0 for i in range(len(file_list))] # num of transitions
+         # Loop through all of the files and get our next residue -- they should
+         # be synchronized, so this should pull the same residue from each file
          for i, frec in enumerate(file_list):
             stuff = frec.get_next_residue()
-            if not stuff or stuff == (None,None,None): raise StopWhile
-            resname, resnum, ydata[i] = stuff
+            # If we got nothing bust out of the loop
+            if not stuff:
+               raise StopWhile
+            resname,resnum,offset[i],pred[i],ydata[i],trans[i] = stuff
             # Make the y-data into a hill-plottable form
-         try:
-            params, cov = optimize.curve_fit(fit_func, xdata, ydata, starting_guess)
-         except (RuntimeError, ValueError):
-            # If we can't fit the data (expected at the very beginning), just go on
-            continue
+         if fit_func:
+            try:
+               params, cov = optimize.curve_fit(fit_func, xdata,
+                                                ydata, starting_guess)
+            except (RuntimeError, ValueError):
+               # If we can't fit the data (expected at the beginning) just go on
+               continue
+            line = '%d ' % numframes
+            try:
+               for i, param in enumerate(params):
+                  try:
+                     line += '%.4f %.4f ' % (param, math.sqrt(cov[i][i]))
+                  except TypeError:
+                     line += '%.4f %.4f ' % (param, cov)
+            except ValueError:
+               continue
+         else:
+            # Average all of the predicted pKas, ignoring values whose offset is
+            # >= 3 pH units
+            runsum = runsum2 = numpts = 0
+            for i in range(len(file_list)):
+               if abs(offset[i]) < 3:
+                  runsum += pred[i]
+                  runsum2 += pred[i] * pred[i]
+                  numpts += 1
+
+            if numpts == 0: continue
+            avg = runsum / numpts
+            stdev = math.sqrt(abs(runsum2/numpts - avg*avg))
+            line = '%d %.4f %.4f' % (numframes, avg, stdev)
+            
          # Now write out the data as: Frame # pKa1 std.dev. [hill.coef. std.dev.]
          # but only write out if we actually got a pKa this time around
          ofile = output_files['%s_%d' % (resname, resnum)]
-         line = '%d ' % numframes
-         try:
-            for i, param in enumerate(params):
-               try:
-                  line += '%.4f %.4f ' % (param, math.sqrt(cov[i][i]))
-               except TypeError: # Catch if covariance is infinite
-                  line += '%.4f %.4f ' % (param, cov)
-            ofile.write(line + os.linesep)
-         except ValueError:
-            continue
+         ofile.write(line + os.linesep)
+
    except StopWhile: pass
    
 if __name__ == '__main__':
@@ -211,8 +226,11 @@ if __name__ == '__main__':
    group.add_option('-n', '--no-hill-coefficient', dest='hill',
                     action='store_false',
                     help='Fix the Hill coefficient to 1. Default behavior.')
+   group.add_option('-a', '--average', dest='avg', default=False,
+                    action='store_true',
+                    help='Do simple averaging to get pKa and error bars.')
    parser.add_option_group(group)
-   group = OptionGroup(parser, 'Output Options', 'THese options control output')
+   group = OptionGroup(parser, 'Output Options', 'These options control output')
    group.add_option('-o', '--output', dest='outprefix', metavar='FILE_PREFIX',
                     default='running_pkas',
                     help='Prefix to apply to output files. The output files ' +
@@ -240,6 +258,8 @@ if __name__ == '__main__':
    if opt.hill:
       fit_func = curve_with_hillcoef
       starting_guess = (1,1)
+   if opt.avg:
+      fit_func = None
    # Now call our main function
    main(args, opt.outprefix, fit_func, starting_guess)
    print 'Finished: I took %.3f minutes' % ((time()-start)/60)

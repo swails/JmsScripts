@@ -112,6 +112,12 @@ def _get_residues(ph_setlist):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def _individual_info(lines, outfile, data_type, data_desc, hill=False):
+
+   if data_type == 'frac_deprot':
+      data_type = 'frac_prot'
+      do_deprot = True
+   else:
+      do_deprot = False
    # Write the fraction protonated
 
    ph_setlist = set_list(lines)
@@ -137,7 +143,10 @@ def _individual_info(lines, outfile, data_type, data_desc, hill=False):
             continue
          myres = phset.residue_list[phset.residue_list.index(res)]
          if not hill:
-            line += [phset.pH, getattr(myres, data_type), '']
+            if do_deprot:
+               line += [phset.pH, 1-getattr(myres, data_type), '']
+            else:
+               line += [phset.pH, getattr(myres, data_type), '']
          else:
             if myres.frac_prot == 1:
                line += [phset.pH, '-inf', '']
@@ -160,8 +169,14 @@ def frac_info(lines, outfile):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def frac_deprot_info(lines, outfile):
+   _individual_info(lines, outfile, 'frac_deprot', 'Fraction Deprotonated')
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 def hill_info(lines, outfile):
    _individual_info(lines, outfile, 'frac_prot', 'Hill plot', hill=True)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def trans_info(lines, outfile):
@@ -211,8 +226,8 @@ def main():
                 help='Final CSV file with total statistics. [Default %default]')
    parser.add_option('-i', '--info', dest='info', default=None,
                    help='What info do you want printed out?. Available ' +
-                   'options are [pKa, frac_prot, transitions, offset, hill]. ' +
-                   'Default: full description')
+                   'options are [pKa, frac_prot, transitions, offset, hill, ' +
+                   'frac_deprot]. Default: full description')
    opt, args = parser.parse_args()
 
    # Interrupt handler
@@ -229,8 +244,10 @@ def main():
       run_method = full_info
    elif opt.info.lower() == 'pka':
       run_method = pka_info
-   elif opt.info.lower().startswith('frac'):
+   elif opt.info.lower().startswith('frac_p'):
       run_method = frac_info
+   elif opt.info.lower().startswith('frac_d'):
+      run_method = frac_deprot_info
    elif opt.info.lower().startswith('trans'):
       run_method = trans_info
    elif opt.info.lower() == 'offset':

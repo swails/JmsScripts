@@ -41,3 +41,6 @@ class AmberParmError(ChemError):
 
 class MoleculeError(ChemError):
    """ This occurs when there's a problem determining molecularity """
+
+class DihedralError(ChemError):
+   " This happens when we try to do disallowed things in the _Dihedral class "

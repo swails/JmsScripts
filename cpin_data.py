@@ -1,7 +1,7 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
-TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS DAP DCP DG  DT  AP  CP  G   U  "
-EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3"
+TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS DAP DCP DG  DT  AP  CP  G   U   C5  "
+EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3 13.5"
 
 # This python file is used by cpinutil.py and has all of the data for
 # each titratable residue for each value of igb that is desired.
@@ -23,12 +23,12 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       # set the relative energies for the different igb choices
       if igb == 2:
          if has_water: relene = 26.6047496 + KB * LN_TO_LOG * TEMP * pKa
-         else:         relene = 26.6012839 + KB * LN_TO_LOG * TEMP * pKa
+         else:         relene = 26.8894581 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 5:
          if has_water: relene = 26.1881636 + KB * LN_TO_LOG * TEMP * pKa
          else:         relene = 26.5980488 + KB * LN_TO_LOG * TEMP * pKa
       elif igb == 8:
-         relene = 21.6040215 + KB * LN_TO_LOG * TEMP * pKa
+         relene = 26.3448911 + KB * LN_TO_LOG * TEMP * pKa
       else:
          relene = 0.0
 
@@ -133,12 +133,12 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
 
       if igb == 2:
          if has_water: relene = 8.0464682 + KB * TEMP * LN_TO_LOG * pKa
-         else:         relene = 8.2906037 + KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = 8.4057785 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = 7.6690995 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 8.0855764 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = 3.5654376 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 8.3493469 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -257,12 +257,12 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       
       if igb == 2:
          if has_water: relene = -65.003415 - KB * TEMP * LN_TO_LOG * pKa
-         else:         relene = -65.070555 - KB * TEMP * LN_TO_LOG * pKa
+         else:         relene = -65.113428 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 5:
          if has_water: relene = -64.047229 - KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -64.166385 - KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = -61.310885 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -61.3305355 - KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -333,8 +333,8 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
             relene1 = -2.86001 - KB * TEMP * LN_TO_LOG * pKa1
             relene2 = -6.70726 - KB * TEMP * LN_TO_LOG * pKa2
       elif igb == 8:
-         relene1 = -3.4072 - KB * TEMP * LN_TO_LOG * pKa1
-         relene2 = -6.3373386 - KB * TEMP * LN_TO_LOG * pKa2
+         relene1 = -3.4000 - KB * TEMP * LN_TO_LOG * pKa1
+         relene2 = -6.3190 - KB * TEMP * LN_TO_LOG * pKa2
       else:
          relene1 = 0.0
          relene2 = 0.0
@@ -412,7 +412,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = -14.3162107 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = -14.5392838 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = -18.4151468 + KB * TEMP * LN_TO_LOG * pKa
+         relene = -18.393654 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -476,7 +476,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
          if has_water: relene = 76.2827217 + KB * TEMP * LN_TO_LOG * pKa
          else:         relene = 76.2588331 + KB * TEMP * LN_TO_LOG * pKa
       elif igb == 8:
-         relene = 71.5780565 + KB * TEMP * LN_TO_LOG * pKa
+         relene = 71.5804519 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.0
 
@@ -1153,5 +1153,79 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
                   -0.6139,      # O2' 
                    0.4186,      # HO'2
                   -0.5246 ] ]   # O3' 
+
+   if residue == "C5":
+      pKa = 13.5
+
+      if igb == 5:
+         relene = 0.00 #- KB * TEMP * LN_TO_LOG * pKa
+      elif igb == 2:
+         relene = 0.00 #- KB * TEMP * LN_TO_LOG * pKa
+      else:
+         relene = 0.00
+
+      return   [ [ 0,           # Relative energy STATE 0 C5 (prot)
+                   1,           # Relative protonation
+                   0.4295,      # HO5'
+                  -0.6223,      # O5'
+                   0.0558,      # C5'
+                   0.0679,      # H5'
+                   0.0679,      # H5''
+                   0.1065,      # C4'
+                   0.1174,      # H4'
+                  -0.3548,      # O4'
+                   0.0066,      # C1'
+                   0.2029,      # H1'
+                  -0.0484,      # N1
+                   0.0053,      # C6
+                   0.1958,      # H6
+                  -0.5215,      # C5
+                   0.1928,      # H5
+                   0.8185,      # C4
+                  -0.9530,      # N4
+                   0.4234,      # H41
+                   0.4234,      # H42
+                  -0.7584,      # N3
+                   0.7538,      # C2
+                  -0.6252,      # O2
+                   0.2022,      # C3'
+                   0.0615,      # H3'
+                   0.0670,      # C2'
+                   0.0972,      # H2'
+                  -0.6139,      # O2'
+                   0.4186,      # HO2'
+                  -0.5246 ] ,   # O3'
+
+                 [ relene,      # Relative energy STATE 1 C5 (deprot)
+                   0,           # Relative protonation
+                   0.3866,      # HO5'
+                  -0.5598,      # O5'
+                  -0.0573,      # C5'
+                   0.0717,      # H5'
+                   0.0717,      # H5''
+                   0.1395,      # C4'
+                   0.1157,      # H4'
+                  -0.4334,      # O4'
+                   0.0066,      # C1'
+                   0.2029,      # H1'
+                  -0.0484,      # N1
+                   0.0053,      # C6
+                   0.1958,      # H6
+                  -0.5215,      # C5
+                   0.1928,      # H5
+                   0.8185,      # C4
+                  -0.9530,      # N4
+                   0.4234,      # H41
+                   0.4234,      # H42
+                  -0.7584,      # N3
+                   0.7538,      # C2
+                  -0.6252,      # O2
+                   0.0645,      # C3'
+                   0.0273,      # H3'
+                   0.2017,      # C2'
+                  -0.0459,      # H2'
+                  -0.8621,      # O2'
+                   0.0000,      # HO2'
+                  -0.5443 ] ]   # O3'
 
    return -1

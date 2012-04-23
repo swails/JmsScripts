@@ -162,8 +162,8 @@ def _parseFormat(format_string):  # parse a format statement and send back detai
 
 class _Atom(object):
    """ 
-   An atom. Only fill these in _AtomList types, since _AtomList will keep track
-   of when indexes and other stuff needs to be updated
+   An atom. Only use these as elements in _AtomList instances, since _AtomList
+   will keep track of when indexes and other stuff needs to be updated
    """
    #===================================================
 
@@ -224,8 +224,14 @@ class _Atom(object):
       self.nb_idx = self.parm.parm_data['ATOM_TYPE_INDEX'][self.starting_index]
       self.attype = self.parm.parm_data['AMBER_ATOM_TYPE'][self.starting_index]
       self.tree = self.parm.parm_data['TREE_CHAIN_CLASSIFICATION'][self.starting_index]
-      self.radii = self.parm.parm_data['RADII'][self.starting_index]
-      self.screen = self.parm.parm_data['SCREEN'][self.starting_index]
+      if 'RADII' in self.parm.parm_data:
+         self.radii = self.parm.parm_data['RADII'][self.starting_index]
+      else:
+         self.radii = 0.0 # dummy number
+      if 'SCREEN' in self.parm.parm_data:
+         self.screen = self.parm.parm_data['SCREEN'][self.starting_index]
+      else:
+         self.radii = 0.0 # dummy number
       # Load the positions and velocities if the amberParm object them
       if hasattr(self.parm, 'coords'):
          self.xx = self.parm.coords[self.starting_index*3  ]
@@ -292,6 +298,8 @@ class _Atom(object):
           other in self.dihedral_partners or other in self.exclusion_partners):
          return
       self.exclusion_partners.append(other)
+      # If he is excluded from me, then I am excluded from him
+      other.exclude(self)
 
    #===================================================
 
@@ -485,10 +493,21 @@ class _Dihedral(object):
 
    def write_info(self, parm, key, idx):
       """ Write the info to the topology file """
-      parm.parm_data[key][5*idx  ] = 3*(self.atom1.idx)
-      parm.parm_data[key][5*idx+1] = 3*(self.atom2.idx)
-      parm.parm_data[key][5*idx+2] = 3*(self.atom3.idx) * self.signs[0]
-      parm.parm_data[key][5*idx+3] = 3*(self.atom4.idx) * self.signs[1]
+      # In order to preserve multi-term and improper dihedral definitions, we
+      # have to make sure that atom index 0 is _never_ in either of the last
+      # 2 positions (since you can't have '-0'. Therefore, if atoms 3 or 4 are
+      # index 0 and their sign is negative, swap the dihedral
+      if (self.atom3.idx == 0 and self.signs[0] == -1) or \
+         (self.atom4.idx == 0 and self.signs[1] == -1):
+         parm.parm_data[key][5*idx  ] = 3*(self.atom4.idx)
+         parm.parm_data[key][5*idx+1] = 3*(self.atom3.idx)
+         parm.parm_data[key][5*idx+2] = 3*(self.atom2.idx) * self.signs[0]
+         parm.parm_data[key][5*idx+3] = 3*(self.atom1.idx) * self.signs[1]
+      else:
+         parm.parm_data[key][5*idx  ] = 3*(self.atom1.idx)
+         parm.parm_data[key][5*idx+1] = 3*(self.atom2.idx)
+         parm.parm_data[key][5*idx+2] = 3*(self.atom3.idx) * self.signs[0]
+         parm.parm_data[key][5*idx+3] = 3*(self.atom4.idx) * self.signs[1]
       parm.parm_data[key][5*idx+4] = self.dihed_type.idx + 1
       # Now have this bond type write its info
 #     self.dihed_type.write_info(parm)
@@ -502,6 +521,39 @@ class _Dihedral(object):
       """
       return id(thing) == id(self.atom1) or id(thing) == id(self.atom2) or \
              id(thing) == id(self.atom3) or id(thing) == id(self.atom4)
+
+   #===================================================
+
+   def __eq__(self, thing):
+      """
+      A dihedral is equivalent if the 4 atoms are the same (or reverse) in order
+
+      Allow comparison with another type of dihedral or with a list of 4 atoms
+      (or tuple)
+      """
+      if type(thing).__name__ == '_Dihedral':
+         # I'm comparing with another _Dihedral here
+         return ( (self.atom1 == thing.atom1 and self.atom2 == thing.atom2 and
+                   self.atom3 == thing.atom3 and self.atom4 == thing.atom4) or
+                  (self.atom1 == thing.atom4 and self.atom2 == thing.atom3 and
+                   self.atom4 == thing.atom1) )
+      if type(thing).__name__ in ('list', 'tuple'):
+         # Here, atoms are expected to index from 0 (Python standard) if we
+         # are comparing with a list or tuple
+         if len(thing) != 4:
+            raise exceptions.DihedralError(('comparative %s has %d elements! ' +
+                           ' Expect 4.') % (type(thing).__name__, len(thing)))
+         # Compare starting_index, since we may not have an index right now...
+         return ( (self.atom1.starting_index == thing[0] and 
+                   self.atom2.starting_index == thing[1] and
+                   self.atom3.starting_index == thing[2] and
+                   self.atom4.starting_index == thing[3]) or
+                  (self.atom1.starting_index == thing[3] and 
+                   self.atom2.starting_index == thing[2] and
+                   self.atom3.starting_index == thing[1] and
+                   self.atom4.starting_index == thing[0]) )
+
+      raise TypeError('Cannot compare _Dihedral with %s' % type(thing).__name__)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -624,10 +676,10 @@ class _AtomList(list):
       self.parm.parm_data['RADII'] = zeros[:]
       self.parm.parm_data['SCREEN'] = zeros[:]
       self._index_us()
+      self._determine_exclusions()
       for atm in self: 
          atm.add_data()
          atm.starting_index = atm.idx # arrays are updated...
-      self._determine_exclusions()
 
    #===================================================
 
@@ -636,6 +688,28 @@ class _AtomList(list):
           topology file, since it's expensive
       """
       self.parm.parm_data['EXCLUDED_ATOMS_LIST'] = []
+      # We have to do something different for extra points. See the top of
+      # extra_pts.f in the sander src/ directory. Effectively, the EP is
+      # excluded from every atom that the atom it's attached to is excluded
+      # from. So here we go through and exclude every extra point from every
+      # other atom my bonded pair is excluded from:
+      for atm in self:
+         if not atm.attype[:2] in ['EP', 'LP']: continue
+         partner = atm.bond_partners[0]
+         # Now add all bond partners
+         for patm in partner.bond_partners:
+            # Don't add myself
+            if patm is atm: continue
+            atm.exclude(patm)
+         # Now add all angle partners
+         for patm in partner.angle_partners: atm.exclude(patm)
+         # Now add all dihedral partners
+         for patm in partner.dihedral_partners: atm.exclude(patm)
+         # Now add all other arbitrary exclusions
+         for patm in partner.exclusion_partners:
+            if patm is atm: continue
+            atm.exclude(patm)
+
       for atm in self:
          vals_to_add = []
          for member in atm.bond_partners:
@@ -678,6 +752,20 @@ class _TypeList(list):
       """ Removes a bond from the bond type """
       list.__delitem__(self, idx)
 
+   #===================================================
+   
+   def append(self, item):
+      """ Appending changes our _TypeList """
+      self.changed = True
+      list.append(self, item)
+
+   #===================================================
+
+   def extend(self, items):
+      """ Extending changes our _TypeList """
+      self.changed = True
+      list.extend(self, items)
+   
    #===================================================
 
    def _make_array(self):
@@ -778,9 +866,21 @@ class AmberParm(object):
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def __init__(self, prm_name='prmtop', rst7_name=''): # set up necessary variables
-      """ Instantiates an AmberParm object from data in prm_name and establishes validity
-          based on presence of POINTERS and CHARGE sections """
+   def __init__(self, prm_name='prmtop', rst7_name=''):
+      """
+      Instantiates an AmberParm object from data in prm_name and establishes
+      validity based on presence of POINTERS and CHARGE sections. During
+      instantiation, the following functions are called:
+         o  rdparm()  -- Reads the top file (calls rdparm_old() if necessary)
+                         rdparm() scales the charges to electron-charges
+         o  LoadPointers() -- Loads the POINTERS section into the pointers dict
+         o  fill_LJ() -- Fills the Lennard Jones radius/depth arrays from
+                         diagonal terms
+         o  fill_14_LJ() -- Fills the 1-4 Lennard Jones radius/depth arrays for
+                            chamber topology files
+         o  _load_structure() -- Fills data structures (atom/bond/angle/dihedral
+                                 lists, etc.) to allow rebuilding the topology
+      """
 
       # instance variables:
       self.prm_name = prm_name # name of the prmtop file
@@ -856,6 +956,10 @@ class AmberParm(object):
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    
    def LoadPointers(self):
+      """
+      Loads the data in POINTERS section into a pointers dictionary with each
+      key being the pointer name according to http://ambermd.org/formats.html
+      """
       self.pointers["NATOM"] = self.parm_data["POINTERS"][NATOM]
       self.pointers["NTYPES"] = self.parm_data["POINTERS"][NTYPES]
       self.pointers["NBONH"] = self.parm_data["POINTERS"][NBONH]
@@ -1054,6 +1158,18 @@ class AmberParm(object):
                   self.parm_data[current_flag].append(data_holder)
                position_inline += size_item # move to the next item
 
+      # If we have no version, let's see if this is an old style topology file
+      if not self.version:
+         try:
+            self.rdparm_old(prmlines)
+            self.version = \
+                '%VERSION  VERSION_STAMP = V0001.000  DATE = 00/00/00  00:00:00'
+         except ValueError:
+            print >> stderr, ('%%VERSION string not found, and %s does ' +
+                                  'not appear to be') % self
+            print >> stderr, 'an old-style (Amber <7) topology file.'
+            return 
+
       # eliminate multiplicative constant on charges to reduce to fraction-e charges
       try:
          for i in range(len(self.parm_data["CHARGE"])):
@@ -1081,6 +1197,255 @@ class AmberParm(object):
          at2 = self.parm_data['BONDS_WITHOUT_HYDROGEN'][3*i+1] / 3
          self.bonds[at1].append(at2)
          self.bonds[at2].append(at1)
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def rdparm_old(self, prmtop_lines):
+      """
+      This reads an old-style topology file and stores the results in the same
+      data structures as a new-style topology file
+      """
+      def read_integer(line_idx, lines, num_items):
+         # line_idx should be the line _before_ the first line you
+         # want data from.
+         i, tmp_data = 0, []
+         while i < num_items:
+            idx = i % 12
+            if idx == 0:
+               line_idx += 1
+            try:
+               tmp_data.append(int(lines[line_idx][idx*6:idx*6+6]))
+            except ValueError, err:
+               print 'Error parsing line (', line_idx, '):', \
+                        lines[line_idx], idx*6, idx*6+6, num_items, i
+               raise err
+            i += 1
+         # If we had no items, we need to jump a line:
+         if num_items == 0: line_idx += 1
+         return tmp_data, line_idx
+
+      def read_string(line_idx, lines, num_items):
+         # line_idx should be the line _before_ the first line you
+         # want data from.
+         i, tmp_data = 0, []
+         while i < num_items:
+            idx = i % 20
+            if idx == 0:
+               line_idx += 1
+            tmp_data.append(lines[line_idx][idx*4:idx*4+4])
+            i += 1
+         # If we had no items, we need to jump a line:
+         if num_items == 0: line_idx += 1
+         return tmp_data, line_idx
+
+      def read_float(line_idx, lines, num_items):
+         # line_idx should be the line _before_ the first line you
+         # want data from.
+         i, tmp_data = 0, []
+         while i < num_items:
+            idx = i % 5
+            if idx == 0:
+               line_idx += 1
+            try:
+               tmp_data.append(float(lines[line_idx][idx*16:idx*16+16]))
+            except ValueError, err:
+               print 'Error parsing line (', line_idx, '):', \
+                        lines[line_idx], idx*6, idx*6+6, num_items, i
+               raise err
+            i += 1
+         # If we had no items, we need to jump a line:
+         if num_items == 0: line_idx += 1
+         return tmp_data, line_idx
+
+      # First add a title
+      self.addFlag('TITLE', '20a4', data=['| Converted old-style topology'])
+
+      # Next, read in the pointers
+      line_idx = 0
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines, 30)
+      # Add a final pointer of 0, which corresponds to NUMEXTRA
+      tmp_data.append(0)
+      self.addFlag('POINTERS', '10I8', data=tmp_data)
+
+      # Next read in the atom names
+      tmp_data, line_idx = read_string(line_idx, prmtop_lines,
+                                       self.parm_data['POINTERS'][NATOM])
+      self.addFlag('ATOM_NAME', '20a4', data=tmp_data)
+
+      # Next read the charges
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NATOM])
+      self.addFlag('CHARGE', '5E16.8', data=tmp_data)
+
+      # Next read the masses
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NATOM])
+      self.addFlag('MASS', '5E16.8', data=tmp_data)
+
+      # Next read atom type index
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NATOM])
+      self.addFlag('ATOM_TYPE_INDEX', '10I8', data=tmp_data)
+
+      # Next read number excluded atoms
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NATOM])
+      self.addFlag('NUMBER_EXCLUDED_ATOMS', '10I8', data=tmp_data)
+      
+      # Next read nonbonded parm index
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NTYPES]**2)
+      self.addFlag('NONBONDED_PARM_INDEX', '10I8', data=tmp_data)
+
+      # Next read residue label
+      tmp_data, line_idx = read_string(line_idx, prmtop_lines,
+                                       self.parm_data['POINTERS'][NRES])
+      self.addFlag('RESIDUE_LABEL', '20a4', data=tmp_data)
+
+      # Next read residue pointer
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NRES])
+      self.addFlag('RESIDUE_POINTER', '10I8', data=tmp_data)
+   
+      # Next read bond force constant
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NUMBND])
+      self.addFlag('BOND_FORCE_CONSTANT', '5E16.8', data=tmp_data)
+
+      # Next read bond equil value
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NUMBND])
+      self.addFlag('BOND_EQUIL_VALUE', '5E16.8', data=tmp_data)
+
+      # Next read angle force constant
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NUMANG])
+      self.addFlag('ANGLE_FORCE_CONSTANT', '5E16.8', data=tmp_data)
+
+      # Next read the angle equilibrium value
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NUMANG])
+      self.addFlag('ANGLE_EQUIL_VALUE', '5E16.8', data=tmp_data)
+
+      # Next read the dihedral force constant
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPTRA])
+      self.addFlag('DIHEDRAL_FORCE_CONSTANT', '5E16.8', data=tmp_data)
+
+      # Next read dihedral periodicity
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPTRA])
+      self.addFlag('DIHEDRAL_PERIODICITY', '5E16.8', data=tmp_data)
+
+      # Next read the dihedral phase
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPTRA])
+      self.addFlag('DIHEDRAL_PHASE', '5E16.8', data=tmp_data)
+
+      # Next read SOLTY (?)
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NATYP])
+      self.addFlag('SOLTY', '5E16.8', data=tmp_data)
+
+      # Next read lennard jones acoef and bcoef
+      numvals = self.parm_data['POINTERS'][NTYPES]
+      numvals = numvals * (numvals + 1) / 2
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines, numvals)
+      self.addFlag('LENNARD_JONES_ACOEF', '5E16.8', data=tmp_data)
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines, numvals)
+      self.addFlag('LENNARD_JONES_BCOEF', '5E16.8', data=tmp_data)
+
+      # Next read bonds including hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NBONH]*3)
+      self.addFlag('BONDS_INC_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read bonds without hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NBONA]*3)
+      self.addFlag('BONDS_WITHOUT_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read angles including hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NTHETH]*4)
+      self.addFlag('ANGLES_INC_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read angles without hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NTHETA]*4)
+      self.addFlag('ANGLES_WITHOUT_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read dihdrals including hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NPHIH]*5)
+      self.addFlag('DIHEDRALS_INC_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read dihedrals without hydrogen
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NPHIA]*5)
+      self.addFlag('DIHEDRALS_WITHOUT_HYDROGEN', '10I8', data=tmp_data)
+
+      # Next read the excluded atoms list
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NEXT])
+      self.addFlag('EXCLUDED_ATOMS_LIST', '10I8', data=tmp_data)
+
+      # Next read the hbond terms
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPHB])
+      self.addFlag('HBOND_ACOEF', '5E16.8', data=tmp_data)
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPHB])
+      self.addFlag('HBOND_BCOEF', '5E16.8', data=tmp_data)
+      tmp_data, line_idx = read_float(line_idx, prmtop_lines,
+                                      self.parm_data['POINTERS'][NPHB])
+      self.addFlag('HBCUT', '5E16.8', data=tmp_data)
+
+      # Next read amber atom type
+      tmp_data, line_idx = read_string(line_idx, prmtop_lines,
+                                       self.parm_data['POINTERS'][NATOM])
+      self.addFlag('AMBER_ATOM_TYPE', '20a4', data=tmp_data)
+
+      # Next read tree chain classification
+      tmp_data, line_idx = read_string(line_idx, prmtop_lines,
+                                       self.parm_data['POINTERS'][NATOM])
+      self.addFlag('TREE_CHAIN_CLASSIFICATION', '20a4', data=tmp_data)
+
+      # Next read the join array
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NATOM])
+      self.addFlag('JOIN_ARRAY', '10I8', data=tmp_data)
+
+      # Next read the irotat array
+      tmp_data, line_idx = read_integer(line_idx, prmtop_lines,
+                                        self.parm_data['POINTERS'][NATOM])
+      self.addFlag('IROTAT', '10I8', data=tmp_data)
+
+      # Now do PBC stuff
+      if self.parm_data['POINTERS'][IFBOX]:
+         # Solvent pointers
+         tmp_data, line_idx = read_integer(line_idx, prmtop_lines, 3)
+         self.addFlag('SOLVENT_POINTERS', '10I8', data=tmp_data)
+
+         # Atoms per molecule
+         tmp_data, line_idx = read_integer(line_idx, prmtop_lines, 
+                                          self.parm_data['SOLVENT_POINTERS'][1])
+         self.addFlag('ATOMS_PER_MOLECULE', '10I8', data=tmp_data)
+
+         # Box dimensions
+         tmp_data, line_idx = read_float(line_idx, prmtop_lines, 4)
+         self.addFlag('BOX_DIMENSIONS', '5E16.8', data=tmp_data)
+
+      # end if self.parm_data['POINTERS'][IFBOX]
+
+      # Now do CAP stuff
+      if self.parm_data['POINTERS'][IFCAP]:
+         # CAP_INFO
+         tmp_data, line_idx = read_integer(line_idx, prmtop_lines, 1)
+         self.addFlag('CAP_INFO', '10I8', data=tmp_data)
+         tmp_data, line_idx = read_integer(line_idx, prmtop_lines, 4)
+         self.addFlag('CAP_INFO2', '10I8', data=tmp_data)
+      # end if self.parm_data['POINTERS'][IFCAP]
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1213,6 +1578,12 @@ class AmberParm(object):
       # we've deleted atoms
       self.atom_list.write_to_parm()
 
+      # Recount number of extra points
+      nextra = 0
+      for atm in self.atom_list:
+         if atm.attype[:2] in ['EP', 'LP']: nextra += 1
+      self.parm_data['POINTERS'][NUMEXTRA] = nextra
+
       self.parm_data['POINTERS'][NNB] = len(self.parm_data['EXCLUDED_ATOMS_LIST'])
       # Write the residue arrays
       num_res = 0
@@ -1227,6 +1598,20 @@ class AmberParm(object):
       self.parm_data['RESIDUE_LABEL'] = self.parm_data['RESIDUE_LABEL'][:num_res]
       self.parm_data['RESIDUE_POINTER'] = self.parm_data['RESIDUE_POINTER'][:num_res]
       self._fill_res_container()
+
+      # Adjust NMXRS (number of atoms in largest residue) in case that changed
+      max_atm = 0
+      for i in range(1,self.parm_data['POINTERS'][NRES]):
+         atm_in_res = self.parm_data['RESIDUE_POINTER'][i] \
+                    - self.parm_data['RESIDUE_POINTER'][i-1]
+         if atm_in_res > max_atm: max_atm = atm_in_res
+
+      # Check the last residue
+      max_atm = max(self.parm_data['POINTERS'][NATOM] -
+        self.parm_data['RESIDUE_POINTER'][self.parm_data['POINTERS'][NRES]-1]+1,
+        max_atm)
+      
+      self.parm_data['POINTERS'][NMXRS] = max_atm
 
       # Now write all of the bond arrays. We will loop through all of the bonds to
       # make sure that all of their atoms still exist (atm.idx > -1). At the same
@@ -1979,7 +2364,7 @@ class AmberParm(object):
       """
       self.flag_list.append(flag_name.upper())
       self.formats[flag_name.upper()] = flag_format
-      if data:
+      if data != None:
          self.parm_data[flag_name.upper()] = list(data)
       else:
          if num_items == 0:
@@ -2220,11 +2605,15 @@ def set_molecules(parm, solute_ions=False):
 
 def _set_owner(parm, owner_array, atm, mol_id):
    """ Recursively sets ownership of given atom and all bonded partners """
-   from sys import setrecursionlimit
-   # Since we use a recursive function here, let's set the recursion limit
-   # to the absolute theoretical maximum, which would only be achieved if
-   # we have a completely linear molecule with only 2 neighbors for each atom
-   setrecursionlimit(parm.ptr('natom'))
+   from sys import setrecursionlimit, getrecursionlimit
+   # Since we use a recursive function here, we make sure that the recursion limit
+   # is large enough to handle the maximum possible recursion depth we'll need
+   # (NATOM). We don't want to shrink it, though, since we use list comprehensions
+   # in list constructors in some places that have an implicit (shallow) recursion,
+   # therefore, reducing the recursion limit too much here could raise a recursion
+   # depth exceeded exception during a _Type/Atom/etcList creation. Therefore, set
+   # the recursion limit to the greater of the current limit or the number of atoms
+   setrecursionlimit( max(parm.ptr('natom'),getrecursionlimit()) )
    owner_array[atm] = mol_id
    for partner in parm.atom_list[atm].bond_partners:
       if not owner_array[partner.starting_index]:

@@ -76,6 +76,11 @@ class AmberMask(object):
             continue
          # If p is an operator, is the last character, or is a ()...
          elif self._isOperator(p) or i == len(self.mask) - 1 or p in ['(',')']:
+            # Deal with the last character being a wildcard that we have to
+            # convert
+            if p == '=' and i == len(self.mask) - 1: # wildcard
+               if flag > 0: p = '*'
+               else: raise MaskError('AmberMask: \'=\' not in name list syntax')
             # If this is the end of an operand, terminate the buffer, flush
             # it to infix, and reset flag to 0 and empty the buffer
             if flag > 0:
@@ -539,8 +544,8 @@ def _nameMatch(atnam1, atnam2):
    atnam1 = str(atnam1).replace(' ','')
    atnam2 = str(atnam2).replace(' ','')
    # Replace amber mask wildcards with appropriate regex wildcards and protect the +
-   atnam1 = atnam1.replace('*',r'\\w*')
-   atnam1 = atnam1.replace('?',r'\\w')
+   atnam1 = atnam1.replace('*',r'\w*')
+   atnam1 = atnam1.replace('?',r'\w')
    atnam1 = atnam1.replace('+',r'\+')
    # Now replace just the first instance of atnam2 in atnam2 with '', and return *not* that
    # DEBUG:

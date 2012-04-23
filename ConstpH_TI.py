@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 
 ###########################################################
 #                                                         #
@@ -9,9 +10,10 @@
 
 # modules
 from cpin_data import getData
-from chemistry.amber.readparm import amberParm
+from chemistry.amber.readparm import AmberParm
 from utilities import which
 from subprocess import Popen, PIPE
+from optparse import OptionParser, OptionGroup
 
 from math import fsum
 from time import time
@@ -22,53 +24,71 @@ sys.stderr = os.fdopen(sys.stderr.fileno(),'w',0)
 
 tstart = time()
 
-# usage instructions
-def printusage():
-   print >> sys.stderr, 'Usage: ConstpH_TI.py -igb <igb_value> -resname <resname> \\'
-   print >> sys.stderr, '                     -states <state1> <state2> {-na || -aa}'
-   sys.exit()
+epilog = '''This program will run TI calculations to determine a good estimate 
+of the reference energy for a would-be titratable residue (between two specific
+states). You must set the environment variable DO_PARALLEL such that sander.MPI
+can be run with at least 2 threads (e.g., 'mpirun -np 2')'''
+
+parser = OptionParser(epilog=epilog)
+group = OptionGroup(parser, 'Residue Info', 'Options that pertain to the ' +
+                    'nature of the residue you want to make titratable')
+group.add_option('-r', '--resname', dest='resname', metavar='RESIDUE_NAME',
+                 help='Name of the residue you wish to titrate. No default',
+                 default=None)
+group.add_option('-0', '--state0', dest='state0', metavar='INT', default=0,
+                 help='The original protonation state you want as lambda=0. ' +
+                 '(Default %default)', type='int')
+group.add_option('-1', '--state1', dest='state1', metavar='INT', default=1,
+                 help='The original protonation state you want as lambda=1. ' +
+                 '(Default %default)', type='int')
+group.add_option('-n', '--nucleic-acid', dest='amino_acid', default=True,
+                 action='store_false', help='This residue is a nucleic acid')
+group.add_option('-a', '--amino-acid', dest='amino_acid', action='store_true',
+                 help='This residue is an amino acid. (Default)')
+group.add_option('--left-res', dest='left_res', metavar='RES', default=None,
+                 help='Which residue comes to the left in the model compound ' +
+                 'Defaults to the basic caps for AA or NA')
+group.add_option('--right-res', dest='right_res', metavar='RES', default=None,
+                 help='Which residue comes to the right in the model ' +
+                 'compound. Defaults to the basic caps for AA or NA')
+group.add_option('-i', '--isolated-residue', dest='isolated', default=False,
+                 action='store_true', help='This is an isolated ligand-like ' +
+                 'residue, so do not cap it. NOT default.')
+group.add_option('-l', '--off-lib', dest='off', default=None, metavar='FILE',
+                 help='For custom residues, the OFF file with the residue ' +
+                 'definition')
+group.add_option('-f', '--frcmod', dest='frcmod', default=None, metavar='FILE',
+                 help='For custom residues, the frcmod file with the extra ' +
+                 'parameters necessary for this residue')
+parser.add_option_group(group)
+group = OptionGroup(parser, 'Calculation Info', 'Options that pertain to the ' +
+                    'conditions that you wish to titrate your residue under.')
+group.add_option('-g', '--igb', dest='igb', metavar='INT', default=0,
+                 help='Amber igb (GB) model to titrate for/with. No default',
+                 type='int')
+parser.add_option_group(group)
+
+opt, arg = parser.parse_args()
+
+if not opt.igb or not opt.resname:
+   print 'Missing arguments.'
+   parser.print_help()
+   sys.exit(1)
+if arg:
+   print 'Extra arguments [%s]' % ', '.join(arg)
+   sys.exit(1)
 
 # Get the MPI command from DO_PARALLEL, as is custom with AMBER
 try:
    mpi_cmd = os.environ["DO_PARALLEL"]
 except KeyError:
-   print >> sys.stderr, 'Error: You must set DO_PARALLEL to run sander.MPI with 2 threads!'
-   sys.exit()
+   sys.exit('Error: You must set DO_PARALLEL to run sander.MPI with 2 threads!')
 
-# obvious errors or call for help
-if len(sys.argv) < 3:
-   printusage()
-
-if sys.argv[1] == '-h' or sys.argv[1] == '--help':
-   printusage()
-
-amino_acid = True
-state1 = 0
-state2 = 1
-
-# Input parser
-try:
-   for i in range(len(sys.argv)):
-      if sys.argv[i] == "-igb":
-         igb = int(sys.argv[i+1])
-      elif sys.argv[i] == "-resname":
-         resname = sys.argv[i+1].strip('"').strip("'")
-      elif sys.argv[i] == '-na':
-         amino_acid = False
-      elif sys.argv[i] == '-aa':
-         amino_acid = True
-      elif sys.argv[i] == '-states':
-         state1 = int(sys.argv[i+1])
-         state2 = int(sys.argv[i+2])
-      elif sys.argv[i].startswith('-'):
-         print >> sys.stderr, 'Unrecognized option, %s!' % sys.argv[i]
-         printusage()
-except ValueError:
-   print >> sys.stderr, 'Error: IGB, STATE1, and STATE2 must be integers!'
-   sys.exit()
-except IndexError:
-   print >> sys.stderr, 'Error: Command line error!'
-   sys.exit()
+amino_acid = opt.amino_acid
+isolated = opt.isolated
+state1, state2 = opt.state0, opt.state1
+igb = opt.igb
+resname = opt.resname.strip('"').strip("'")
 
 # MDIN file for TI calculations
 
@@ -121,18 +141,40 @@ if sander == "none" or tleap == "none" or (igb == 8 and changerad == 'none'):
    sys.exit()
 
 # Make tleap script and build the residue
-if amino_acid:
+extras = ''
+if opt.off:
+   extras += 'loadOFF %s\n' % opt.off
+if opt.frcmod:
+   extras += 'loadAmberParams %s\n' % opt.frcmod
+
+if isolated:
    tleap_script = """source leaprc.constph
-l = sequence {ACE %s NME}
+%s
+saveamberparm %s %s0.prmtop %s0.inpcrd
+quit
+""" % (extras, resname, resname.lower(), resname.lower())
+
+elif amino_acid:
+   next_str, prev_str = opt.left_res, opt.right_res
+   if opt.left_res is None: next_str = 'ACE'
+   if opt.right_res is None: prev_str = 'NME'
+   tleap_script = """source leaprc.constph
+%s
+l = sequence {%s %s %s}
 saveamberparm l %s0.prmtop %s0.inpcrd
 quit
-""" % (resname, resname.lower(), resname.lower())
+""" % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
 else:
+   next_str, prev_str = opt.left_res, opt.right_res
+   if opt.left_res is None: next_str = 'CH3'
+   if opt.right_res is None: prev_str = 'MOC'
+
    tleap_script = """source leaprc.constph
-l = sequence {MOC %s CH3}
+%s
+l = sequence {%s %s %s}
 saveamberparm l %s0.prmtop %s0.inpcrd
 quit
-""" % (resname, resname.lower(), resname.lower())
+""" % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
 
 file = open("tleap.in","w")
 file.write(tleap_script)
@@ -146,14 +188,14 @@ if igb == 8:
       print >> sys.stderr, 'parmed.py failed!'
       sys.exit(1)
 
-# Get the data for the residue and load the amberParm object
+# Get the data for the residue and load the AmberParm object
 charges = getData(resname, igb)
 
 if charges == -1:
-   print >> sys.stderr, 'Error: Could not find %s in cpin_data.py! Add the residue and re-run.'
+   print >> sys.stderr, 'Error: Could not find %s in cpin_data.py! Add the residue and re-run.' % resname
    sys.exit()
 
-prm = amberParm("%s0.prmtop" % resname.lower())
+prm = AmberParm("%s0.prmtop" % resname.lower())
 prm.overwrite = True # allow the prmtop to be overwritten
 
 # check validity of prmtop
@@ -170,24 +212,35 @@ except KeyError:
 
 # Create the new prmtops and print out net charge of each state, then delete the prmtop object
 
-start_res = prm.parm_data["RESIDUE_POINTER"][1] - 1 # starts at 0
+idx = prm.parm_data['RESIDUE_LABEL'].index(opt.resname)
+start_res = prm.parm_data['RESIDUE_POINTER'][idx] - 1
 
-if (prm.parm_data["RESIDUE_POINTER"][2] - prm.parm_data["RESIDUE_POINTER"][1] != len(charges[state1]) - 2):
-   print >> sys.stderr, 'Warning: Residue not expected size (comparing cpin_data and prmtop).'
+try:
+   natom_prm = (prm.parm_data['RESIDUE_POINTER'][idx+1]
+              - prm.parm_data['RESIDUE_POINTER'][idx  ])
+except IndexError:
+   natom_prm = (prm.ptr('natom') - prm.parm_data['RESIDUE_POINTER'][idx] + 1)
+
+if natom_prm != len(charges[state1])-2:
+   print 'Error: Residue not expected size (comparing cpin_data and prmtop).'
+   print '%d vs. %d' % (natom_prm, len(charges[state1])-2)
    sys.exit()
 
-print >> sys.stdout, "Charge of state {0}: {1:8.4f}".format(state1, fsum(charges[state1][2:]))
-print >> sys.stdout, "Charge of state {0}: {1:8.4f}".format(state2, fsum(charges[state2][2:]))
+print "Charge of state {0}: {1:8.4f}".format(state1, fsum(charges[state1][2:]))
+print "Charge of state {0}: {1:8.4f}".format(state2, fsum(charges[state2][2:]))
 
 for i in range(len(charges[state1])-2):
    prm.parm_data["CHARGE"][start_res+i] = charges[state1][2+i]
 
+print "Full charge of state {0}: {1:8.4f}".format(state1, sum(prm.parm_data['CHARGE']))
 prm.writeParm("%s0.prmtop" % resname.lower())
 
 for i in range(len(charges[state2])-2):
    prm.parm_data["CHARGE"][start_res+i] = charges[state2][2+i]
 
+print "Full charge of state {0}: {1:8.4f}".format(state2, sum(prm.parm_data['CHARGE']))
 prm.writeParm("%s1.prmtop" % resname.lower())
+
 # Now it's time to minimize
 file = open('min.mdin','w')
 file.write(Min_mdin)

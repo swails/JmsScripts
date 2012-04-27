@@ -18,10 +18,11 @@ try:
    commrank = commworld.Get_rank()
    commsize = commworld.Get_size()
 except ImportError:
+   print 'Could not find mpi4py -- Not using it!'
    class COMM_WORLD:
-      def Abort():
+      def Abort(self):
          sys.exit(1)
-      def Barrier():
+      def Barrier(self):
          pass
    commworld = COMM_WORLD()
    commrank = 0
@@ -47,8 +48,14 @@ parser.add_option('-g', '--igb', dest='igb', default=5, type='int',
                   help='GB value to parameterize for')
 parser.add_option('-t', '--nstlim', dest='nstlim', default=2000000, type='int',
                   help='How long to run each window')
-parser.add_option('-a', '--amino-acid', dest='aa', action='store_true', default=True)
-parser.add_option('-n', '--nucleic-acid', dest='aa', action='store_false', default=True)
+parser.add_option('-a', '--amino-acid', dest='aa', action='store_true', default=True,
+                  help='Use amino acid caps for reference compound')
+parser.add_option('-n', '--nucleic-acid', dest='aa', action='store_false', default=True,
+                  help='Use nucleic acid caps for reference compound')
+parser.add_option('-l', '--left-residue', dest='leftres', default=None,
+                  help='Which residue to cap with on the left terminus')
+parser.add_option('-i', '--right-residue', dest='rightres', default=None,
+                  help='Which residue to cap with on the right terminus')
 
 (options, args) = parser.parse_args()
 
@@ -101,16 +108,25 @@ min_mdin = """Minimization to relax initial bad contacts, implicit solvent
  /
 """
 
-if options.aa:
-   caps = ['ACE', 'NME']
+if options.leftres is not None:
+   left_term = options.leftres
+elif options.aa:
+   left_term = 'ACE'
 else:
-   caps = ['MOC', 'CH3']
+   left_term = 'MOC'
+
+if options.rightres is not None:
+   right_term = options.rightres
+elif options.aa:
+   right_term = 'NME'
+else:
+   right_term = 'CH3'
 
 tleapin = """source leaprc.constph
 l = sequence {%s %s %s}
 saveamberparm l %s.parm7 %s.rst7
 quit
-""" % (caps[0], options.res, caps[1], options.res, options.res)
+""" % (left_term, options.res, right_term, options.res, options.res)
 
 if master:
    # First it's time to create the prmtop

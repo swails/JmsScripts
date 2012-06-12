@@ -65,7 +65,7 @@ def set_list(lines):
    start_of_set = \
           re.compile(r'Solvent pH is *([-+]?\d+(?:\.\d*)?|\.\d+)')
    residue_line = \
-          re.compile(r'([A-Z4]+) *(\d+) *: Offset *([-+]?\d+(?:\.\d*)?|\.\d+|-*[Ii]nf) *Pred *([-+]?\d+(?:\.\d*)?|\.\d+|-*[Ii]nf) *Frac Prot *(\d+(?:\.\d*)?) *Transitions *(\d+)')
+          re.compile(r'([A-Z45]+) *(\d+) *: Offset *([-+]?\d+(?:\.\d*)?|\.\d+|-*[Ii]nf) *Pred *([-+]?\d+(?:\.\d*)?|\.\d+|-*[Ii]nf) *Frac Prot *(\d+(?:\.\d*)?) *Transitions *(\d+)')
    end_of_set = \
           re.compile(r'Average total molecular protonation: *(\d+(?:\.\d*))')
 

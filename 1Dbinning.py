@@ -100,7 +100,7 @@ if (binrange[0] == 0 and binrange[1] == 0):
 # Set up default number of bins according to "Scott's Choice"
 if bins == 0:
    inttmp = 3.5 * utilities.stdev(data,'no') / float(len(data)) ** (1/3.0)
-   bins = int(math.ceil(binrange[1] - binrange[0]/inttmp))
+   bins = int(math.ceil((binrange[1] - binrange[0])/inttmp))
 
 if normalize: 
    pointweight /= float(len(data)) * (binrange[1] - binrange[0])/bins

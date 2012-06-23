@@ -51,7 +51,7 @@ class DataSet(np.ndarray):
       if type(interval).__name__ != 'int':
          raise TypeError("interval expected to be an integer!")
 
-      for i in range(1, (self.size-1) // interval):
+      for i in range(1, (self.size-1) // interval+1):
          hist = np.histogram(self[:i*interval],
                              bins=self.nbins,
                              range=(self.hmin, self.hmax),

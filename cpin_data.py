@@ -1,6 +1,6 @@
 # If you add titratable residues to getData, also add them here. EXP_PKAS is only
 # used to screen residues based on maxpKa and minpKa. flags.
-TITRATABLE = "AS4 GL4 HIP TYR LYS  CYS DAP DCP DG  DT  AP  CP  G   U   C    A  C5   1UH"
+TITRATABLE =" AS4 GL4 HIP TYR LYS  CYS DAP DCP DG  DT  AP  CP  G   U   C    A  C5   1UH "
 EXP_PKAS   = "4.0 4.4 6.5 9.6 10.4 8.5 3.9 4.3 2.1 9.7 3.9 4.3 2.1 9.3 13.5 13 13.5 0.0"
 
 # This python file is used by cpinutil.py and has all of the data for
@@ -1391,9 +1391,9 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
       pKa = 0
 
       if igb == 5:
-         relene = 0.00 #- KB * TEMP * LN_TO_LOG * pKa
+         relene = 0.00 #+ KB * TEMP * LN_TO_LOG * pKa
       elif igb == 2:
-         relene = -84.4627 - KB * TEMP * LN_TO_LOG * pKa
+         relene = -7.04074 + KB * TEMP * LN_TO_LOG * pKa
       else:
          relene = 0.00
 
@@ -1486,7 +1486,7 @@ def getData(residue, igb, has_water=False, neighbor_right='none', neighbor_left=
                    0.1270,      # H40         
                    0.0000 ] ,   # H41         
 
-                 [ 1,           # Relative energy STATE 1 1UH (prot)
+                 [ relene,      # Relative energy STATE 1 1UH (prot)
                    1,           # Relative protonation
                   -0.0787,      # C1          
                   -0.0657,      # C2          

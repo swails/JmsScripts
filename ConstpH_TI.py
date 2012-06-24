@@ -66,6 +66,8 @@ group = OptionGroup(parser, 'Calculation Info', 'Options that pertain to the ' +
 group.add_option('-g', '--igb', dest='igb', metavar='INT', default=0,
                  help='Amber igb (GB) model to titrate for/with. No default',
                  type='int')
+group.add_option('-t', '--nstlim', dest='nstlim', default=5000000, type='int',
+                 metavar='INT', help='Number of time steps for simulations.')
 parser.add_option_group(group)
 
 opt, arg = parser.parse_args()
@@ -94,7 +96,7 @@ resname = opt.resname.strip('"').strip("'")
 
 TI_mdin = """TI calculation
 &cntrl
-   nstlim =5000000, nscm=2000,
+   nstlim = {4}, nscm=2000,
    ntx={0}, irest={1}, ntpr=1000,
    tempi=0.0, temp0=300.0, ntt=3, gamma_ln=5.0,
    ntb=0, igb={2}, cut=999.0,
@@ -261,14 +263,14 @@ del prm
 for i in range(11):
    if i == 0:
       file = open('mdin','w')
-      file.write(TI_mdin.format(1, 0, igb, 0.1 * i))
+      file.write(TI_mdin.format(1, 0, igb, 0.1 * i, opt.nstlim))
       file.close()
       file = open('groupfile','w')
       file.write(TI_groupfile1)
       file.close()
    else:
       file = open('mdin','w')
-      file.write(TI_mdin.format(5, 1, igb, 0.1 * i))
+      file.write(TI_mdin.format(5, 1, igb, 0.1 * i, opt.nstlim))
       file.close()
       file = open('groupfile','w')
       file.write(TI_groupfile2.format(resname.lower(),i-1,i))

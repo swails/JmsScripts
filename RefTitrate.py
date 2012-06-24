@@ -56,6 +56,10 @@ parser.add_option('-l', '--left-residue', dest='leftres', default=None,
                   help='Which residue to cap with on the left terminus')
 parser.add_option('-i', '--right-residue', dest='rightres', default=None,
                   help='Which residue to cap with on the right terminus')
+parser.add_option('--frcmod', dest='frcmod', metavar='FILE', default=None,
+                  help='File with additional parameters for the compound')
+parser.add_option('--lib', dest='lib', metavar='FILE', default=None,
+                  help='File with the residue definition (OFF file)')
 
 (options, args) = parser.parse_args()
 
@@ -122,11 +126,21 @@ elif options.aa:
 else:
    right_term = 'CH3'
 
-tleapin = """source leaprc.constph
-l = sequence {%s %s %s}
+tleapin = "source leaprc.constph\n"
+
+if options.frcmod is not None:
+   tleapin += "loadamberparams %s\n" % options.frcmod
+if options.lib is not None:
+   tleapin += "loadoff %s\n" % options.lib
+
+tleapin += """l = sequence {%s %s %s}
 saveamberparm l %s.parm7 %s.rst7
 quit
 """ % (left_term, options.res, right_term, options.res, options.res)
+
+f = open('tleap.in', 'w')
+f.write(tleapin)
+f.close()
 
 if master:
    # First it's time to create the prmtop

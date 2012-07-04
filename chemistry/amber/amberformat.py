@@ -19,7 +19,7 @@ class AmberFormat(AmberParm):
       self.formats = {}
       self.parm_comments = {}
       self.flag_list = []
-      self.version = ''
+      self.version = '%VERSION  VERSION_STAMP = V0001.000  DATE = 01/26/02  14:17:31'
       self.prm_name = ''
       self.charge_flag = 'CHARGE'
 
@@ -94,6 +94,10 @@ class AmberFormat(AmberParm):
       except KeyError:
          return
       
+   def set_version(self, verstring):
+      """ Sets the version string """
+      self.version = '%%VERSION %s' % verstring.strip()
+
    def writeParm(self, name, overwrite=False):
       """
       Writes the current data in parm_data into a new topology file with

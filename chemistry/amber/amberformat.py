@@ -115,7 +115,7 @@ class AmberFormat(AmberParm):
 
       # get current time to put into new prmtop file if we had a %VERSION
       if self.version != '':
-         now = datetime.now()
+         now = datetime.datetime.now()
          datestring = "DATE = %02d/%02d/%02d  %02d:%02d:%02d" % ( now.month, 
                         now.day, now.year % 100, now.hour, now.minute, now.second)
          for i in range(len(self.version)): # replace the date in version string

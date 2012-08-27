@@ -7,7 +7,11 @@
 
 
 '''
+# force all division using '/' to be floating-point division and
+# '//' to be integer division (equivalent to Python 3 behavior)
+from __future__ import division
 import math
+import warnings
 
 class Atom():
     '''
@@ -51,11 +55,10 @@ Atom serial number. Atom name. Alternate location indicator. Residue name. Chain
         '''
     Antiquated function same as __str__
         '''
-        print "# Warning, antiquated function, __str__ function added"
+        warnings.warn("antiquated function, __str__ function added",
+                      DeprecationWarning)
         return(str(self))
 
-        return(pdbstring)
-        
 def centermolecule(listofAtoms):
     '''
 Given a list of Atom class objects, returns the same list centered
@@ -65,10 +68,10 @@ Given a list of Atom class objects, returns the same list centered
         for dim in range(3):
             center[dim]+=atom.coord[dim]
     for dim in range(3):
-        center[dim]=center[dim]/float(len(listofAtoms))
-    for i in range(len(listofAtoms)):
+        center[dim]=center[dim]/len(listofAtoms)
+    for atom in listofAtoms:
         for dim in range(3):
-            listofAtoms[i].coord[dim]-=center[dim]
+            atom.coord[dim]-=center[dim]
     return(listofAtoms)
 
 
@@ -152,7 +155,7 @@ Test if coordinate is inside VDW radius of list of atoms
                  if dist < radii[atom.element[0]]+buffer :
                      inside = True
                      break
-            except:
+            except KeyError:
                 print "Cannot find radius of atom named: ",atom.element,atom.name
                 exit()
     return(inside)
@@ -173,7 +176,7 @@ Test if coordinate is within specified radius of listed atoms
 
 def calcmolvolume(atoms,gridspacing,probesize=0.0):
     import modules.djsgrid as grid
-    print "This function is under testing and quite slow. This should be replaced by faster, more reliable code"
+    warnings.warn("This function is under testing and quite slow. This should be replaced by faster, more reliable code")
 
     volume=0.0
     print "spacing =",gridspacing
@@ -232,7 +235,7 @@ def calcmolvolume(atoms,gridspacing,probesize=0.0):
                 netindex=[]
                 for i in range(3): # indices of each point on shell
                     #print "shellindex,myindex[i]=",shellindex[i],myindices[i]
-                    netindex.append(shellindex[i]+myindices[i]) # origin of atom + shell index
+                    netin296c06886f1c5ad215350a2346e42a7521f95feedex.append(shellindex[i]+myindices[i]) # origin of atom + shell index
                     #print spans
                 #print "netindices=",netindex
                 #print grid.getcoordfromindices(netindex,mins,[gridspacing]*3)
@@ -245,7 +248,7 @@ def calcmolvolume(atoms,gridspacing,probesize=0.0):
     occupiedpdbfile.close()
     testedpdbfile.close()
     return(volume)
+296c06886f1c5ad215350a2346e42a7521f95fee
 
 
-
-
+296c06886f1c5ad215350a2346e42a7521f95fee

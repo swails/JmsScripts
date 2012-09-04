@@ -235,7 +235,7 @@ def calcmolvolume(atoms,gridspacing,probesize=0.0):
                 netindex=[]
                 for i in range(3): # indices of each point on shell
                     #print "shellindex,myindex[i]=",shellindex[i],myindices[i]
-                    netin296c06886f1c5ad215350a2346e42a7521f95feedex.append(shellindex[i]+myindices[i]) # origin of atom + shell index
+                    netindex.append(shellindex[i]+myindices[i]) # origin of atom + shell index
                     #print spans
                 #print "netindices=",netindex
                 #print grid.getcoordfromindices(netindex,mins,[gridspacing]*3)
@@ -248,7 +248,3 @@ def calcmolvolume(atoms,gridspacing,probesize=0.0):
     occupiedpdbfile.close()
     testedpdbfile.close()
     return(volume)
-296c06886f1c5ad215350a2346e42a7521f95fee
-
-
-296c06886f1c5ad215350a2346e42a7521f95fee

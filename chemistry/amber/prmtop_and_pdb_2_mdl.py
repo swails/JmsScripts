@@ -73,7 +73,7 @@ Consult relevant literature for more information.
     mdldata.addFlag("COORD","5e16.8",data=coords)
     mdlfilename=pdbfilename.split(".pdb")[0]+".mdl" 
     mdldata.writeParm(mdlfilename, overwrite=False)
-    print "Finished constructing:",mdfilename
+    print "Finished constructing:",mdlfilename
 
 if __name__ == '__main__' :
     main()

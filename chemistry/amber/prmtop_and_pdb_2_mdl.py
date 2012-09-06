@@ -13,7 +13,7 @@ def main():
     minargs=3
     numargs=len(sys.argv)
     if(numargs<minargs) :
-        print "# format prmtop_and_pdb_2_mdl.py <prmtop file> <pdbfile>"
+        print "# format prmtop_and_pdb_2_mdl.py <prmtop file> <pdbfile> [<1=Guess multiplicity (dangerous)>]"
     	print "Insufficient arguments, need ",minargs," : ",numargs
     	exit()
     print '''
@@ -21,10 +21,24 @@ Warning! This utility gives a mdl file based on the prmtop.
 But the results should be inspected afterwards.
 Some things that work in MD do not work in RISM.
 Consult relevant literature for more information.
+
+
+
     '''
 
     prmfilename=sys.argv[1]
     pdbfilename=sys.argv[2]
+    if numargs>3 :
+        guessmult=1
+        print '''
+You chose to let this program guess the multiplicity.
+This is a dangerous option.
+I will naively use atom types to decide multiplicity.
+This is not generally true, but may be for your system.
+Please check it.
+            '''
+    else:
+        guessmult=0
     prmtopdata=AmberParm(prmfilename)
     mdldata=AmberFormat() 
     #TITLE -> TITLE 20a4
@@ -39,19 +53,31 @@ Consult relevant literature for more information.
     numatoms,numtypes=prmtopdata.parm_data["POINTERS"][0:2]
     mdldata.addFlag("TITLE","20a4",data=prmtopdata.parm_data["TITLE"])
     mdldata.addFlag("POINTERS","10i8",data=prmtopdata.parm_data["POINTERS"][0:2])
-    mdldata.addFlag("ATMTYP","10i8",data=set(prmtopdata.parm_data["ATOM_TYPE_INDEX"]))
+    if guessmult:
+        mdldata.addFlag("ATMTYP","10i8",data=set(prmtopdata.parm_data["ATOM_TYPE_INDEX"]))
+    else:
+        mdldata.addFlag("ATMTYP","10i8",data=prmtopdata.parm_data["ATOM_TYPE_INDEX"])
 
     atomtypeindices=prmtopdata.parm_data["ATOM_TYPE_INDEX"]
     dupenames=prmtopdata.parm_data["ATOM_NAME"]
-    names = [dupenames[atomtypeindices.index(i+1)] for i in range(numtypes)]
+    if guessmult:
+        names = [dupenames[atomtypeindices.index(i+1)] for i in range(numtypes)]
+    else:
+        names=dupenames
     mdldata.addFlag("ATMNAME","20a4",data=names)
 
     dupemasses=prmtopdata.parm_data["MASS"]
-    masses = [dupemasses[atomtypeindices.index(i+1)] for i in range(numtypes)]
+    if guessmult:
+        masses = [dupemasses[atomtypeindices.index(i+1)] for i in range(numtypes)]
+    else:
+        masses=dupemasses
     mdldata.addFlag("MASS","5e16.8",data=masses)
 
     dupecharges=prmtopdata.parm_data["CHARGE"] # need to add back in multiplicative factor
-    charges=[dupecharges[atomtypeindices.index(i+1)]*18.2223 for i in range(numtypes)]
+    if guessmult:
+        charges=[dupecharges[atomtypeindices.index(i+1)]*18.2223 for i in range(numtypes)]
+    else:
+        charges=dupecharges
     mdldata.addFlag("CHG","5e16.8",data=charges)
 
     #Nonbonded
@@ -59,7 +85,10 @@ Consult relevant literature for more information.
     prmtopdata.fill_LJ()
     mdldata.addFlag("LJEPSILON","5e16.8",data=prmtopdata.LJ_depth)
     mdldata.addFlag("LJSIGMA","5e16.8",data=prmtopdata.LJ_radius)
-    multiplicity=[atomtypeindices.count(i+1) for i in range(numtypes)]
+    if guessmult:
+        multiplicity=[atomtypeindices.count(i+1) for i in range(numtypes)]
+    else:
+        multiplicity=[1]*numatoms
     mdldata.addFlag("MULTI","10i8",data=multiplicity)
 
     #coordinates

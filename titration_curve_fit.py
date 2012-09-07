@@ -11,6 +11,11 @@ from optparse import OptionParser
 from scipy.optimize import curve_fit
 import numpy as np
 import sys, math
+try:
+   import matplotlib.pyplot as plt
+   hasplt = True
+except ImportError:
+   hasplt = False
 
 def f(ph, pka, n):
    return 1.0/(1.0+10.0**(n*(pka-ph)))
@@ -23,6 +28,9 @@ if __name__ == '__main__':
    parser.add_option('-d', '--deprotonated', dest='protonated', default=True,
                      action='store_false', help='The input data is fraction ' +
                      'deprotonated. NOT default behavior.')
+   parser.add_option('-t', '--title', dest='title', default='',
+                     metavar='STRING',help='Title for the plot (appended with '
+                     '"Titration Curve")')
    opt, arg = parser.parse_args()
 
    if not opt.input_file:
@@ -53,10 +61,29 @@ if __name__ == '__main__':
 
    params, cov = curve_fit(f, xdata, ydata, p0=(avg,1))
 
-   print params
-
    sum2 = 0.0
    for i in range(len(xdata)):
       sum2 += (ydata[i] - f(xdata[i], params[0], params[1])) ** 2
 
-   print sum2
+
+   if not hasplt:
+      print 'pKa = %f' % params[0]
+      print 'n   = %f' % params[1]
+      print 'RSS = %f' % sum2
+      sys.exit(0)
+   
+   if opt.title:
+      opt.title = opt.title.strip() + ' '
+
+   # Plot me
+   fcn_x = np.linspace(min(xdata)-1, max(xdata)+1, 1000)
+   fcn_y = [f(i, params[0], params[1]) for i in fcn_x]
+   plt.axis([min(xdata)-1, max(xdata)+1, 0, 1])
+   plt.xlabel('pH')
+   plt.ylabel('Fraction Deprotonated')
+   plt.title('%sTitration Curve' % opt.title)
+   plt.text(min(xdata)-0.9, 0.4, 'pKa = %.2f\nn    = %.2f\nRSS = %.4e' %
+            (params[0], params[1], sum2))
+   plt.grid(True)
+   myplot = plt.plot(xdata, ydata, 'bo', fcn_x, fcn_y, 'r-')
+   plt.show()

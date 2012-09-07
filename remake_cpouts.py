@@ -77,7 +77,8 @@ def main():
    usage = '%prog [Options] cpout1 cpout2 cpout3 ... cpoutN'
    parser = OptionParser(usage=usage)
    parser.add_option('-p', '--prefix', dest='prefix', default=None,
-                     help='Prefix of output cpout files')
+                     help='Prefix of output cpout files. Output cpout files '
+                     'are named <prefix>.pH_<pH>')
    opt, arg = parser.parse_args()
 
    try:
@@ -97,7 +98,7 @@ def main():
 
    files = {}
    for pH in pH_list:
-      files[pH] = open(opt.prefix + 'pH_%.2f' % pH, 'w')
+      files[pH] = open(opt.prefix + '.pH_%.2f' % pH, 'w')
 
    while records[0]:
       for rec in records:

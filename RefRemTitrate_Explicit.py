@@ -54,7 +54,9 @@ group.add_option('-f', '--fine-resolution', dest='fineres', default=0.2,
 group.add_option('-c', '--coarse-resolution', dest='coarseres', default=1.0,
                  type='float', metavar='FLOAT',
                  help='pH increments further from pKa')
-
+group.add_option('--ntcnstph', metavar='INT', dest='ntcnstph', default=50,
+                 type='int', help='Number of steps between protonation state '
+                 'change attempts. (Default %default)')
 parser.add_option_group(group)
 
 group = OptionGroup(parser, 'Simulation Options', 'Options controlling the '
@@ -126,11 +128,11 @@ md_mdin = """Mdin file for titrating stuff
    ntp=0, ntc=2, ntf=2, cut=8.0,
    ntb=0, saltcon=0.1,
    nrespa=1, tol=0.000001, icnstph=2,
-   solvph=%%s, ntcnstph=5, gamma_ln=2.0,
+   solvph=%%d, ntcnstph=%d, gamma_ln=2.0,
    ntwr=500, ioutfm=1, numexchg=%d,
-   ntrelax=%s
+   ntrelax=%d
  /
-""" % (nstlim, numexchg, options.ntrelax)
+""" % (nstlim, options.ntcnstph, numexchg, options.ntrelax)
 
 min_mdin = """Minimization to relax initial bad contacts, explicit solvent
  &cntrl

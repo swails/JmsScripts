@@ -157,7 +157,7 @@ heat_mdin = """Slow heating in explicit solvent
    VALUE1=50.0, VALUE2=300.0,
  /
  &wt TYPE='END' /
-"""
+""" % (options.heatsteps)
 
 equil_mdin = """Constant pressure equilibration dynamics
  &cntrl
@@ -168,7 +168,7 @@ equil_mdin = """Constant pressure equilibration dynamics
    ntp=1, ntc=2, ntf=2, cut=8,
    ntb=2, iwrap=1, ioutfm=1,
  /
-"""
+""" % (options.equisteps)
 
 if options.leftres is not None:
    left_term = options.leftres
@@ -195,8 +195,8 @@ tleapin += """l = sequence {%s %s %s}
 solvateoct l TIP3PBOX %s
 saveamberparm l %s.parm7 %s.rst7
 quit
-""" % (left_term, options.res, right_term, options.res, options.res,
-       options.box)
+""" % (left_term, options.res, right_term, options.box, options.res,
+       options.res)
 
 f = open('tleap.in', 'w')
 f.write(tleapin)
@@ -258,11 +258,18 @@ if proc_return != 0:
 mdin = open('mdin.min', 'w')
 mdin.write(min_mdin)
 mdin.close()
+mdin = open('heat.mdin', 'w')
+mdin.write(heat_mdin)
+mdin.close()
+mdin = open('equil.mdin', 'w')
+mdin.write(equil_mdin)
+mdin.close()
 
 print "\n Minimizing initial structure"
-proc_return = Popen([pmemd, '-O', '-i', 'mdin.min', '-c',
-                   '%s.rst7' % options.res, '-p', '%s.parm7' % options.res,
-                   '-o', 'min.mdout', '-r', '%s.min.rst7' % options.res]).wait()
+proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' +
+                        ('-O -i mdin.min -c %s.rst7 -p %s.parm7 -o min.mdout '
+                        '-r %s.min.rst7') % (options.res, options.res,
+                        options.res))
 
 if proc_return != 0:
    print >> sys.stderr, 'pmemd minimization error!'
@@ -274,18 +281,20 @@ os.unlink('min.mdout')
 os.unlink('leap.log')
 
 print '\n Heating structure'
-proc_return = Popen([pmemd, '-O', '-i', 'heat.mdin', '-c',
-                  '%s.min.rst7' % options.res, '-p', '%s.parm7' % options.res,
-                  '-o', 'heat.mdout', 'r', '%s.heat.rst7' % options.res]).wait()
+proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
+                        ('-O -i heat.mdin -c %s.min.rst7 -p %s.parm7 '
+                        '-o heat.mdout -r %s.heat.rst7') % (options.res,
+                        options.res, options.res))
 
 if proc_return != 0:
    print >> sys.stderr, 'pmemd heating error!'
    sys.exit(1)
 
 print '\n Equilibrating structure'
-proc_return = Popen([pmemd, '-O', '-i', 'equil.mdin', '-c',
-                '%s.heat.rst7' % options.res, '-p', '%s.parm7' % options.res,
-                '-o', 'equil.mdout', 'r', '%s.equil.rst7' % options.res]).wait()
+proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
+                        ('-O -i equil.mdin -c %s.heat.rst7 -p %s.parm7 '
+                        '-o equil.mdout -r %s.equil.rst7') % (options.res,
+                        options.res, options.res))
 
 if proc_return != 0:
    print >> sys.stderr, 'pmemd equilibration error!'

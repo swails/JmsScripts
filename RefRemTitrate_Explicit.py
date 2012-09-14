@@ -128,7 +128,7 @@ md_mdin = """Mdin file for titrating stuff
    ntp=0, ntc=2, ntf=2, cut=8.0,
    saltcon=0.1,
    nrespa=1, tol=0.000001, icnstph=2,
-   solvph=%%d, ntcnstph=%d, gamma_ln=2.0,
+   solvph=%%f, ntcnstph=%d, gamma_ln=2.0,
    ntwr=500, ioutfm=1, numexchg=%d,
    ntrelax=%d
  /

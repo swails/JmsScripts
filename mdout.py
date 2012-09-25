@@ -8,6 +8,7 @@ It does NOT do:
    o  Store decomp data when idecomp != 0
 """
 
+from dataset import DataSet
 import numpy as np
 import os
 import re
@@ -56,7 +57,10 @@ class AmberMdout(object):
 
       # Determine how many steps we've done
       if (self.is_min and 'maxcyc' in keys)or(self.is_md and 'nstlim' in keys):
-         if self.is_min: self.num_steps = self.properties['maxcyc']
+         if self.is_min:
+            self.num_steps = self.properties['maxcyc']
+            if self.properties['imin'] == 5:
+               self.num_steps = self._get_imin5_nsteps()
          if self.is_md:
             self.num_steps = self.properties['nstlim']
             if 'numexchg' in keys:
@@ -67,9 +71,14 @@ class AmberMdout(object):
          self.num_terms = self.num_steps / self.properties['ntpr'] + 1
          # For restart, we don't have that extra term at the beginning
          if self.is_restart: self.num_terms -= 1
+         if self.properties['imin'] == 5:
+            self.num_terms *= self._get_imin5_nsteps()
       else:
-         self.num_steps = AmberMdout.UNKNOWN
-         self.num_terms = AmberMdout.UNKNOWN
+         if self.properties['imin'] == 5:
+            self.num_steps = self.num_terms = self._get_imin5_nsteps()
+         else:
+            self.num_steps = AmberMdout.UNKNOWN
+            self.num_terms = AmberMdout.UNKNOWN
       self.get_data()
       
    #================================================
@@ -126,18 +135,24 @@ class AmberMdout(object):
 
    def get_data(self):
       """ Extracts the data from the mdout file """
-      energy_fields = re.compile(r'([A-Z\(\) 1-9\-]+(?:tot){0,1} *= *\-*\d+[.\d]*)')
+      energy_fields = re.compile(r'([A-Za-z\(\) 1-9\-\.]+ *= *\-*\d*[.\d]*(?:E[+-]*\d+)?)')
       if self.is_md:
          start_of_record = energy_fields
          ignore_record = re.compile(r'^      A V E R A G E S   O V E R|^      R M S  F L U C T U A T I O N S')
       elif self.is_min:
          start_of_record = re.compile(r'^   NSTEP       ENERGY          RMS            GMAX         NAME    NUMBER')
-         ignore_record = re.compile(r'^                    FINAL RESULTS')
+         if self.properties['imin'] == 1:
+            ignore_record = re.compile(r'^                    FINAL RESULTS')
+         else:
+            # imin == 5, don't ignore any records
+            ignore_record = Exception()
+            setattr(ignore_record, 'match', lambda *args, **kwargs: False)
       fl = open(self.filename, 'r')
       rawline = fl.readline()
       first_record_done = False
       num_record = 0
       ignore_this_record = False
+      ignore_next_record = False
 
       while rawline:
          # First find the Results section
@@ -156,8 +171,6 @@ class AmberMdout(object):
             if rawline[0] == '|':
                rawline = fl.readline()
                continue
-            ignore_this_record = ignore_this_record or \
-                                 bool(ignore_record.match(rawline))
             # See if we found the start of the record
             items = start_of_record.findall(rawline)
             # If items is blank, read the next line and continue
@@ -166,44 +179,62 @@ class AmberMdout(object):
                continue
             # If we are doing a minimization, the format is different -- the
             # starting line is by itself, and their values are right below them
+            used_terms = []
             if self.is_min:
                terms = items[0].split()
-               if not first_record_done:
-                  for term in terms: 
-                     # NAME is an atom name -- skip over this one
-                     if term == 'NAME': continue
-                     self.data[term] = np.zeros(self.num_terms)
                term_vals = fl.readline().split()
                for i, term in enumerate(terms):
-                  # Skip over NAME again (see above)
+                  # Skip over NAME since it has no value
                   if term == 'NAME': continue
                   if not ignore_this_record:
-                     self.data[term][num_record] = float(term_vals[i])
+                     try:
+                        self.data[term].add_value(float(term_vals[i]))
+                     except KeyError:
+                        self.data[term] = np.zeros(self.num_terms).view(DataSet)
+                        self.data[term].add_value(float(term_vals[i]))
+                     used_terms.append(term)
                # Eat the next line (it's blank)
                fl.readline()
                # The next line has stuff on it
                rawline = fl.readline()
                items = energy_fields.findall(rawline)
             # Now if we've found a record, cycle through it
-            while items:
-               # Load the items into their respective places in the data dict
-               for item in items:
-                  term, term_val = item.split('=')
-                  term, term_val = term.strip(), term_val.strip()
-                  # If we're on our first one, we need to create the data array
-                  if not first_record_done:
-                     self.data[term] = np.zeros(self.num_terms)
-                  if not ignore_this_record:
-                     self.data[term][num_record] = float(term_val)
-               # Now we're done with the terms, get the next line
-               rawline = fl.readline()
-               items = energy_fields.findall(rawline)
-            # Now that we're (definitely) done with our first record...
-            first_record_done = True
+            try:
+               while items:
+                  breakme = False
+                  # Load the items into their respective places in the data dict
+                  for item in items:
+                     term, term_val = item.split('=')
+                     term, term_val = term.strip(), term_val.strip()
+                     if term in used_terms:
+                        raise StopIteration
+                     else:
+                        used_terms.append(term)
+                     # If we're on our first one, we need to create the data array
+                     if not ignore_this_record:
+                        try:
+                           self.data[term].add_value(float(term_val))
+                        except KeyError:
+                           self.data[term] = np.zeros(self.num_terms).view(DataSet)
+                           self.data[term].add_value(float(term_val))
+                        except Exception, err:
+                           raise err
+                  # Now we're done with the terms, get the next line
+                  rawline = fl.readline()
+                  items = energy_fields.findall(rawline)
+                  while not items and rawline[:14] != '   5.  TIMINGS':
+                     if self.is_min and start_of_record.findall(rawline):
+                        raise StopIteration
+                     rawline = fl.readline()
+                     ignore_next_record = (ignore_next_record or 
+                                           bool(ignore_record.match(rawline)))
+                     items = energy_fields.findall(rawline)
+            except StopIteration:
+               pass
             # We do not want to off-hand ignore the next record
-            if not ignore_this_record: num_record += 1
-            ignore_this_record = False
-            rawline = fl.readline()
+            ignore_this_record = ignore_next_record
+            ignore_next_record = False
+#           rawline = fl.readline()
          # end while rawline and rawline[:14] != '   5.  TIMINGS':
          # Once we get here, we're done.
          break
@@ -213,12 +244,12 @@ class AmberMdout(object):
       # size of each data array). In cases where we didn't know how many terms
       # to start with, or when simulations didn't finish, we resize/reshape the
       # arrays to remove extra zeros
-      if num_record != self.num_terms:
-         for key in self.data: self.data[key] = self.data[key][:num_record]
+      for key in self.data.keys():
+         self.data[key] = self.data[key].truncate()
          # Update the number of terms and the number of steps
-         self.num_terms = num_record
-         if 'ntpr' in self.properties: 
-            self.num_steps = self.num_terms * self.properties['ntpr']
+      self.num_terms = len(self.data[self.data.keys()[0]])
+      if 'ntpr' in self.properties: 
+         self.num_steps = self.num_terms * self.properties['ntpr']
 
    #================================================
 
@@ -236,7 +267,7 @@ class AmberMdout(object):
       # them both into that new array one after another. Then put it into
       # self.data[key] to complete the in-place addition
       for key in selfkeys:
-         tmp = np.zeros(size1 + size2)
+         tmp = np.zeros(size1 + size2).view(DataSet)
          for i, j in enumerate(self.data[key]): tmp[i] = j
          for i, j in enumerate(other.data[key]): tmp[i+size1] = j
          self.data[key] = tmp
@@ -245,6 +276,20 @@ class AmberMdout(object):
       self.num_steps += other.num_steps
 
       return self
+
+   #================================================
+
+   def _get_imin5_nsteps(self):
+      """ Get the total number of steps if imin == 5 """
+      fl = open(self.filename, 'r')
+      nsets = 0
+      for line in fl:
+         if line.startswith('minimizing coord set #'):
+            nsets = max(nsets, int(line[22:].strip()))
+      fl.close()
+      if nsets == 0:
+         raise MdoutError('Could not find number of frames for imin=5!')
+      return nsets
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 

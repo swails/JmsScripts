@@ -13,6 +13,11 @@ class DatasetError(Exception):
 class DataSet(np.ndarray):
    """ Derived class from Numpy array class """
 
+   def __array_finalize__(self, obj):
+      """ Set up a counter so we can add to this """
+      self.counter = 0
+#     np.ndarray.__array_finalize__(self, obj)
+
    def KullbackLeibler(self, interval, ofile=sys.stdout):
       r"""
       Performs Kullback-Liebler analysis on the data set by histogramming
@@ -111,8 +116,22 @@ class DataSet(np.ndarray):
    def append(self, val):
       """ Adds a new element to the array """
       # Assume it is a float, to save time
-      self.resize(self.size+1)
+      self.resize(self.size+1, refcheck=False)
       self[self.size-1] = val
+
+   def add_value(self, val):
+      """ Add a float to my array """
+      if not isinstance(val, float):
+         raise TypeError('add_value expects a float!')
+      if self.counter >= self.shape[0]:
+         raise IndexError('Cannot add_value to DataSet, out of bounds (%d)!' % 
+                          self.counter)
+      self[self.counter] = val
+      self.counter += 1
+
+   def truncate(self):
+      """ Get rid of everything after counter """
+      return np.resize(self, self.counter)
 
 def _kull_leib(hist1, hist2):
    """ 
@@ -137,7 +156,7 @@ def load_from_file(infile, column):
          val = float(line.split()[column-1])
       except IndexError: continue
       except ValueError: continue
-      ret.resize(ret.size+1)
+      ret.resize(ret.size+1, refcheck=False)
       ret[ret.size-1] = val
 
    return ret

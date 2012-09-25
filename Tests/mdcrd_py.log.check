@@ -1,40 +1,53 @@
 Running cpptraj:
 
-CPPTRAJ: Trajectory Analysis. V12.1
+CPPTRAJ: Trajectory Analysis. V13.8b
     ___  ___  ___  ___
      | \/ | \/ | \/ | 
     _|_/\_|_/\_|_/\_|_
 
+	AmberParm Title: [NASN]
+	Radius Set: H(N), salt-bridge modified Bondi radii (mbondi3)
+Warning: [trpcage.nowat.parm7] ATOMIC_NUMBER not present in topology.
+	trpcage.nowat.parm7: determining molecule info from bonds.
 INPUT: Reading Input from STDIN, type "go" to run, "quit" to exit:
 >   [trajin trpcage.solv5.1_remd12.nc 1 163 1 ]
 	[trpcage.solv5.1_remd12.nc] contains 163 frames.
 	Warning: Box info present in trajectory trpcage.solv5.1_remd12.nc but not in
 	         associated parm trpcage.nowat.parm7
-	[trpcage.solv5.1_remd12.nc] Box type is NonOrthorhombic.
+	Box type is Non-orthogonal (beta=109.471219)
+	[trpcage.solv5.1_remd12.nc] Box type is Non-orthogonal
 	Warning: Setting parm trpcage.nowat.parm7 box information from trajectory trpcage.solv5.1_remd12.nc.
+	Box type is Non-orthogonal (beta=109.471219)
 >   [trajin trpcage.solv5.2_remd12.nc 1 62 1 ]
 	[trpcage.solv5.2_remd12.nc] contains 62 frames.
+	Box type is Non-orthogonal (beta=109.471219)
+	[trpcage.solv5.2_remd12.nc] Box type is Non-orthogonal
 >   [trajin trpcage.solv5.3_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.3_remd12.nc] contains 2000 frames.
+	Box type is Non-orthogonal (beta=109.471219)
+	[trpcage.solv5.3_remd12.nc] Box type is Non-orthogonal
 >   [trajin trpcage.solv5.4_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.4_remd12.nc] contains 2000 frames.
+	Box type is Non-orthogonal (beta=109.471219)
+	[trpcage.solv5.4_remd12.nc] Box type is Non-orthogonal
 >   [trajin trpcage.solv5.5_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.5_remd12.nc] contains 2000 frames.
+	Box type is Non-orthogonal (beta=109.471219)
+	[trpcage.solv5.5_remd12.nc] Box type is Non-orthogonal
 >   [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
-> 
+> > 
 INPUT TRAJECTORIES:
-  [trpcage.solv5.1_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 163 of 163)
-  [trpcage.solv5.2_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 62 of 62)
-  [trpcage.solv5.3_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
-  [trpcage.solv5.4_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
-  [trpcage.solv5.5_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm 0 (with box info) (reading 2000 of 2000)
+  [trpcage.solv5.1_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm trpcage.nowat.parm7 (with box info) (reading 163 of 163)
+  [trpcage.solv5.2_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm trpcage.nowat.parm7 (with box info) (reading 62 of 62)
+  [trpcage.solv5.3_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm trpcage.nowat.parm7 (with box info) (reading 2000 of 2000)
+  [trpcage.solv5.4_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm trpcage.nowat.parm7 (with box info) (reading 2000 of 2000)
+  [trpcage.solv5.5_remd12.nc] is a NetCDF AMBER trajectory with replica temperatures, Parm trpcage.nowat.parm7 (with box info) (reading 2000 of 2000)
   Coordinate processing will occur on 6225 frames.
 
 PARAMETER FILES:
- 0: trpcage.nowat.parm7, 304 atoms, 20 res, non-ortho. box, 6225 frames
+ 0: trpcage.nowat.parm7, 304 atoms, 20 res, box: Non-orthogonal, 1 mol, 6225 frames
 
 REFERENCE COORDS:
-  No reference coordinates.
   No frames defined.
 
 OUTPUT TRAJECTORIES:
@@ -48,7 +61,7 @@ BEGIN TRAJECTORY PROCESSING:
 .....................................................
 PARM [trpcage.nowat.parm7]: Setting up 1 actions.
   0: [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
-	304 atoms selected.
+	Mask [:*] corresponds to 304 atoms.
 ----- [trpcage.solv5.1_remd12.nc] (1-163, 1) -----
  0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% Complete.
 
@@ -69,8 +82,14 @@ Read 6225 frames and processed 6225 frames.
 ACTION OUTPUT:
 
 DATASETS:
-  There is 1 data set: rmsd
+  There is 1 data set: 
+	Data set rmsd, size is 6225 []:-1 "rmsd"
+
+DATASETS AFTER ANALYSIS:
+  There is 1 data set: 
+	Data set rmsd, size is 6225 []:-1 "rmsd"
 DATAFILE OUTPUT:
-  AmberTraj_RMSD.dat: rmsd
+  AmberTraj_RMSD.dat:  rmsd
+AmberTraj_RMSD.dat: Writing 6225 frames.
 
 cpptraj ran successfully!

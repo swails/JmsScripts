@@ -130,7 +130,7 @@ md_mdin = """Mdin file for titrating stuff
    nrespa=1, tol=0.000001, icnstph=2,
    solvph=%%f, ntcnstph=%d, gamma_ln=2.0,
    ntwr=500, ioutfm=1, numexchg=%d,
-   ntrelax=%d
+   ntrelax=%d, ntwx=1000,
  /
 """ % (nstlim, options.ntcnstph, numexchg, options.ntrelax)
 
@@ -334,7 +334,7 @@ for i, ph in enumerate(phlist):
                   '-o %(sys)s_pH%(ph)s.mdout -r %(sys)s.md.rst7.%(num)s '
                   '-inf %(num)s.mdinfo -cpin %(sys)s.cpin -cpout '
                   '%(sys)s_pH%(ph)s.cpout -cprestrt %(num)d.cprestrt -rem 4 '
-                  '-remlog %(sys)s_rem.log\n') % opts)
+                  '-remlog %(sys)s_rem.log -x %(sys)s_pH%(ph)s.nc\n') % opts)
 
 grpfile.close()
    

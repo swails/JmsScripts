@@ -8,7 +8,7 @@ By Jason Swails, Updated 04/18/2011
 """
 
 from chemistry.amber.readparm import amberParm
-from commandline_parser import OptionParser
+from MMPBSA_mods.commandline_parser import OptionParser
 import sys
 import os
 

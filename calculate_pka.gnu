@@ -2,7 +2,8 @@ set term gif size 1280,1024 enhanced font 'calibri,20'
 set output 'titration_curve.gif'
 
 a = 1e-5
-f(x) = 1 / (a * 10 ** x + 1)
+hill = 1.
+f(x) = 1 / (10 ** (hill*(a-x)) + 1)
 
 fit f(x) 'titration_curve.dat' u 1:2 via a
 

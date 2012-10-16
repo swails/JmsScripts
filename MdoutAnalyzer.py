@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from Tkinter import Tk, BOTH
 from tkFileDialog import askopenfilenames
+from Tkinter import Tk, BOTH
+from mdoutanalyzer.mdout import AmberMdout
 from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
 from optparse import OptionParser
-from mdout import AmberMdout
 
 parser = OptionParser(usage='%prog [mdout1] [mdout2] ... [mdoutN]')
 opt, arg = parser.parse_args()

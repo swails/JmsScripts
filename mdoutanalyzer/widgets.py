@@ -56,7 +56,7 @@ class GraphButton(_AnaButton):
       plt.cla()
       xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
-               'marker' : None,
+               'marker' : '',
                'linewidth' : self.graph_props.linewidth()}
       if self.graph_props.lines():
          props['linestyle'] = '-'
@@ -148,7 +148,7 @@ class HistButton(_AnaButton):
       plt.clf()
       plt.cla()
       props = {'linestyle' : '',
-               'marker' : None,
+               'marker' : '',
                'linewidth' : self.graph_props.linewidth()}
       if self.graph_props.lines():
          props['linestyle'] = '-'
@@ -201,7 +201,7 @@ class AutoCorrButton(_AnaButton):
       plt.cla()
       xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
-               'marker' : None,
+               'marker' : '',
                'linewidth' : self.graph_props.linewidth()}
       if self.graph_props.lines():
          props['linestyle'] = '-'

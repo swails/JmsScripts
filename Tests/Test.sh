@@ -17,19 +17,19 @@ echo "============================================================"
 echo "Testing mdout.py"
 printf "   testing minimization output:   "
 
-python ../mdout.py --mdout trpcage.nowat.min.mdout > tmp
+python ../mdoutanalyzer/mdout.py --mdout trpcage.nowat.min.mdout > tmp
 diff -Nru mdout_trpcage_min.check tmp > mdout_trpcage_min.diff 2>&1
 test_cleanup $? mdout_trpcage_min.diff
 
 printf "   testing heating output:        "
 
-python ../mdout.py --mdout trpcage.nowat.heat0.mdout > tmp
+python ../mdoutanalyzer/mdout.py --mdout trpcage.nowat.heat0.mdout > tmp
 diff -Nru mdout_trpcage_heat.check tmp > mdout_trpcage_heat.diff 2>&1
 test_cleanup $? mdout_trpcage_heat.diff
 
 printf "   testing combining mdout files: "
 
-python ../mdout.py --mdout trpcage.nowat.heat0.mdout \
+python ../mdoutanalyzer/mdout.py --mdout trpcage.nowat.heat0.mdout \
                    --next-mdout trpcage.nowat.heat1.mdout > tmp
 diff -Nru mdout_trpcage_combine.check tmp > mdout_trpcage_combine.diff 2>&1
 test_cleanup $? mdout_trpcage_combine.diff

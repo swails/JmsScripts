@@ -36,6 +36,7 @@ class GraphPropMenu(Menu):
       self.add_checkbutton(onvalue=True, offvalue=False,
                            label='Normalize Histograms',
                            variable=self.graph_props._normalize)
+      self.add_separator()
       self.add_command(command=lambda: InputEntryWindow(self,
                                self.graph_props._xlabel, 'X-axis Label'),
                        label='Set X-axis Label')

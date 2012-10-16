@@ -1,6 +1,32 @@
 #!/usr/bin/env python
 
-import matplotlib.pyplot as plt
-import numpy as np
-from Tkinter import *
+from Tkinter import Tk, BOTH
+from tkFileDialog import askopenfilenames
+from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
 from optparse import OptionParser
+from mdout import AmberMdout
+
+parser = OptionParser(usage='%prog [mdout1] [mdout2] ... [mdoutN]')
+opt, arg = parser.parse_args()
+
+root = Tk()
+root.resizable(False, False)
+root.title('Mdout Analyzer')
+if not arg:
+   arg = askopenfilenames(title='Select Mdout File(s)', parent=root,
+                          filetypes=[('Mdout Files', '*.mdout'),
+                                     ('All Files', '*')])
+
+if not arg:
+   print ('No mdout files chosen!')
+
+for f in arg:
+   try:
+      mdout += AmberMdout(f)
+   except NameError:
+      mdout = AmberMdout(f)
+
+app = MdoutAnalyzerApp(root, mdout)
+app.pack(fill=BOTH)
+
+root.mainloop()

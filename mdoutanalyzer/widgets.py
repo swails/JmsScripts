@@ -4,6 +4,8 @@ List of useful widgets we use here.
 from __future__ import division
 
 from csv import writer
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from mdoutanalyzer.windows import TextWindow
 import numpy as np
@@ -80,9 +82,7 @@ class GraphButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.master.master.master.withdraw()
       plt.show()
-      self.master.master.master.deiconify()
       self.graph_props.reset_colors()
 
 class SaveButton(_AnaButton):
@@ -182,9 +182,7 @@ class HistButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.master.master.master.withdraw()
       plt.show()
-      self.master.master.master.deiconify()
       self.graph_props.reset_colors()
 
 class AutoCorrButton(_AnaButton):
@@ -231,9 +229,7 @@ class AutoCorrButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.master.master.master.withdraw()
       plt.show()
-      self.master.master.master.deiconify()
       self.graph_props.reset_colors()
       
 if __name__ == '__main__':

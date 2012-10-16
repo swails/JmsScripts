@@ -56,7 +56,11 @@ class GraphButton(_AnaButton):
 
       plt.clf()
       plt.cla()
-      xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
+      # Try to get our x data from the Time
+      try:
+         xdata = self.datasets['TIME(PS)']
+      except KeyError:
+         xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
                'marker' : '',
                'linewidth' : self.graph_props.linewidth()}
@@ -82,8 +86,8 @@ class GraphButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      plt.show()
       self.graph_props.reset_colors()
+      plt.show()
 
 class SaveButton(_AnaButton):
    """ For saving the data to a file """
@@ -182,8 +186,8 @@ class HistButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      plt.show()
       self.graph_props.reset_colors()
+      plt.show()
 
 class AutoCorrButton(_AnaButton):
    """
@@ -197,7 +201,10 @@ class AutoCorrButton(_AnaButton):
 
       plt.clf()
       plt.cla()
-      xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
+      try:
+         xdata = self.datasets['TIME(PS)']
+      except KeyError:
+         xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
                'marker' : '',
                'linewidth' : self.graph_props.linewidth()}
@@ -229,8 +236,8 @@ class AutoCorrButton(_AnaButton):
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      plt.show()
       self.graph_props.reset_colors()
+      plt.show()
       
 if __name__ == '__main__':
    root = Tk()

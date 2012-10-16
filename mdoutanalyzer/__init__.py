@@ -6,3 +6,5 @@ __all__ = ['toplevel_app', 'menus', 'graphproperties', 'widgets', 'windows',
            'mdout', 'dataset']
 __author__ = 'Jason M. Swails'
 __version__ = '1.0'
+__license__ = 'GPL v3'
+__date__ = 'Oct. 16, 2012'

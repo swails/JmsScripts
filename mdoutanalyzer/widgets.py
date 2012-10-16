@@ -83,6 +83,7 @@ class GraphButton(_AnaButton):
       self.master.master.master.withdraw()
       plt.show()
       self.master.master.master.deiconify()
+      self.graph_props.reset_colors()
 
 class SaveButton(_AnaButton):
    """ For saving the data to a file """
@@ -184,6 +185,7 @@ class HistButton(_AnaButton):
       self.master.master.master.withdraw()
       plt.show()
       self.master.master.master.deiconify()
+      self.graph_props.reset_colors()
 
 class AutoCorrButton(_AnaButton):
    """
@@ -232,6 +234,7 @@ class AutoCorrButton(_AnaButton):
       self.master.master.master.withdraw()
       plt.show()
       self.master.master.master.deiconify()
+      self.graph_props.reset_colors()
       
 if __name__ == '__main__':
    root = Tk()

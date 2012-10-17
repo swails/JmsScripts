@@ -58,7 +58,7 @@ class GraphButton(_AnaButton):
       plt.cla()
       # Try to get our x data from the Time
       try:
-         xdata = self.datasets['TIME(PS)']
+         xdata = self.datasets['TIME(PS)'].copy()
       except KeyError:
          xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
@@ -81,7 +81,7 @@ class GraphButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         plt.plot(xdata, self.datasets[self.keylist[i]], label=label,
+         plt.plot(xdata, self.datasets[self.keylist[i]].copy(), label=label,
                   color=self.graph_props.get_next_color(), **props)
       # Deiconify the root
       if self.graph_props.legend():
@@ -171,7 +171,7 @@ class HistButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]]
+         dset = self.datasets[self.keylist[i]].copy()
          bw = self.graph_props.binwidth()
          if bw == 0:
             bw = 3.5 * dset.std() / len(dset) ** (1/3)
@@ -202,7 +202,7 @@ class AutoCorrButton(_AnaButton):
       plt.clf()
       plt.cla()
       try:
-         xdata = self.datasets['TIME(PS)']
+         xdata = self.datasets['TIME(PS)'].copy()
       except KeyError:
          xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       props = {'linestyle' : '',
@@ -225,10 +225,11 @@ class AutoCorrButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]][:]
+         dset = self.datasets[self.keylist[i]].copy()
+         print id(dset), 'and', id(self.datasets[self.keylist[i]])
          dset -= dset.sum() / len(dset)
          dset /= dset.std()
-         dset2 = dset[:] / len(dset)
+         dset2 = dset.copy() / len(dset)
          acor = np.correlate(dset, dset2, 'full')
          acor = acor[len(acor)//2:]
          plt.plot(xdata, acor, label=label,

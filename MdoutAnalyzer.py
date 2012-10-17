@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from tkFileDialog import askopenfilenames
-from Tkinter import Tk, N, S, E, W
+from Tkinter import Tk, BOTH
 from mdoutanalyzer import __version__, __author__, __date__
 from mdoutanalyzer.mdout import AmberMdout
 from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
@@ -38,7 +38,12 @@ for f in arg:
       mdout = AmberMdout(f)
 
 app = MdoutAnalyzerApp(root, mdout)
-app.grid(row=0, column=0, stick=N+S+E+W)
+app.pack(fill=BOTH)
+# Update idle tasks here to make sure the whole app is filled in before making
+# our window non-resizable.  In some instances, this can chop off the second
+# frame
 app.update_idletasks()
+# Now make our window non-resizable
 root.resizable(False, False)
+# Enter our mainloop
 root.mainloop()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from tkFileDialog import askopenfilenames
-from Tkinter import Tk, BOTH
+from Tkinter import Tk, N, S, E, W
 from mdoutanalyzer import __version__, __author__, __date__
 from mdoutanalyzer.mdout import AmberMdout
 from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
@@ -22,7 +22,6 @@ parser = OptionParser(usage='%prog [mdout1] [mdout2] ... [mdoutN]',
 opt, arg = parser.parse_args()
 
 root = Tk()
-root.resizable(False, False)
 root.title('Mdout Analyzer')
 if not arg:
    arg = askopenfilenames(title='Select Mdout File(s)', parent=root,
@@ -39,6 +38,7 @@ for f in arg:
       mdout = AmberMdout(f)
 
 app = MdoutAnalyzerApp(root, mdout)
-app.pack(fill=BOTH)
-
+app.grid(row=0, column=0, stick=N+S+E+W)
+app.update_idletasks()
+root.resizable(False, False)
 root.mainloop()

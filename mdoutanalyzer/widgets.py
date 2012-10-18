@@ -219,10 +219,10 @@ class HistButton(_AnaButton):
             # Use a kernel density estimate for the histogramming to provide a
             # smooth curve
             kde = gaussian_kde(dset)
-            # Use 200 points to characterize the surface. Go 1/10th of the range
+            # Use 200 points to characterize the surface. Go 1/100th of the range
             # out past either side of the max and min
-            kmin = dset.min() - (dset.max() - dset.min()) / 10
-            kmax = dset.max() + (dset.max() - dset.min()) / 10
+            kmin = dset.min() - (dset.max() - dset.min()) / 100
+            kmax = dset.max() + (dset.max() - dset.min()) / 100
             xdata = np.arange(kmin, kmax+0.000000001, (kmax-kmin)/200)
             ydata = np.asarray([kde.evaluate(x) for x in xdata])
             plt.plot(xdata, ydata, label=label, **props)

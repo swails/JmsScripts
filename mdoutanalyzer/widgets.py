@@ -86,7 +86,6 @@ class GraphButton(_AnaButton):
       if not self.graph_props.use_time():
          xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
       
-      props = self.graph_props.graph_options()
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
       plt.ylabel(self.graph_props.ylabel())
@@ -95,16 +94,17 @@ class GraphButton(_AnaButton):
       for i, a in enumerate(self.activelist):
          if not a.get(): continue
          # plot me
+         props = self.graph_props.graph_options()
          if self.graph_props.legend():
             label = self.keylist[i]
          else:
             label = '_nolegend_'
          plt.plot(xdata, self.datasets[self.keylist[i]].copy()[nexcl:], 
-                  label=label, color=self.graph_props.get_next_color(), **props)
-      # Deiconify the root
+                  label=label, **props)
+      # Show the legend or not
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.graph_props.reset_colors()
+      self.graph_props.reset_props()
       plt.show()
 
 class SaveButton(_AnaButton):
@@ -201,7 +201,6 @@ class HistButton(_AnaButton):
                      parent=self)
          self.graph_props.noscipy()
          
-      props = self.graph_props.graph_options()
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
       plt.ylabel(self.graph_props.ylabel())
@@ -209,11 +208,12 @@ class HistButton(_AnaButton):
       plt.grid(self.graph_props.gridlines())
       for i, a in enumerate(self.activelist):
          if not a.get(): continue
+         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         props = self.graph_props.graph_options()
          if self.graph_props.legend():
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
          # Plot either with a KDE or not
          if self.graph_props.use_kde():
             # Use a kernel density estimate for the histogramming to provide a
@@ -225,8 +225,7 @@ class HistButton(_AnaButton):
             kmax = dset.max() + (dset.max() - dset.min()) / 10
             xdata = np.arange(kmin, kmax+0.000000001, (kmax-kmin)/200)
             ydata = np.asarray([kde.evaluate(x) for x in xdata])
-            plt.plot(xdata, ydata, label=label,
-                     color=self.graph_props.get_next_color(), **props)
+            plt.plot(xdata, ydata, label=label, **props)
          else:
             # No KDE -- straight-out histogramming
             bw = self.graph_props.binwidth()
@@ -238,12 +237,11 @@ class HistButton(_AnaButton):
                nbins = -int(bw)
             hist, bin_edges = np.histogram(dset, nbins,
                                            density=self.graph_props.normalize())
-            plt.plot(bin_edges[:len(hist)], hist, label=label,
-                     color=self.graph_props.get_next_color(), **props)
+            plt.plot(bin_edges[:len(hist)], hist, label=label, **props)
       # Plot our function
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.graph_props.reset_colors()
+      self.graph_props.reset_props()
       plt.show()
 
 class AutoCorrButton(_AnaButton):
@@ -269,8 +267,6 @@ class AutoCorrButton(_AnaButton):
 
       xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
       
-      props = self.graph_props.graph_options()
-      
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
       plt.ylabel(self.graph_props.ylabel())
@@ -279,6 +275,7 @@ class AutoCorrButton(_AnaButton):
       for i, a in enumerate(self.activelist):
          if not a.get(): continue
          # plot me
+         props = self.graph_props.graph_options()
          if self.graph_props.legend():
             label = self.keylist[i]
          else:
@@ -289,12 +286,11 @@ class AutoCorrButton(_AnaButton):
          dset2 = dset.copy() / len(dset)
          acor = np.correlate(dset, dset2, 'full')
          acor = acor[len(acor)//2:]
-         plt.plot(xdata, acor, label=label,
-                  color=self.graph_props.get_next_color(), **props)
+         plt.plot(xdata, acor, label=label, **props)
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
-      self.graph_props.reset_colors()
+      self.graph_props.reset_props()
       plt.show()
       
 if __name__ == '__main__':

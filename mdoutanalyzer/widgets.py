@@ -226,7 +226,6 @@ class AutoCorrButton(_AnaButton):
          else:
             label = '_nolegend_'
          dset = self.datasets[self.keylist[i]].copy()
-         print id(dset), 'and', id(self.datasets[self.keylist[i]])
          dset -= dset.sum() / len(dset)
          dset /= dset.std()
          dset2 = dset.copy() / len(dset)

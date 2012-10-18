@@ -1,14 +1,18 @@
 from Tkinter import *
 from tkFileDialog import askopenfilenames
 from mdout import AmberMdout
+from mdoutanalyzer.graphproperties import GraphControlWindow
 from mdoutanalyzer.widgets import InputEntryWindow
 
 class FileMenu(Menu):
    """ The main file menu """
-   def __init__(self, master, mdout):
+   def __init__(self, master, mdout, graph_props):
       Menu.__init__(self, master, tearoff=0)
       self.mdout = mdout
+      self.graph_props = graph_props
       self.add_command(label='Add Mdout File(s)', command=self._add_mdout)
+      self.add_separator()
+      self.add_command(label='Edit Graph Properties', command=self._edit_props)
       self.add_separator()
       self.add_command(label='Quit', command=master.master.destroy)
 
@@ -20,36 +24,9 @@ class FileMenu(Menu):
       for f in fnames:
          self.mdout += AmberMdout(f)
 
-class GraphPropMenu(Menu):
-   """ Controls the graph properties """
-   def __init__(self, master, graph_props):
-      Menu.__init__(self, master, tearoff=0)
-      self.graph_props = graph_props
-      self.add_checkbutton(onvalue=True, offvalue=False, label='Grid Lines',
-                           variable=self.graph_props._gridlines)
-      self.add_checkbutton(onvalue=True, offvalue=False, label='Use Points',
-                           variable=self.graph_props._points)
-      self.add_checkbutton(onvalue=True, offvalue=False, label='Use Lines',
-                           variable=self.graph_props._lines)
-      self.add_checkbutton(onvalue=True, offvalue=False, label='Show Legend',
-                           variable=self.graph_props._legend)
-      self.add_checkbutton(onvalue=True, offvalue=False,
-                           label='Normalize Histograms',
-                           variable=self.graph_props._normalize)
-      self.add_separator()
-      self.add_command(command=lambda: InputEntryWindow(self,
-                               self.graph_props._xlabel, 'X-axis Label'),
-                       label='Set X-axis Label')
-      self.add_command(command=lambda: InputEntryWindow(self,
-                               self.graph_props._ylabel, 'Y-axis Label'),
-                       label='Set Y-axis Label')
-      self.add_command(command=lambda: InputEntryWindow(self,
-                               self.graph_props._title, 'Graph Title'),
-                       label='Graph Title')
-      self.add_command(command=lambda: InputEntryWindow(self,
-                               self.graph_props._bin_width,
-                              'Histogram Bin Width (negative means # of bins)'),
-                       label='Histogram Bins')
+   def _edit_props(self):
+      """ Open up a window controlling the graph properties """
+      window = GraphControlWindow(self, self.graph_props)
 
 class HelpMenu(Menu):
    """ About and Help """
@@ -69,13 +46,10 @@ class MainMenu(Menu):
                     activeborderwidth=0)
       self.graph_props = graph_props
       self.mdout = mdout
-      self.file_menu = FileMenu(self, self.mdout)
-      self.graph_prop_menu = GraphPropMenu(self, self.graph_props)
+      self.file_menu = FileMenu(self, self.mdout, self.graph_props)
       self.help = HelpMenu(self)
       # Add the menus
       self.add_cascade(label='File', underline=0, menu=self.file_menu)
-      self.add_cascade(label='Graph Options', underline=0,
-                       menu=self.graph_prop_menu)
       self.add_cascade(label='Help', underline=0, menu=self.help)
 
 if __name__ == '__main__':

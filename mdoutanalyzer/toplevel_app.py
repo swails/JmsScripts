@@ -1,7 +1,7 @@
 from Tkinter import *
 from mdoutanalyzer.widgets import (DataButton, GraphButton, SaveButton,
                                    StatButton, HistButton, AutoCorrButton)
-from mdoutanalyzer.graphproperties import GraphProperties
+from mdoutanalyzer.graphproperties import GraphProperties, GraphControlWindow
 from mdoutanalyzer.menus import MainMenu
 
 class MdoutAnalyzerApp(Frame):
@@ -31,7 +31,7 @@ class MdoutAnalyzerApp(Frame):
       for i, b in enumerate(self.button_list):
          b.grid(row=1+i//self.NCOLS, column=i%self.NCOLS, sticky=N+S+E+W,
                 padx=2, pady=2)
-      self.data_canv.pack(fill=BOTH)
+      self.data_canv.grid(column=0, row=0, sticky=N+S+E+W)
 
       # What do we want to do with the data?
       self.action_canv = Frame(self)
@@ -60,4 +60,4 @@ class MdoutAnalyzerApp(Frame):
       for i, b in enumerate(self.acts):
          b.grid(row=1+i//self.NCOLS2, column=i%self.NCOLS2, sticky=N+S+E+W,
                 padx=2, pady=2)
-      self.action_canv.pack(fill=BOTH)
+      self.action_canv.grid(column=0, row=1, sticky=N+S+E+W)

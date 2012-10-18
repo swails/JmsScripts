@@ -10,8 +10,12 @@ import matplotlib.pyplot as plt
 from mdoutanalyzer.windows import TextWindow
 import numpy as np
 from tkFileDialog import asksaveasfilename
-from tkMessageBox import showerror
+from tkMessageBox import showerror, showwarning
 from Tkinter import *
+try:
+   from scipy.stats import gaussian_kde
+except ImportError:
+   gaussian_kde = None
 
 class InputEntryWindow(Toplevel):
    """ Widget that takes a single text input """
@@ -26,6 +30,16 @@ class InputEntryWindow(Toplevel):
       self.button.pack(fill=X)
       self.resizable(False, False)
       self.grab_set()
+
+class LabeledEntry(Frame):
+   """ This is a labeled entry widget """
+
+   def __init__(self, master, text, *args, **kwargs):
+      Frame.__init__(self, master)
+      self.entry = Entry(self, *args, **kwargs)
+      self.label = Label(self, text=text)
+      self.entry.pack(fill=BOTH)
+      self.label.pack(fill=BOTH)
 
 class DataButton(Checkbutton):
    """ Button for each data set parsed from the mdout file """
@@ -56,19 +70,23 @@ class GraphButton(_AnaButton):
 
       plt.clf()
       plt.cla()
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
       # Try to get our x data from the Time
       try:
-         xdata = self.datasets['TIME(PS)'].copy()
+         xdata = self.datasets['TIME(PS)'].copy()[nexcl:]
       except KeyError:
-         xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
-      props = {'linestyle' : '',
-               'marker' : '',
-               'linewidth' : self.graph_props.linewidth()}
-      if self.graph_props.lines():
-         props['linestyle'] = '-'
-      if self.graph_props.points():
-         props['marker'] = 'o'
+         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
       
+      if not self.graph_props.use_time():
+         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      
+      props = self.graph_props.graph_options()
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
       plt.ylabel(self.graph_props.ylabel())
@@ -81,8 +99,8 @@ class GraphButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         plt.plot(xdata, self.datasets[self.keylist[i]].copy(), label=label,
-                  color=self.graph_props.get_next_color(), **props)
+         plt.plot(xdata, self.datasets[self.keylist[i]].copy()[nexcl:], 
+                  label=label, color=self.graph_props.get_next_color(), **props)
       # Deiconify the root
       if self.graph_props.legend():
          plt.legend(loc=0)
@@ -102,7 +120,15 @@ class SaveButton(_AnaButton):
       if not str(fname.strip()):
          return
 
-      xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
+
+      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
       actives, keys = [xdata], ['Frame']
       for i, val in enumerate(self.activelist):
          if not val.get(): continue
@@ -119,7 +145,7 @@ class SaveButton(_AnaButton):
             csvwriter.writerow([v[i] for v in actives])
       else:
          f.write('#' + ''.join(['%16s' % n for n in keys]) + '\n')
-         for i in range(len(self.datasets[keys[1]])):
+         for i in range(nexcl, len(self.datasets[keys[1]])):
             f.write(' ' + ''.join(['%16.4f' % v[i] for v in actives]) + '\n')
       f.close()
 
@@ -130,9 +156,18 @@ class StatButton(_AnaButton):
 
       report_str = '%20s%20s%20s\n' % ('Data Set', 'Avg.', 'Std. Dev.')
       report_str += '-'*60 + '\n'
+
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
+
       for i, val in enumerate(self.activelist):
          if not val.get(): continue
-         dset = self.datasets[self.keylist[i]]
+         dset = self.datasets[self.keylist[i]][nexcl:]
          report_str += '%20s%20.4f%20.8f\n' % (self.keylist[i],
                        np.sum(dset) / len(dset), dset.std())
       
@@ -151,14 +186,22 @@ class HistButton(_AnaButton):
 
       plt.clf()
       plt.cla()
-      props = {'linestyle' : '',
-               'marker' : '',
-               'linewidth' : self.graph_props.linewidth()}
-      if self.graph_props.lines():
-         props['linestyle'] = '-'
-      if self.graph_props.points():
-         props['marker'] = 'o'
       
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
+      
+      if self.graph_props.use_kde() and gaussian_kde is None:
+         showwarning('No scipy!', 'You must have scipy in order to use a '
+                     'kernel density estimate to smooth the histograms!',
+                     parent=self)
+         self.graph_props.noscipy()
+         
+      props = self.graph_props.graph_options()
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
       plt.ylabel(self.graph_props.ylabel())
@@ -166,24 +209,38 @@ class HistButton(_AnaButton):
       plt.grid(self.graph_props.gridlines())
       for i, a in enumerate(self.activelist):
          if not a.get(): continue
-         # plot me
          if self.graph_props.legend():
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]].copy()
-         bw = self.graph_props.binwidth()
-         if bw == 0:
-            bw = 3.5 * dset.std() / len(dset) ** (1/3)
-         if bw > 0:
-            nbins = int((np.max(dset) - np.min(dset)) / bw)
+         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         # Plot either with a KDE or not
+         if self.graph_props.use_kde():
+            # Use a kernel density estimate for the histogramming to provide a
+            # smooth curve
+            kde = gaussian_kde(dset)
+            # Use 200 points to characterize the surface. Go 1/10th of the range
+            # out past either side of the max and min
+            kmin = dset.min() - (dset.max() - dset.min()) / 10
+            kmax = dset.max() + (dset.max() - dset.min()) / 10
+            xdata = np.arange(kmin, kmax+0.000000001, (kmax-kmin)/200)
+            ydata = np.asarray([kde.evaluate(x) for x in xdata])
+            plt.plot(xdata, ydata, label=label,
+                     color=self.graph_props.get_next_color(), **props)
          else:
-            nbins = -int(bw)
-         hist, bin_edges = np.histogram(dset, nbins,
-                                        density=self.graph_props.normalize())
-         plt.plot(bin_edges[:len(hist)], hist, label=label,
-                  color=self.graph_props.get_next_color(), **props)
-      # Deiconify the root
+            # No KDE -- straight-out histogramming
+            bw = self.graph_props.binwidth()
+            if bw == 0:
+               bw = 3.5 * dset.std() / len(dset) ** (1/3)
+            if bw > 0:
+               nbins = int((np.max(dset) - np.min(dset)) / bw)
+            else:
+               nbins = -int(bw)
+            hist, bin_edges = np.histogram(dset, nbins,
+                                           density=self.graph_props.normalize())
+            plt.plot(bin_edges[:len(hist)], hist, label=label,
+                     color=self.graph_props.get_next_color(), **props)
+      # Plot our function
       if self.graph_props.legend():
          plt.legend(loc=0)
       self.graph_props.reset_colors()
@@ -199,19 +256,20 @@ class AutoCorrButton(_AnaButton):
          showerror('No Data Sets!', 'No data sets chosen!', parent=self)
          return
 
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
+
       plt.clf()
       plt.cla()
-      try:
-         xdata = self.datasets['TIME(PS)'].copy()
-      except KeyError:
-         xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
-      props = {'linestyle' : '',
-               'marker' : '',
-               'linewidth' : self.graph_props.linewidth()}
-      if self.graph_props.lines():
-         props['linestyle'] = '-'
-      if self.graph_props.points():
-         props['marker'] = 'o'
+
+      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      
+      props = self.graph_props.graph_options()
       
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())

@@ -6,6 +6,7 @@ from mdoutanalyzer import __version__, __author__, __date__
 from mdoutanalyzer.mdout import AmberMdout
 from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
 from optparse import OptionParser
+import sys
 
 verstring = """
    %%prog : An AMBER MD output file parser and graphing utility
@@ -30,6 +31,7 @@ if not arg:
 
 if not arg:
    print ('No mdout files chosen!')
+   sys.exit(1)
 
 for f in arg:
    try:

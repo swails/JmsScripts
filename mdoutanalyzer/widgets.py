@@ -99,7 +99,10 @@ class GraphButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         plt.plot(xdata, self.datasets[self.keylist[i]].copy()[nexcl:], 
+         # Catch instance where an energy is not printed on the first frame
+         # (e.g., for EAMBER when restraints are on)
+         xstart = len(xdata) + nexcl - len(self.datasets[self.keylist[i]])
+         plt.plot(xdata[xstart:], self.datasets[self.keylist[i]].copy()[nexcl:],
                   label=label, **props)
       # Show the legend or not
       if self.graph_props.legend():
@@ -280,14 +283,14 @@ class AutoCorrButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]].copy()
+         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
          dset -= dset.sum() / len(dset)
          dset /= dset.std()
          dset2 = dset.copy() / len(dset)
          acor = np.correlate(dset, dset2, 'full')
          acor = acor[len(acor)//2:]
-         plt.plot(xdata, acor, label=label, **props)
-      # Deiconify the root
+         xend = len(acor)
+         plt.plot(xdata[:xend], acor, label=label, **props)
       if self.graph_props.legend():
          plt.legend(loc=0)
       self.graph_props.reset_props()

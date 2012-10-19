@@ -2,7 +2,6 @@ from Tkinter import *
 from tkFileDialog import askopenfilenames
 from mdout import AmberMdout
 from mdoutanalyzer.graphproperties import GraphControlWindow
-from mdoutanalyzer.widgets import InputEntryWindow
 
 class FileMenu(Menu):
    """ The main file menu """
@@ -26,7 +25,7 @@ class FileMenu(Menu):
 
    def _edit_props(self):
       """ Open up a window controlling the graph properties """
-      window = GraphControlWindow(self, self.graph_props)
+      GraphControlWindow(self, self.graph_props)
 
 class HelpMenu(Menu):
    """ About and Help """

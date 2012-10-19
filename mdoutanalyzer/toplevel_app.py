@@ -1,7 +1,7 @@
 from Tkinter import *
 from mdoutanalyzer.widgets import (DataButton, GraphButton, SaveButton,
                                    StatButton, HistButton, AutoCorrButton)
-from mdoutanalyzer.graphproperties import GraphProperties, GraphControlWindow
+from mdoutanalyzer.graphproperties import GraphProperties
 from mdoutanalyzer.menus import MainMenu
 
 class MdoutAnalyzerApp(Frame):

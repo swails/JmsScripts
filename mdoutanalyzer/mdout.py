@@ -296,8 +296,7 @@ class AmberMdout(object):
 if __name__ == '__main__':
    """ Test our code """
    from optparse import OptionParser
-   from subprocess import Popen, PIPE
-   from os.path import exists
+   from subprocess import Popen
    import sys
    parser = OptionParser()
    parser.add_option('--mdout', dest='mdout', help='Input mdout to analyze',

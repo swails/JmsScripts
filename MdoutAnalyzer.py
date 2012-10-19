@@ -3,10 +3,15 @@
 from tkFileDialog import askopenfilenames
 from Tkinter import Tk, BOTH
 from mdoutanalyzer import __version__, __author__, __date__
+from mdoutanalyzer.graphproperties import GraphControlWindow
 from mdoutanalyzer.mdout import AmberMdout
 from mdoutanalyzer.toplevel_app import MdoutAnalyzerApp
 from optparse import OptionParser
+import re
 import sys
+
+geore = re.compile(r'(\d+)x(\d+)\+(\d+)\+(\d+)')
+geoformat = '%dx%d+%d+%d'
 
 verstring = """
    %%prog : An AMBER MD output file parser and graphing utility
@@ -47,5 +52,14 @@ app.pack(fill=BOTH)
 app.update_idletasks()
 # Now make our window non-resizable
 root.resizable(False, False)
+root.update_idletasks()
+# Load up the graph options window and move it to the right of the root window
+rootgeo = [int(i) for i in geore.match(root.geometry()).groups()]
+graphprops = GraphControlWindow(root, app.graph_props)
+root.update_idletasks()
+ggeo = [int(i) for i in geore.match(graphprops.geometry()).groups()]
+graphprops.geometry(geoformat % (ggeo[0], ggeo[1], rootgeo[2] + rootgeo[0] + 5,
+                                 rootgeo[3])
+                   )
 # Enter our mainloop
 root.mainloop()

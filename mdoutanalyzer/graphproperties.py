@@ -3,7 +3,6 @@ Data structure controlling the appearance of the graph and a GUI control panel
 exposing those options
 """
 
-from matplotlib.pyplot import show
 from mdoutanalyzer.widgets import LabeledEntry
 from Tkinter import *
 

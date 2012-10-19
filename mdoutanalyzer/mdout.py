@@ -8,7 +8,10 @@ It does NOT do:
    o  Store decomp data when idecomp != 0
 """
 
-from mdoutanalyzer.dataset import DataSet
+try:
+   from mdoutanalyzer.dataset import DataSet
+except ImportError:
+   from dataset import DataSet
 import numpy as np
 import os
 import re

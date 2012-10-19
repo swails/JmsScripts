@@ -4,7 +4,6 @@ CPPTRAJ: Trajectory Analysis. V13.8b
     ___  ___  ___  ___
      | \/ | \/ | \/ | 
     _|_/\_|_/\_|_/\_|_
-
 	AmberParm Title: [NASN]
 	Radius Set: H(N), salt-bridge modified Bondi radii (mbondi3)
 Warning: [trpcage.nowat.parm7] ATOMIC_NUMBER not present in topology.
@@ -14,26 +13,27 @@ INPUT: Reading Input from STDIN, type "go" to run, "quit" to exit:
 	[trpcage.solv5.1_remd12.nc] contains 163 frames.
 	Warning: Box info present in trajectory trpcage.solv5.1_remd12.nc but not in
 	         associated parm trpcage.nowat.parm7
-	Box type is Non-orthogonal (beta=109.471219)
-	[trpcage.solv5.1_remd12.nc] Box type is Non-orthogonal
-	Warning: Setting parm trpcage.nowat.parm7 box information from trajectory trpcage.solv5.1_remd12.nc.
-	Box type is Non-orthogonal (beta=109.471219)
+	Box type is Trunc. Oct. (beta=109.471219)
+	Warning: Traj box type (Trunc. Oct.) does not match parm box type (None)
+	Warning: Setting parm box angles from traj (109.471219, 109.471219, 109.471219)
+	Box type is Trunc. Oct. (beta=109.471219)
+	[trpcage.solv5.1_remd12.nc] Box type is Trunc. Oct.
 >   [trajin trpcage.solv5.2_remd12.nc 1 62 1 ]
 	[trpcage.solv5.2_remd12.nc] contains 62 frames.
-	Box type is Non-orthogonal (beta=109.471219)
-	[trpcage.solv5.2_remd12.nc] Box type is Non-orthogonal
+	Box type is Trunc. Oct. (beta=109.471219)
+	[trpcage.solv5.2_remd12.nc] Box type is Trunc. Oct.
 >   [trajin trpcage.solv5.3_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.3_remd12.nc] contains 2000 frames.
-	Box type is Non-orthogonal (beta=109.471219)
-	[trpcage.solv5.3_remd12.nc] Box type is Non-orthogonal
+	Box type is Trunc. Oct. (beta=109.471219)
+	[trpcage.solv5.3_remd12.nc] Box type is Trunc. Oct.
 >   [trajin trpcage.solv5.4_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.4_remd12.nc] contains 2000 frames.
-	Box type is Non-orthogonal (beta=109.471219)
-	[trpcage.solv5.4_remd12.nc] Box type is Non-orthogonal
+	Box type is Trunc. Oct. (beta=109.471219)
+	[trpcage.solv5.4_remd12.nc] Box type is Trunc. Oct.
 >   [trajin trpcage.solv5.5_remd12.nc 1 2000 1 ]
 	[trpcage.solv5.5_remd12.nc] contains 2000 frames.
-	Box type is Non-orthogonal (beta=109.471219)
-	[trpcage.solv5.5_remd12.nc] Box type is Non-orthogonal
+	Box type is Trunc. Oct. (beta=109.471219)
+	[trpcage.solv5.5_remd12.nc] Box type is Trunc. Oct.
 >   [rmsd rmsd :* first out AmberTraj_RMSD.dat ]
 > > 
 INPUT TRAJECTORIES:
@@ -45,7 +45,7 @@ INPUT TRAJECTORIES:
   Coordinate processing will occur on 6225 frames.
 
 PARAMETER FILES:
- 0: trpcage.nowat.parm7, 304 atoms, 20 res, box: Non-orthogonal, 1 mol, 6225 frames
+ 0: trpcage.nowat.parm7, 304 atoms, 20 res, box: Trunc. Oct., 1 mol, 6225 frames
 
 REFERENCE COORDS:
   No frames defined.
@@ -81,7 +81,7 @@ Read 6225 frames and processed 6225 frames.
 
 ACTION OUTPUT:
 
-DATASETS:
+DATASETS BEFORE ANALYSIS:
   There is 1 data set: 
 	Data set rmsd, size is 6225 []:-1 "rmsd"
 

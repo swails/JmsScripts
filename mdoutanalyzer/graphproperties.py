@@ -116,12 +116,10 @@ class GraphProperties(object):
                                            len(self._linestyles)]
          self._used_lines += 1
       if self.pointstyle() == 'u':
-         print 'I am here!'
          r['marker'] = self._pointstyles[self._used_points %
                                          len(self._pointstyles)]
          self._used_points += 1
       
-      print self.pointstyle()
       return r
    
    def noscipy(self):

@@ -238,8 +238,12 @@ class HistButton(_AnaButton):
                nbins = int((np.max(dset) - np.min(dset)) / bw)
             else:
                nbins = -int(bw)
-            hist, bin_edges = np.histogram(dset, nbins,
+            try:
+               hist, bin_edges = np.histogram(dset, nbins,
                                            density=self.graph_props.normalize())
+            except TypeError:
+               hist, bin_edges = np.histogram(dset, nbins,
+                                           normed=self.graph_props.normalize())
             plt.plot(bin_edges[:len(hist)], hist, label=label, **props)
       # Plot our function
       if self.graph_props.legend():

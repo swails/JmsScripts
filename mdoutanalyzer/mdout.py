@@ -141,7 +141,7 @@ class AmberMdout(object):
       energy_fields = re.compile(r'([A-Za-z\(\) 1-9\-\.]+ *= *\-*\d*[.\d]*(?:E[+-]*\d+)?)')
       if self.is_md:
          start_of_record = energy_fields
-         ignore_record = re.compile(r'^      A V E R A G E S   O V E R|^      R M S  F L U C T U A T I O N S')
+         ignore_record = re.compile(r'^      A V E R A G E S   O V E R|^      R M S  F L U C T U A T I O N S|^      DV/DL, AVERAGES OVER')
       elif self.is_min:
          start_of_record = re.compile(r'^   NSTEP       ENERGY          RMS            GMAX         NAME    NUMBER')
          if self.properties['imin'] == 1:

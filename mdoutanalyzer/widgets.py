@@ -299,7 +299,54 @@ class AutoCorrButton(_AnaButton):
          plt.legend(loc=0)
       self.graph_props.reset_props()
       plt.show()
+
+class RunningAvgButton(_AnaButton):
+   """
+   Plots the running average of a variable
+   """
+
+   def execute(self):
       
+      if sum([v.get() for v in self.activelist]) == 0:
+         showerror('No Data Sets!', 'No data sets chosen!', parent=self)
+         return
+
+      nexcl = self.graph_props.nexcl()
+      if nexcl < 0 or nexcl > len(self.datasets[self.keylist[0]]):
+         showerror('Bad Exclusions!',
+                   'Number of excluded points must be greater than '
+                   'zero and less than the number of data points!',
+                   parent=self)
+         return
+      
+      plt.clf()
+      plt.cla()
+
+      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      
+      # Set the graph properties
+      plt.xlabel(self.graph_props.xlabel())
+      plt.ylabel(self.graph_props.ylabel())
+      plt.title(self.graph_props.title())
+      plt.grid(self.graph_props.gridlines())
+      for i, a in enumerate(self.activelist):
+         if not a.get(): continue
+         # plot me
+         props = self.graph_props.graph_options()
+         if self.graph_props.legend():
+            label = self.keylist[i]
+         else:
+            label = '_nolegend_'
+         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         ravg = dset.copy()
+         for i in range(len(ravg)):
+            ravg[i] = np.sum(dset[:i+1]) / (i+1)
+         plt.plot(xdata, ravg, label=label, **props)
+      if self.graph_props.legend():
+         plt.legend(loc=0)
+      self.graph_props.reset_props()
+      plt.show()
+
 if __name__ == '__main__':
    root = Tk()
    myvar = StringVar()

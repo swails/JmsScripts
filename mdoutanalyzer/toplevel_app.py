@@ -1,6 +1,7 @@
 from Tkinter import *
 from mdoutanalyzer.widgets import (DataButton, GraphButton, SaveButton,
-                                   StatButton, HistButton, AutoCorrButton)
+                                   StatButton, HistButton, AutoCorrButton,
+                                   RunningAvgButton)
 from mdoutanalyzer.graphproperties import GraphProperties
 from mdoutanalyzer.menus import MainMenu
 
@@ -51,6 +52,9 @@ class MdoutAnalyzerApp(Frame):
       self.acts.append(AutoCorrButton(self.action_canv, self.mdout.data,
                                       self.data_active, self.graph_props,
                                       'Autocorrelation'))
+      self.acts.append(RunningAvgButton(self.action_canv, self.mdout.data,
+                                        self.data_active, self.graph_props,
+                                        'Running Average'))
 
       Label(self.action_canv, 
             text='What do you want to do with your data?').grid(

@@ -50,7 +50,12 @@ usages = {
                   '                  int recv_count, MPI_Datatype, int source, int recvtag, Communicator, mpi_status)',
                   'F90: MPI_Sendrecv(*sendbuf, int send_count, MPI_Datatype, int destination, int sendtag, *recvbuf, \n' +
                   '                  int recv_count, MPI_Datatype, int source, int recvtag, Communicator, mpi_status, ierror)',
-                  'Sends and receives in the same call...']
+                  'Sends and receives in the same call...'],
+'mpi_sendrecv_replace' : ['C  : MPI_Sendrecv_replace(*buf, int count, MPI_Datatype, int dest, int sendtag, int source, int recvtag,\n' + 
+                          '                          Communicator, mpi_status)',
+                          'F90: MPI_Sendrecv_replace(*buf, int count, MPI_Datatype, int dest, int sendtag, int source, int recvtag,\n' + 
+                          '                          Communicator, mpi_status, ierror)',
+'Sends and receives in the same call, overwriting the sendbuffer with the received value']
 }
 
 

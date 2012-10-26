@@ -68,7 +68,7 @@ mv logs $logdir/${d}_intel_logs
 # Clean out my repo and go with the GNU compilers
 echo ""
 echo "Switching to the GNU compilers..."
-git clean -f -x -d
+git clean -f -x -d 2>&1 > /dev/null
 source /usr/local/var/mpi-selector/data/mpich2-1.4.1p1-gnu-4.5.3.sh
 echo ""
 
@@ -108,5 +108,8 @@ echo "Beginning parallel tests with 8 cores at `date`"
 (make test.parallel 2>&1) > $logdir/${d}_gnu_parallel_8_test.log
 
 mv logs $logdir/${d}_gnu_logs
+
+echo "Cleaning everything up..."
+git clean -f -x -d 2>&1 > /dev/null
 
 echo "Done at `date`"

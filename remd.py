@@ -127,6 +127,77 @@ class TempRemLog(RemLog):
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
 
+class HRemLog(RemLog):
+   """ A class for H-REMD log file """
+
+   line_re = re.compile(r' *(\d+) *(\d+) *([-+]?\d+\.\d+) *([-+]?\d+\.\d+) *([-+]?\d+\.\d+) *([-+]?\d+\.\d+) *([-+]?\d+\.\d+) *([TF]) *([-+]?\d+\.\d+)')
+
+   def _get_replicas(self):
+      " Gets all of the replica information from the first block of repinfo "
+      rawline = self.file.readline()
+      while rawline:
+         rematch = self.line_re.match(rawline)
+         if not rematch:
+            rawline = self.file.readline()
+            continue
+         # Now we have our first block of replicas
+         while rematch:
+            rep = Replica()
+            self.reps.append(rep)
+            # Each replica will have an index array to trace its trajectory
+            # through replica space. Indexing starts from 0
+            rep.index = [0 for i in range(self.numexchg)]
+            rep.neighbor_index = [0 for i in range(self.numexchg)]
+            rep.temp = np.zeros(self.numexchg)
+            rep.potene1 = np.zeros(self.numexchg)
+            rep.potene2 = np.zeros(self.numexchg)
+            rep.left_fe = np.zeros(self.numexchg)
+            rep.right_fe = np.zeros(self.numexchg)
+            rep.success = ['F' for i in range(self.numexchg)]
+            rep.success_rate = np.zeros(self.numexchg)
+            rep.index[0] = int(rematch.groups()[0]) - 1
+            rep.neighbor_index[0] = int(rematch.groups()[1]) - 1
+            rep.temp[0] = float(rematch.groups()[2])
+            rep.potene1[0] = float(rematch.groups()[3])
+            rep.potene2[0] = float(rematch.groups()[4])
+            rep.left_fe[0] = float(rematch.groups()[5])
+            rep.right_fe[0] = float(rematch.groups()[6])
+            rep.success[0] = rematch.groups()[7]
+            rep.success_rate[0] = float(rematch.groups()[8])
+            rematch = self.line_re.match(self.file.readline())
+         # Finished with our first block of replicas. Bail out now
+         break
+
+   #================================================
+
+   def _parse(self):
+      """ Parses the rem.log file and loads the data arrays """
+      rawline = self.file.readline()
+      num_record = 1
+      while rawline:
+         rematch = self.line_re.match(rawline)
+         if not rematch:
+            rawline = self.file.readline()
+            continue
+         while rematch:
+            n, m, t, p1, p2, lfe, rfe, suc, suc_rate = rematch.groups()
+            n = int(n) - 1
+            m = int(m) - 1
+            self.reps[n].index[num_record] = n
+            self.reps[n].neighbor_index[num_record] = m
+            self.reps[n].temp[num_record] = float(t)
+            self.reps[n].potene1[num_record] = float(p1)
+            self.reps[n].potene2[num_record] = float(p2)
+            self.reps[n].left_fe[num_record] = float(lfe)
+            self.reps[n].right_fe[num_record] = float(rfe)
+            self.reps[n].success[num_record] = suc
+            self.reps[n].success_rate[num_record] = float(suc_rate)
+            rematch = self.line_re.match(self.file.readline())
+         num_record += 1
+         rawline = self.file.readline()
+
+#~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~
+
 class pHRemLog(RemLog):
    """ A class for a rem.log file in pH exchange """
 

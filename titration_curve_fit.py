@@ -54,10 +54,12 @@ if __name__ == '__main__':
 
    # Generate an initial guess, which is just the average of the HH pKas
    avg = 0.0
+   ncalls = 0
    for i, fd in enumerate(ydata):
       if fd > 0 and fd < 1: 
          avg += xdata[i] - math.log10(fd / (1-fd))
-   avg /= len(lines)
+         ncalls += 1
+   avg /= ncalls
 
    params, cov = curve_fit(f, xdata, ydata, p0=(avg,1))
 

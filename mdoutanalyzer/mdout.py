@@ -138,7 +138,7 @@ class AmberMdout(object):
 
    def get_data(self):
       """ Extracts the data from the mdout file """
-      energy_fields = re.compile(r'([A-Za-z\(\) 1-9\-\.\/]+ *= *\-*\d*[.\d]*(?:E[+-]*\d+)?)')
+      energy_fields = re.compile(r'([A-Za-z\(\) 0-9\-\.\/\#]+ *= *\-*\d*[.\d]*(?:E[+-]*\d+)?)')
       if self.is_md:
          start_of_record = energy_fields
          ignore_record = re.compile(r'^      A V E R A G E S   O V E R|^      R M S  F L U C T U A T I O N S|^      DV/DL, AVERAGES OVER')
@@ -221,6 +221,7 @@ class AmberMdout(object):
                            self.data[term] = np.zeros(self.num_terms).view(DataSet)
                            self.data[term].add_value(float(term_val))
                         except Exception, err:
+                           print rawline
                            raise err
                   # Now we're done with the terms, get the next line
                   rawline = fl.readline()

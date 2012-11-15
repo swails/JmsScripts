@@ -23,6 +23,7 @@ class GraphProperties(object):
       self._use_kde = BooleanVar()
       self._gridlines = BooleanVar()
       self._nexcl = IntVar()
+      self._stride = IntVar()
       self._use_time = BooleanVar()
       # Set defaults
       self._legend.set(True)
@@ -32,6 +33,7 @@ class GraphProperties(object):
       self._use_time.set(True)
       self._bin_width.set(0.0)
       self._nexcl.set(0)
+      self._stride.set(1)
       self._linewidth.set(1.0)
       self._pointsize.set(6.0)
       self._linestyle.set('-')
@@ -101,6 +103,9 @@ class GraphProperties(object):
 
    def nexcl(self):
       return self._nexcl.get()
+
+   def stride(self):
+      return self._stride.get()
 
    def graph_options(self):
       """ Returns a dict of the graph options """
@@ -172,6 +177,8 @@ class GraphControlWindow(Toplevel):
                              textvariable=self.graph_props._pointsize)
       self.styles = StyleBoxes(self.entry_frame, self.graph_props._linestyle,
                                self.graph_props._pointstyle)
+      self.stride = LabeledEntry(self.entry_frame, 'Stride', width=40,
+                                 textvariable=self.graph_props._stride)
       self.bins = LabeledEntry(self.entry_frame, 'Bin Width or -Number of Bins',
                              width=40, textvariable=self.graph_props._bin_width)
       self.nexcl = LabeledEntry(self.entry_frame, 'Pts Skip From Beginning',
@@ -184,7 +191,8 @@ class GraphControlWindow(Toplevel):
       self.ps.grid(column=1, row=3, pady=4, padx=2, sticky=N+S+E+W)
       self.bins.grid(column=0, row=4, pady=4, padx=2, sticky=N+S+E+W)
       self.nexcl.grid(column=1, row=4, pady=4, sticky=N+S+E+W)
-      self.styles.grid(column=0, row=5, pady=4, padx=2, columnspan=2, sticky=N+S+E+W)
+      self.stride.grid(column=0, row=5, pady=4, sticky=N+S+E+W)
+      self.styles.grid(column=1, row=5, pady=4, padx=2, sticky=N+S+E+W)
       self.entry_frame.pack(fill=BOTH)
 
 class StyleBoxes(Frame):

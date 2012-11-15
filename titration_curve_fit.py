@@ -14,7 +14,7 @@ import sys, math
 try:
    import matplotlib.pyplot as plt
    hasplt = True
-except ImportError:
+except:
    hasplt = False
 
 def f(ph, pka, n):

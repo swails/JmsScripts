@@ -84,7 +84,8 @@ class GraphButton(_AnaButton):
          xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
       
       if not self.graph_props.use_time():
-         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1, 
+                           self.graph_props.stride())
       
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
@@ -101,8 +102,10 @@ class GraphButton(_AnaButton):
             label = '_nolegend_'
          # Catch instance where an energy is not printed on the first frame
          # (e.g., for EAMBER when restraints are on)
-         xstart = len(xdata) + nexcl - len(self.datasets[self.keylist[i]])
-         plt.plot(xdata[xstart:], self.datasets[self.keylist[i]].copy()[nexcl:],
+         xstart = len(xdata) + nexcl - len(self.datasets[self.keylist[i]]) // \
+                                       self.graph_props.stride()
+         plt.plot(xdata[xstart:], self.datasets[self.keylist[i]].copy()
+                                       [nexcl::self.graph_props.stride()],
                   label=label, **props)
       # Show the legend or not
       if self.graph_props.legend():
@@ -144,11 +147,13 @@ class SaveButton(_AnaButton):
          csvwriter = writer(f)
          # Header
          csvwriter.writerow(keys)
-         for i in range(len(self.datasets[keys[1]])):
+         for i in range(nexcl, len(self.datasets[keys[1]]),
+                        self.graph_props.stride()):
             csvwriter.writerow([v[i] for v in actives])
       else:
          f.write('#' + ''.join(['%16s' % n for n in keys]) + '\n')
-         for i in range(nexcl, len(self.datasets[keys[1]])):
+         for i in range(nexcl, len(self.datasets[keys[1]]),
+                        self.graph_props.stride()):
             f.write(' ' + ''.join(['%16.4f' % v[i] for v in actives]) + '\n')
       f.close()
 
@@ -170,7 +175,7 @@ class StatButton(_AnaButton):
 
       for i, val in enumerate(self.activelist):
          if not val.get(): continue
-         dset = self.datasets[self.keylist[i]][nexcl:]
+         dset = self.datasets[self.keylist[i]][nexcl::self.graph_props.stride()]
          report_str += '%20s%20.4f%20.8f\n' % (self.keylist[i],
                        np.sum(dset) / len(dset), dset.std())
       
@@ -211,7 +216,8 @@ class HistButton(_AnaButton):
       plt.grid(self.graph_props.gridlines())
       for i, a in enumerate(self.activelist):
          if not a.get(): continue
-         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         dset = (self.datasets[self.keylist[i]].copy()
+                        [nexcl::self.graph_props.stride()])
          props = self.graph_props.graph_options()
          if self.graph_props.legend():
             label = self.keylist[i]
@@ -272,7 +278,8 @@ class AutoCorrButton(_AnaButton):
       plt.clf()
       plt.cla()
 
-      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      xdata = np.arange(nexcl+1, (len(self.datasets[self.keylist[0]]) // 
+                                  self.graph_props.stride()) + 1)
       
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
@@ -287,7 +294,8 @@ class AutoCorrButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         dset = (self.datasets[self.keylist[i]].copy()
+                                 [nexcl::self.graph_props.stride()])
          dset -= dset.sum() / len(dset)
          dset /= dset.std()
          dset2 = dset.copy() / len(dset)
@@ -322,7 +330,8 @@ class RunningAvgButton(_AnaButton):
       plt.clf()
       plt.cla()
 
-      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1,
+                        self.graph_props.stride())
       
       # Set the graph properties
       plt.xlabel(self.graph_props.xlabel())
@@ -337,7 +346,8 @@ class RunningAvgButton(_AnaButton):
             label = self.keylist[i]
          else:
             label = '_nolegend_'
-         dset = self.datasets[self.keylist[i]].copy()[nexcl:]
+         dset = (self.datasets[self.keylist[i]].copy()
+                     [nexcl::self.graph_props.stride()])
          ravg = dset.copy()
          for i in range(len(ravg)):
             ravg[i] = np.sum(dset[:i+1]) / (i+1)

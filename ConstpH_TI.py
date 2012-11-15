@@ -157,9 +157,9 @@ quit
 """ % (extras, resname, resname.lower(), resname.lower())
 
 elif amino_acid:
-   next_str, prev_str = opt.left_res, opt.right_res
-   if opt.left_res is None: next_str = 'ACE'
-   if opt.right_res is None: prev_str = 'NME'
+   prev_str, next_str = opt.left_res, opt.right_res
+   if opt.left_res is None: prev_str = 'ACE'
+   if opt.right_res is None: next_str = 'NME'
    tleap_script = """source leaprc.constph
 %s
 l = sequence {%s %s %s}

@@ -7,10 +7,14 @@ from optparse import OptionParser
 from remd import HRemLog
 import sys
 
+C = '\033[91m'; EC = '\033[0m'
+
 usage='%prog [Options] | [mdout1] [mdout2] [mdout3] ... [mdoutN]'
 parser = OptionParser(usage=usage)
 parser.add_option('-l', '--log', dest='input_log', metavar='FILE', default=None,
                   help='Input log file to parse')
+parser.add_option('-d', '--deltas', dest='deltas', default=False,
+                  action='store_true', help='Print out deltas')
 opt, arg = parser.parse_args()
 
 if opt.input_log is None:
@@ -41,9 +45,9 @@ for i, rep in enumerate(remlog.reps):
       if (j % 2 != i % 2):
          n_l_exch[i] += 1
          running_left_fes[i] += np.exp((rep.potene1[j] - nrep.potene2[j])
-                              * 503.01 / 300)
-         left_fes[i][j] = 1 / 503.01 * 300 * np.log(running_left_fes[i] /
-                                                     n_l_exch[i])
+                              * 503.01 / rep.temp[j])
+         left_fes[i][j] = 1 / 503.01 * rep.temp[j] * np.log(running_left_fes[i] 
+                                                   / n_l_exch[i])
          left_runs[i][j] = running_left_fes[i]
          left_nexch[i][j] = n_l_exch[i]
          try:
@@ -53,8 +57,8 @@ for i, rep in enumerate(remlog.reps):
       else:
          n_r_exch[i] += 1
          running_right_fes[i] += np.exp((rep.potene1[j] - nrep.potene2[j])
-                               * 503.01 / 300)
-         right_fes[i][j] = 1 / 503.01 * 300 * np.log(running_right_fes[i] /
+                               * 503.01 / rep.temp[j])
+         right_fes[i][j] = 1 / 503.01 * rep.temp[j] * np.log(running_right_fes[i] /
                                                       n_r_exch[i])
          right_runs[i][j] = running_right_fes[i]
          right_nexch[i][j] = n_r_exch[i]
@@ -64,11 +68,27 @@ for i, rep in enumerate(remlog.reps):
             pass
 
 for j in range(remlog.numexchg):
+   print 'Exchange %8d' % (j+1)
    for i in range(len(remlog.reps)):
-      print ('Replica %4d: Left FE = %10.4f (%10.4f) Right FE = %10.4f (%10.4f)'
-             % (i, left_fes[i][j], remlog.reps[i].left_fe[j], right_fes[i][j],
-                remlog.reps[i].right_fe[j])
-            )
+      d1 = abs(left_fes[i][j] - remlog.reps[i].left_fe[j])
+      d2 = abs(right_fes[i][j] - remlog.reps[i].right_fe[j])
+      if opt.deltas:
+         if d1 > 0.02 or d2 > 0.02:
+            b = C; e = EC
+         else:
+            b = e = ''
+         print (b
+              + 'Replica %4d: Delta Left FE = %10.4f Delta Right FE = %10.4f'
+              + e ) % (i, d1, d2)
+      else:
+         if d1 > 0.02 or d2 > 0.02:
+            b = C; e = EC
+         else:
+            b = e = ''
+         print (b
+              + 'Replica %4d: Left FE = %10.4f (%10.4f) Right FE = %10.4f (%10.4f)'
+              + e) % (i, left_fes[i][j], remlog.reps[i].left_fe[j], right_fes[i][j],
+                   remlog.reps[i].right_fe[j])
 #  print 'Group 1: num_right_exchg = %10d %10d' % (right_nexch[i][0],
 #                                                  right_nexch[i][1])
 #  print 'Group 1: num_left_exchg  = %10d %10d' % (left_nexch[i][0],

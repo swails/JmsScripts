@@ -26,15 +26,15 @@ git clean -f -x -d 2>&1 > /dev/null
 git pull origin master || error "Pulling from origin"
 
 echo "Configuring serial at `date`"
-./configure intel 2>&1 > $logdir/${d}_intel_serial_config.log
+(./configure intel 2>&1) > $logdir/${d}_intel_serial_config.log
 echo "Making serial at `date`"
-make -j6 install || echo "Making serial"
+(make -j6 install 2>&1) > $logdir/${d}_intel_serial_make.log || error "Making serial"
 
 echo "Configuring parallel at `date`"
-./configure -mpi intel 2>&1 > $logidr/${d}_intel_parallel_config.log || \
+(./configure -mpi intel 2>&1) > $logdir/${d}_intel_parallel_config.log || \
                               error "Configuring parallel"
 echo "Making parallel at `date`"
-make -j6 install || echo "Making parallel"
+(make -j6 install 2>&1) > $logdir/${d}_intel_parallel_make.log || error "Making parallel"
 
 # Now it's time to test
 
@@ -73,15 +73,15 @@ source /usr/local/var/mpi-selector/data/mpich2-1.4.1p1-gnu-4.5.3.sh
 echo ""
 
 echo "Configuring serial at `date`"
-./configure gnu 2>&1 > $logdir/${d}_gnu_serial_config.log
+(./configure gnu 2>&1) > $logdir/${d}_gnu_serial_config.log
 echo "Making serial at `date`"
-make -j6 install || echo "Making serial"
+(make -j6 install 2>&1) > $logdir/${d}_gnu_serial_make.log || error "Making serial"
 
 echo "Configuring parallel at `date`"
-./configure -mpi gnu 2>&1 > $logidr/${d}_gnu_parallel_config.log || \
+(./configure -mpi gnu 2>&1) > $logdir/${d}_gnu_parallel_config.log || \
                               error "Configuring parallel"
 echo "Making parallel at `date`"
-make -j6 install || echo "Making parallel"
+(make -j6 install 2>&1) > $logdir/${d}_gnu_parallel_make.log || error "Making parallel"
 
 # Now it's time to test
 

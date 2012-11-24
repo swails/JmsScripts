@@ -10,6 +10,9 @@ error() {
    exit 1
 }
 
+# Source some resource scripts
+. ~/.amber_selector
+
 # Set the main git repo as Amber installation to use, check out master, update
 # it, clean all files, then build, test, etc.
 

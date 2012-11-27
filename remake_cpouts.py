@@ -66,6 +66,7 @@ class TitrationRecord(object):
          outfile.write(os.linesep)
          outfile.write(os.linesep.join([self.ph_rec.sub('',l) for l in self.lines[4:]]))
          outfile.write(os.linesep)
+         outfile.write(os.linesep)
          return
       outfile.write(os.linesep.join([self.ph_rec.sub('',l) for l in self.lines]))
       outfile.write(os.linesep)

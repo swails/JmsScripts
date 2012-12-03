@@ -156,6 +156,7 @@ class AmberMdout(object):
       num_record = 0
       ignore_this_record = False
       ignore_next_record = False
+      n_omitted = 0
 
       while rawline:
          # First find the Results section
@@ -204,7 +205,6 @@ class AmberMdout(object):
             # Now if we've found a record, cycle through it
             try:
                while items:
-                  breakme = False
                   # Load the items into their respective places in the data dict
                   for item in items:
                      term, term_val = item.split('=')
@@ -221,8 +221,7 @@ class AmberMdout(object):
                            self.data[term] = np.zeros(self.num_terms).view(DataSet)
                            self.data[term].add_value(float(term_val))
                         except Exception, err:
-                           print rawline
-                           raise err
+                           n_omitted += 1
                   # Now we're done with the terms, get the next line
                   rawline = fl.readline()
                   items = energy_fields.findall(rawline)
@@ -254,6 +253,11 @@ class AmberMdout(object):
       self.num_terms = len(self.data[self.data.keys()[0]])
       if 'ntpr' in self.properties: 
          self.num_steps = self.num_terms * self.properties['ntpr']
+      
+      if n_omitted > 0:
+         warnings.warn(('Omitted %d data points (%d total data fields) '
+                        'at the end of %s!') % (n_omitted, len(self.data),
+                       self.filename))
 
    #================================================
 

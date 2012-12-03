@@ -79,9 +79,11 @@ class GraphButton(_AnaButton):
          return
       # Try to get our x data from the Time
       try:
-         xdata = self.datasets['TIME(PS)'].copy()[nexcl:]
+         xdata = self.datasets['TIME(PS)'].copy()[nexcl::
+                                                  self.graph_props.stride()]
       except KeyError:
-         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+         xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1,
+                           self.graph_props.stride())
       
       if not self.graph_props.use_time():
          xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1, 
@@ -102,10 +104,8 @@ class GraphButton(_AnaButton):
             label = '_nolegend_'
          # Catch instance where an energy is not printed on the first frame
          # (e.g., for EAMBER when restraints are on)
-         xstart = len(xdata) + nexcl - len(self.datasets[self.keylist[i]]) // \
-                                       self.graph_props.stride()
-         plt.plot(xdata[xstart:], self.datasets[self.keylist[i]].copy()
-                                       [nexcl::self.graph_props.stride()],
+         plt.plot(xdata, self.datasets[self.keylist[i]].copy()[
+                                          nexcl::self.graph_props.stride()],
                   label=label, **props)
       # Show the legend or not
       if self.graph_props.legend():
@@ -117,7 +117,7 @@ class SaveButton(_AnaButton):
    """ For saving the data to a file """
 
    def execute(self):
-      """ Graphs the data sets """
+      """ Saves the data sets to a text or CSV file """
       fname = asksaveasfilename(parent=self, defaultextension='.dat',
                                 filetypes=[('Data File', '*.dat'),
                                            ('CSV File', '*.csv'),
@@ -134,7 +134,7 @@ class SaveButton(_AnaButton):
                    parent=self)
          return
 
-      xdata = np.arange(nexcl+1, len(self.datasets[self.keylist[0]])+1)
+      xdata = np.arange(1, len(self.datasets[self.keylist[0]])+1)
       actives, keys = [xdata], ['Frame']
       for i, val in enumerate(self.activelist):
          if not val.get(): continue

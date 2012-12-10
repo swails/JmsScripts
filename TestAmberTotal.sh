@@ -24,9 +24,9 @@ printf $oldamber > ~/.last_amber_choice
 
 d=`date +%m-%d-%y`
 cd $AMBERHOME
-git checkout master || error "Checking out master"
+git checkout master 2>&1 > /dev/null || error "Checking out master"
 git clean -f -x -d 2>&1 > /dev/null
-git pull origin master || error "Pulling from origin"
+git pull origin master  2>&1 > /dev/null || error "Pulling from origin"
 
 echo "Configuring serial at `date`"
 (./configure intel 2>&1) > $logdir/${d}_intel_serial_config.log

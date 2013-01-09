@@ -38,4 +38,8 @@ def GetAtoms(resname, startatom, state):
          return []
       elif state == 1:
          return [startatom + 8]
-#  elif resname == 'LYS':
+   elif resname == 'LYS':
+      if state == 0:
+         return []
+      elif state == 1:
+         return [startatom + 16]

@@ -32,8 +32,8 @@ if __name__ == '__main__':
                      metavar='STRING',help='Title for the plot (appended with '
                      '"Titration Curve")')
    parser.add_option('--no-plot', dest='plot', default=True,
-                     action='store_false', help='Do not plot the titration
-                     curve.')
+                     action='store_false', help='Do not plot the titration '
+                     'curve.')
    opt, arg = parser.parse_args()
 
    if not opt.input_file:

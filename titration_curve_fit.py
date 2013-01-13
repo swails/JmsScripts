@@ -31,6 +31,9 @@ if __name__ == '__main__':
    parser.add_option('-t', '--title', dest='title', default='',
                      metavar='STRING',help='Title for the plot (appended with '
                      '"Titration Curve")')
+   parser.add_option('--no-plot', dest='plot', default=True,
+                     action='store_false', help='Do not plot the titration
+                     curve.')
    opt, arg = parser.parse_args()
 
    if not opt.input_file:
@@ -42,6 +45,8 @@ if __name__ == '__main__':
          print >> sys.stderr, 'Could not open %s for reading' % opt.input_file
          sys.exit(1)
    
+   hasplt = hasplt and opt.plot
+
    lines = infile.readlines()
 
    xdata = np.zeros(len(lines))

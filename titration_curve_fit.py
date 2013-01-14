@@ -34,6 +34,10 @@ if __name__ == '__main__':
    parser.add_option('--no-plot', dest='plot', default=True,
                      action='store_false', help='Do not plot the titration '
                      'curve.')
+   parser.add_option('-c', '--column', dest='col' default=1, type='int',
+                     metavar='INT', help='Column that titration data is in. '
+                     'First column, column 0, must have the pH values. Default '
+                     '(%default)')
    opt, arg = parser.parse_args()
 
    if not opt.input_file:
@@ -53,8 +57,9 @@ if __name__ == '__main__':
    ydata = np.zeros(len(lines))
 
    for i, line in enumerate(lines):
+      if line.split().startswith('#'): continue
       xdata[i] = float(line.split()[0])  # pH
-      ydata[i] = float(line.split()[1])  # Fraction deprotonated
+      ydata[i] = float(line.split()[opt.col])  # Fraction deprotonated
       if opt.protonated: ydata[i] = 1.0 - ydata[i]
 
    # Generate an initial guess, which is just the average of the HH pKas

@@ -34,7 +34,7 @@ if __name__ == '__main__':
    parser.add_option('--no-plot', dest='plot', default=True,
                      action='store_false', help='Do not plot the titration '
                      'curve.')
-   parser.add_option('-c', '--column', dest='col' default=1, type='int',
+   parser.add_option('-c', '--column', dest='col', default=1, type='int',
                      metavar='INT', help='Column that titration data is in. '
                      'First column, column 0, must have the pH values. Default '
                      '(%default)')

@@ -245,8 +245,7 @@ else:
 print "\n Creating cpin file"
 cpin = open(options.res + '.cpin', 'w')
 proc_return = Popen([cpinutil, '-p', '%s.parm7' % options.res, '-igb', 
-                     '%d' % options.igb, '--ignore-warnings'],
-                    stdout=cpin, stderr=log).wait()
+                     '%d' % options.igb], stdout=cpin, stderr=log).wait()
 cpin.close()
 print " Finished making cpin file"
 

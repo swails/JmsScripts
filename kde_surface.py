@@ -55,7 +55,7 @@ signal(SIGINT, lambda *args, **kwargs: parser.print_help())
 def buffered_range(n, x, buffer=0.1):
    """ Returns a buffered range based on input miN and maX """
    r = x - n
-   return x + buffer * r, n - buffer * r
+   return n - buffer * r, x + buffer * r
 
 opt = parser.parse_args()
 

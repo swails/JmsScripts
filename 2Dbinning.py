@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import division
 import math, sys, utilities, time, re
 from optparse import OptionParser
 from os import path

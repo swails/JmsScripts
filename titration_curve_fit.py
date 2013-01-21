@@ -57,7 +57,7 @@ if __name__ == '__main__':
    ydata = np.zeros(len(lines))
 
    for i, line in enumerate(lines):
-      if line.split().startswith('#'): continue
+      if line.strip().startswith('#'): continue
       xdata[i] = float(line.split()[0])  # pH
       ydata[i] = float(line.split()[opt.col])  # Fraction deprotonated
       if opt.protonated: ydata[i] = 1.0 - ydata[i]

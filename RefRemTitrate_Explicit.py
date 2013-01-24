@@ -95,6 +95,7 @@ if options.res is None or options.pKa is None:
 # Now determine where required programs are
 sander = which('sander.MPI')
 pmemd = which('pmemd.MPI')
+pmemd_cuda = which('pmemd.cuda')
 tleap = which('tleap')
 cpinutil = which('cpinutil.py')
 converter = which('parmed.py')
@@ -280,7 +281,13 @@ os.unlink('min.mdout')
 os.unlink('leap.log')
 
 print '\n Heating structure'
-proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
+if pmemd_cuda is not None:
+   proc_return = os.system(pmemd_cuda + ' ' +
+                        ('-O -i heat.mdin -c %s.min.rst7 -p %s.parm7 '
+                        '-o heat.mdout -r %s.heat.rst7') % (options.res,
+                        options.res, options.res))
+else:
+   proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
                         ('-O -i heat.mdin -c %s.min.rst7 -p %s.parm7 '
                         '-o heat.mdout -r %s.heat.rst7') % (options.res,
                         options.res, options.res))
@@ -290,7 +297,13 @@ if proc_return != 0:
    sys.exit(1)
 
 print '\n Equilibrating structure'
-proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
+if pmemd_cuda is not None:
+   proc_return = os.system(pmemd_cuda + ' ' + 
+                        ('-O -i equil.mdin -c %s.heat.rst7 -p %s.parm7 '
+                        '-o equil.mdout -r %s.equil.rst7') % (options.res,
+                        options.res, options.res))
+else:
+   proc_return = os.system(options.mpi_cmd + ' ' + pmemd + ' ' + 
                         ('-O -i equil.mdin -c %s.heat.rst7 -p %s.parm7 '
                         '-o equil.mdout -r %s.equil.rst7') % (options.res,
                         options.res, options.res))

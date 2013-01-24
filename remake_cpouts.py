@@ -113,4 +113,4 @@ if __name__ == '__main__':
    import time
    start = time.time()
    main()
-   print 'Took: %.3f min' % ((time.time() - start)/60.0)
+   print 'Took: %.1f sec' % ((time.time() - start))

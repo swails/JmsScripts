@@ -70,6 +70,9 @@ group.add_option('-n', '--num-replicas', default=6, metavar='INT', dest='nreps',
 group.add_option('-m', '--mpi-cmd', dest='mpi_cmd', metavar='STRING',
                  help='MPI Command to run MPI programs on your machine. ('
                  'Default "%default")', default='mpiexec -n 6')
+group.add_option('-d', '--intdiel', dest='intdiel', type='float', default=1.0,
+                 metavar='FLOAT', help='Internal dielectric to use. Default is '
+                 '1.0')
 parser.add_option_group(group)
 
 (options, args) = parser.parse_args()
@@ -80,7 +83,10 @@ if options.res is None or options.pKa is None:
    sys.exit(1)
 
 # Now determine where required programs are
-sander = which('sander.MPI')
+sander = which('sander')
+sanderMPI = which('sander.MPI')
+pmemd = which('pmemd')
+pmemdcuda = which('pmemd.cuda')
 tleap = which('tleap')
 cpinutil = which('cpinutil.py')
 converter = which('parmed.py')
@@ -89,11 +95,11 @@ if options.nreps % 2 != 0:
    print >> sys.stderr, 'Error: Even number of replicas required!'
    sys.exit(1)
 
-if 'none' in [sander, tleap, cpinutil]:
+if None in [sander, sander.MPI, tleap, cpinutil]:
    print >> sys.stderr, 'sander, tleap, and cpinutil.py are all necessary!'
    sys.exit(1)
 
-if options.igb == 8 and converter == 'none':
+if options.igb == 8 and converter is None:
    print >> sys.stderr, 'parmed.py is needed for igb = 8!'
    sys.exit(1)
 
@@ -116,8 +122,9 @@ md_mdin = """Mdin file for titrating stuff
    nrespa=1, tol=0.000001, icnstph=1,
    solvph=%%s, ntcnstph=5, gamma_ln=2.0,
    ntwr=500, ioutfm=1, numexchg=%d,
+   intdiel=%s,
  /
-""" % (nstlim, options.igb, numexchg)
+""" % (nstlim, options.igb, numexchg, options.intdiel)
 
 min_mdin = """Minimization to relax initial bad contacts, implicit solvent
  &cntrl
@@ -152,9 +159,15 @@ if options.lib is not None:
    tleapin += "loadoff %s\n" % options.lib
 
 tleapin += """l = sequence {%s %s %s}
+set default pbradii %%s
 saveamberparm l %s.parm7 %s.rst7
 quit
 """ % (left_term, options.res, right_term, options.res, options.res)
+
+if options.igb == 8:
+   tleapin = tleapin % 'mbondi3'
+else:
+   tleapin = tleapin % 'mbondi2'
 
 f = open('tleap.in', 'w')
 f.write(tleapin)
@@ -174,37 +187,11 @@ if proc_return != 0:
 
 print " Successfully created topology file %s.parm7" % options.res
 
-print "\n Setting prmtop radii"
-# If we're doing igb = 8, do the prmtop conversion
-if options.igb == 8:
-   file = open('__TMP__','w')
-   file.write('changeradii mbondi3\nsetoverwrite True\nparmout %s.parm7\n'
-              % options.res)
-   file.close()
-   file = open('__TMP__','r')
-   proc_return = Popen(['parmed.py','%s.parm7' % options.res], 
-                       stdout=log, stdin=file).wait()
-   file.close()
-   os.remove('__TMP__')
-   print " Set prmtop radii to mbondi3"
-else:
-   file = open('__TMP__','w')
-   file.write('changeradii mbondi2\nsetoverwrite True\nparmout %s.parm7\n'
-              % options.res)
-   file.close()
-   file = open('__TMP__','r')
-   proc_return = Popen(['parmed.py','%s.parm7' % options.res],
-                       stdout=log, stdin=file).wait()
-   file.close()
-   os.remove('__TMP__')
-   print " Set prmtop radii to mbondi2"
-
 # Create the cpin
 print "\n Creating cpin file"
 cpin = open(options.res + '.cpin', 'w')
 proc_return = Popen(['cpinutil.py', '-p', '%s.parm7' % options.res, '-igb', 
-                     '%d' % options.igb, '--ignore-warnings'],
-                    stdout=cpin, stderr=log).wait()
+                     str(options.igb)], stdout=cpin, stderr=log).wait()
 cpin.close()
 print " Finished making cpin file"
 
@@ -217,8 +204,14 @@ mdin = open('mdin.min', 'w')
 mdin.write(min_mdin)
 mdin.close()
 
+if pmemdcuda is not None:
+   prog = pmemdcuda
+elif pmemd is not None:
+   prog = pmemd
+else:
+   prog = sander
 print "\n Minimizing initial structure"
-proc_return = Popen(['sander', '-O', '-i', 'mdin.min', '-c',
+proc_return = Popen([prog, '-O', '-i', 'mdin.min', '-c',
                    '%s.rst7' % options.res, '-p', '%s.parm7' % options.res,
                    '-o', 'min.mdout', '-r', '%s.min.rst7' % options.res]).wait()
 
@@ -273,7 +266,7 @@ grpfile.close()
 print 'Beginning titration of %d replicas...' % options.nreps
 print '\tpKa is %f' % options.pKa
 print '\tSimulating pH values ' + ', '.join([str(i) for i in phlist])
-if os.system('%s %s -ng %d -groupfile groupfile' % (options.mpi_cmd, sander,
+if os.system('%s %s -ng %d -groupfile groupfile' % (options.mpi_cmd, sanderMPI,
                                                     options.nreps)):
    print 'Error during calculation!'
    sys.exit(1)

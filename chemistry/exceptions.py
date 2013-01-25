@@ -8,6 +8,9 @@ class ChemError(Exception):
    def __str__(self):
       return self.msg
 
+class ChemWarning(Warning):
+   """ Base warning class """
+
 class ReadError(ChemError):
    """ Error when files cannot be properly read """
    def __init__(self, msg='Read error.'):
@@ -36,8 +39,20 @@ class MaskError(ChemError):
 class BondError(ChemError):
    """ This is what happens when you try to bond an atom to itself """
 
+class AmberParmWarning(ChemWarning):
+   """ If there is something that is non-fatal """
+
+class AmberFormatWarning(ChemWarning):
+   """ If there is something that is non-fatal """
+
 class AmberParmError(ChemError):
    """ This is a generic AmberParmError """
+
+class AmberParameterError(ChemError):
+   """ If there is an error with parameters """
+
+class AmberParameterWarning(ChemWarning):
+   """ If there is a warning to be raised with parameters """
 
 class MoleculeError(ChemError):
    """ This occurs when there's a problem determining molecularity """

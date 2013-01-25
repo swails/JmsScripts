@@ -98,7 +98,9 @@ holder = []    # empty out holder
 # now it's time to write the tcl script
 outputfile = open('pHVMDscript.tcl', 'w')
 
+cnt = 0
 for x in range(numberframes):
+  if indexedarray[x+1] - indexedarray[x] == 0: continue
   line = "atomselect top \"index "
   for atom in range(indexedarray[x+1]-indexedarray[x]):
     line = line + str(indexedarray[indexedarray[x] + atom])
@@ -106,9 +108,9 @@ for x in range(numberframes):
   line = line + "\" frame "
   line = line + str(x)
   outputfile.write(line)
-  line = "atomselect"
-  line = line + str(x)
+  line = "atomselect%d" % cnt
   line = line + " moveby {99 99 99}" # move them far away to disappear
   outputfile.write("\n")
   outputfile.write(line)
   outputfile.write("\n")
+  cnt += 1

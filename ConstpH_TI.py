@@ -8,16 +8,16 @@ from __future__ import division
 #                                                         #
 ###########################################################
 
+import sys, os
+sys.path.append(os.path.join(os.getenv('AMBERHOME'), 'bin'))
+
 # modules
-from cpin_data import getData
+from ParmedTools.ParmedActions import changeprotstate, netcharge
 from chemistry.amber.readparm import AmberParm
 from utilities import which
-from subprocess import Popen, PIPE
 from optparse import OptionParser, OptionGroup
 
-from math import fsum
 from time import time
-import sys, os
 
 sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
 sys.stderr = os.fdopen(sys.stderr.fileno(),'w',0)
@@ -68,9 +68,20 @@ group.add_option('-g', '--igb', dest='igb', metavar='INT', default=0,
                  type='int')
 group.add_option('-t', '--nstlim', dest='nstlim', default=5000000, type='int',
                  metavar='INT', help='Number of time steps for simulations.')
+group.add_option('-d', '--intdiel', dest='intdiel', default=1.0, type='float',
+                 metavar='FLOAT', help='Internal dielectric constant to use. '
+                 'Default is %default')
 parser.add_option_group(group)
 
 opt, arg = parser.parse_args()
+
+# Initial setup
+amino_acid = opt.amino_acid
+isolated = opt.isolated
+state1, state2 = opt.state0, opt.state1
+igb = opt.igb
+intdiel = opt.intdiel
+resname = opt.resname.strip('"').strip("'")
 
 if not opt.igb or not opt.resname:
    print 'Missing arguments.'
@@ -81,26 +92,18 @@ if arg:
    sys.exit(1)
 
 # Get the MPI command from DO_PARALLEL, as is custom with AMBER
-try:
-   mpi_cmd = os.environ["DO_PARALLEL"]
-except KeyError:
+mpi_cmd = os.getenv('DO_PARALLEL')
+if mpi_cmd is None:
    sys.exit('Error: You must set DO_PARALLEL to run sander.MPI with 2 threads!')
 
-amino_acid = opt.amino_acid
-isolated = opt.isolated
-state1, state2 = opt.state0, opt.state1
-igb = opt.igb
-resname = opt.resname.strip('"').strip("'")
-
 # MDIN file for TI calculations
-
 TI_mdin = """TI calculation
 &cntrl
    nstlim = {4}, nscm=2000,
    ntx={0}, irest={1}, ntpr=1000,
    tempi=0.0, temp0=300.0, ntt=3, gamma_ln=5.0,
    ntb=0, igb={2}, cut=999.0,
-   dt=0.001, 
+   dt=0.001, intdiel={5},
    ntc=2, ntf=2, saltcon=0.1,
    ntwr = 10000, ntwx=1000, 
    icfe=1, clambda={3},
@@ -116,8 +119,9 @@ Min_mdin = """Minimization to relax initial bad contacts, implicit solvent const
    ntb=0,
    cut=1000,
    igb={0},
+   intdiel={1},
 /
-""".format(igb)
+""".format(igb, intdiel)
 
 
 # Groupfiles -- 1 is for the first run, 2 is for each one after
@@ -133,14 +137,9 @@ TI_groupfile2 = """-O -i mdin -p {0}0.prmtop -c {1}_0.restrt -o {2}_0.mdout -r {
 sander = which("sander.MPI")
 sandermin = which("sander")
 tleap = which("tleap")
-if igb == 8:
-   changerad = which("parmed.py")
-if tleap == "none":
-   tleap = which("sleap")
 
-if sander == "none" or tleap == "none" or (igb == 8 and changerad == 'none'):
-   print >> sys.stderr, "Error: You need sander.MPI and tleap or sleap in your PATH to run this program!"
-   sys.exit()
+if sander is None or tleap is None or sandermin is None:
+   sys.exit("Error: You need sander.MPI and tleap to run this program!")
 
 # Make tleap script and build the residue
 extras = ''
@@ -150,11 +149,18 @@ if opt.frcmod:
    extras += 'loadAmberParams %s\n' % opt.frcmod
 
 if isolated:
+   prev_str, next_str = '', ''
    tleap_script = """source leaprc.constph
 %s
+set default pbradii %%s
 saveamberparm %s %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, resname, resname.lower(), resname.lower())
+
+   if igb == 8:
+      tleap_script = tleap_script % 'mbondi3'
+   else:
+      tleap_script = tleap_script % 'mbondi2'
 
 elif amino_acid:
    prev_str, next_str = opt.left_res, opt.right_res
@@ -163,9 +169,15 @@ elif amino_acid:
    tleap_script = """source leaprc.constph
 %s
 l = sequence {%s %s %s}
+set default pbradii %%s
 saveamberparm l %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
+   if igb == 8:
+      tleap_script = tleap_script % 'mbondi3'
+   else:
+      tleap_script = tleap_script % 'mbondi2'
+
 else:
    next_str, prev_str = opt.left_res, opt.right_res
    if opt.left_res is None: next_str = 'CH3'
@@ -174,28 +186,18 @@ else:
    tleap_script = """source leaprc.constph
 %s
 l = sequence {%s %s %s}
+set default pbradii %%s
 saveamberparm l %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
 
-file = open("tleap.in","w")
-file.write(tleap_script)
-file.close()
+   if igb == 8:
+      tleap_script = tleap_script % 'mbondi3'
+   else:
+      tleap_script = tleap_script % 'mbondi2'
+
+open("tleap.in","w").write(tleap_script)
 os.system(tleap + " -f tleap.in > tleap.log")
-if igb == 8:
-   change_rad_str = "changeRadii mbondi3\nsetOverwrite True\nparmout %s0.prmtop" % (resname.lower())
-   process = Popen([changerad, '%s0.prmtop' % (resname.lower())], stdin=PIPE)
-   process.communicate(change_rad_str)
-   if process.wait():
-      print >> sys.stderr, 'parmed.py failed!'
-      sys.exit(1)
-
-# Get the data for the residue and load the AmberParm object
-charges = getData(resname, igb)
-
-if charges == -1:
-   print >> sys.stderr, 'Error: Could not find %s in cpin_data.py! Add the residue and re-run.' % resname
-   sys.exit()
 
 prm = AmberParm("%s0.prmtop" % resname.lower())
 prm.overwrite = True # allow the prmtop to be overwritten
@@ -203,50 +205,34 @@ prm.overwrite = True # allow the prmtop to be overwritten
 # check validity of prmtop
 
 if not prm.valid:
-   print >> sys.stderr, "Error: Invalid prmtop (%s)!" % prm
-   sys.exit()
+   sys.exit('Error: Invalid prmtop (%s)!' % prm)
 
-try:
-   test = prm.parm_data["POINTERS"][0]
-except KeyError:
-   print >> sys.stderr, "Error: Prmtop is not valid! Check tleap.log for errors"
-   sys.exit()
+if isolated or not prev_str:
+   act = changeprotstate(prm, ':1 %s' % opt.state0)
+else:
+   act = changeprotstate(prm, ':2 %s' % opt.state0)
+act.execute()
+prm.writeParm(str(prm))
+chg1 = netcharge(prm, '*').execute()
+
+if isolated or not prev_str:
+   act = changeprotstate(prm, ':1 %s' % opt.state1)
+else:
+   act = changeprotstate(prm, ':2 %s' % opt.state1)
+act.execute()
+prm.writeParm('%s1.prmtop' % resname.lower())
+chg2 = netcharge(prm, '*').execute()
 
 # Create the new prmtops and print out net charge of each state, then delete the prmtop object
 
 idx = prm.parm_data['RESIDUE_LABEL'].index(opt.resname)
 start_res = prm.parm_data['RESIDUE_POINTER'][idx] - 1
 
-try:
-   natom_prm = (prm.parm_data['RESIDUE_POINTER'][idx+1]
-              - prm.parm_data['RESIDUE_POINTER'][idx  ])
-except IndexError:
-   natom_prm = (prm.ptr('natom') - prm.parm_data['RESIDUE_POINTER'][idx] + 1)
-
-if natom_prm != len(charges[state1])-2:
-   print 'Error: Residue not expected size (comparing cpin_data and prmtop).'
-   print '%d vs. %d' % (natom_prm, len(charges[state1])-2)
-   sys.exit()
-
-print "Charge of state {0}: {1:8.4f}".format(state1, fsum(charges[state1][2:]))
-print "Charge of state {0}: {1:8.4f}".format(state2, fsum(charges[state2][2:]))
-
-for i in range(len(charges[state1])-2):
-   prm.parm_data["CHARGE"][start_res+i] = charges[state1][2+i]
-
-print "Full charge of state {0}: {1:8.4f}".format(state1, sum(prm.parm_data['CHARGE']))
-prm.writeParm("%s0.prmtop" % resname.lower())
-
-for i in range(len(charges[state2])-2):
-   prm.parm_data["CHARGE"][start_res+i] = charges[state2][2+i]
-
-print "Full charge of state {0}: {1:8.4f}".format(state2, sum(prm.parm_data['CHARGE']))
-prm.writeParm("%s1.prmtop" % resname.lower())
+print 'State 0: Net charge is %.4f' % chg1
+print 'State 1: Net charge is %.4f' % chg2
 
 # Now it's time to minimize
-file = open('min.mdin','w')
-file.write(Min_mdin)
-file.close()
+open('min.mdin','w').write(Min_mdin)
 
 print >> sys.stdout, "Minimizing structure..."
 os.system('%s -i min.mdin -o _rm.mdout -inf _rm.mdinfo -r min.restrt -p %s0.prmtop -c %s0.inpcrd' % 
@@ -262,19 +248,11 @@ del prm
 
 for i in range(11):
    if i == 0:
-      file = open('mdin','w')
-      file.write(TI_mdin.format(1, 0, igb, 0.1 * i, opt.nstlim))
-      file.close()
-      file = open('groupfile','w')
-      file.write(TI_groupfile1)
-      file.close()
+      open('mdin','w').write(TI_mdin.format(1,0,igb,0.1*i,opt.nstlim,intdiel))
+      open('groupfile','w').write(TI_groupfile1)
    else:
-      file = open('mdin','w')
-      file.write(TI_mdin.format(5, 1, igb, 0.1 * i, opt.nstlim))
-      file.close()
-      file = open('groupfile','w')
-      file.write(TI_groupfile2.format(resname.lower(),i-1,i))
-      file.close()
+      open('mdin','w').write(TI_mdin.format(5,1,igb,0.1*i,opt.nstlim,intdiel))
+      open('groupfile','w').write(TI_groupfile2.format(resname.lower(),i-1,i))
 
    os.system('{0} {1} -ng 2 -groupfile groupfile'.format(mpi_cmd, sander))
 
@@ -286,18 +264,15 @@ os.system('rm -f profile.dat')
 for i in range(11):
    os.system('grep -A 8 "A V E R A G E" %s_0.mdout | tail -1 | awk \'{print $3}\' >> profile.dat' % i)
 
-file = open('profile.dat','r')
-profile_lines = file.readlines()
-file.close()
-file = open('profile.dat','w')
+profile_lines = open('profile.dat','r').readlines()
+ofile = open('profile.dat','w')
 
 for i in range(11):
-   file.write("{0} {1}".format(i * 0.1, profile_lines[i]))
+   ofile.write("{0} {1}".format(i * 0.1, profile_lines[i]))
 
-file.close()
+ofile.close()
 
 tend = time()
 
-print >> sys.stdout, "Done with your state energy! Integrate profile.dat to find the reference energy."
-print >> sys.stdout, ""
-print >> sys.stdout, "It took {0} minutes".format((tend - tstart) / 60)
+print "Done! Integrate profile.dat to find the reference energy.\n"
+print "It took {0} minutes".format((tend - tstart) / 60)

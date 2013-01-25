@@ -85,8 +85,6 @@ if options.res is None or options.pKa is None:
 # Now determine where required programs are
 sander = which('sander')
 sanderMPI = which('sander.MPI')
-pmemd = which('pmemd')
-pmemdcuda = which('pmemd.cuda')
 tleap = which('tleap')
 cpinutil = which('cpinutil.py')
 converter = which('parmed.py')
@@ -95,7 +93,7 @@ if options.nreps % 2 != 0:
    print >> sys.stderr, 'Error: Even number of replicas required!'
    sys.exit(1)
 
-if None in [sander, sander.MPI, tleap, cpinutil]:
+if None in [sander, sanderMPI, tleap, cpinutil]:
    print >> sys.stderr, 'sander, tleap, and cpinutil.py are all necessary!'
    sys.exit(1)
 
@@ -204,14 +202,8 @@ mdin = open('mdin.min', 'w')
 mdin.write(min_mdin)
 mdin.close()
 
-if pmemdcuda is not None:
-   prog = pmemdcuda
-elif pmemd is not None:
-   prog = pmemd
-else:
-   prog = sander
 print "\n Minimizing initial structure"
-proc_return = Popen([prog, '-O', '-i', 'mdin.min', '-c',
+proc_return = Popen([sander, '-O', '-i', 'mdin.min', '-c',
                    '%s.rst7' % options.res, '-p', '%s.parm7' % options.res,
                    '-o', 'min.mdout', '-r', '%s.min.rst7' % options.res]).wait()
 

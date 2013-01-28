@@ -19,6 +19,12 @@ from optparse import OptionParser, OptionGroup
 
 from time import time
 
+try:
+   import numpy as np
+   from scipy import integrate
+except ImportError:
+   integrate = None
+
 sys.stdout = os.fdopen(sys.stdout.fileno(),'w',0)
 sys.stderr = os.fdopen(sys.stderr.fileno(),'w',0)
 
@@ -267,8 +273,21 @@ for i in range(11):
 profile_lines = open('profile.dat','r').readlines()
 ofile = open('profile.dat','w')
 
+if integrate is not None:
+   xdata = np.zeros(11)
+   ydata = np.zeros(11)
+
 for i in range(11):
    ofile.write("{0} {1}".format(i * 0.1, profile_lines[i]))
+   if integrate is not None:
+      xdata[i] = i * 0.1
+      ydata[i] = profile_lines[i]
+
+# Now integrate the data if possible
+if integrate is not None:
+   integral = integrate.simps(ydata, x=xdata)
+   open('FINAL_INTEGRAL', 'w').write("Final integral (via Simpsons' rule) is %f"
+                                     % integral + '\n')
 
 ofile.close()
 

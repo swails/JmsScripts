@@ -10,17 +10,11 @@ error() {
    exit 1
 }
 
-# Source some resource scripts
-. ~/.amber_selector
-
-# Set the main git repo as Amber installation to use, check out master, update
-# it, clean all files, then build, test, etc.
-
-mkdir -p /home/swails/AmberBuildTest
-logdir=/home/swails/AmberBuildTest
-oldamber=`cat ~/.last_amber_choice`
-_set_amber_var /home/swails/amber
-printf $oldamber > ~/.last_amber_choice
+# Load the Amber git module
+module load amber/homegit
+module load intel/12.1.0
+module load cuda/5.0
+module load mpich2-intel/1.4.1p1_12.1.0
 
 d=`date +%m-%d-%y`
 cd $AMBERHOME
@@ -72,7 +66,8 @@ mv logs $logdir/${d}_intel_logs
 echo ""
 echo "Switching to the GNU compilers..."
 git clean -f -x -d 2>&1 > /dev/null
-source /usr/local/var/mpi-selector/data/mpich2-1.4.1p1-gnu-4.5.3.sh
+module switch intel gcc
+module switch mpich2-intel mpich2-gnu
 echo ""
 
 echo "Configuring serial at `date`"

@@ -91,8 +91,8 @@ yvals = array('d')
 for line in infile:
    try:
       words = line.split()
-      x = float(words[opt.columns[0]])
-      y = float(words[opt.columns[1]])
+      x = float(words[opt.columns[0]-1])
+      y = float(words[opt.columns[1]-1])
    except ValueError:
       continue
    except IndexError:
@@ -103,9 +103,9 @@ for line in infile:
 
 # Determine ranges if we asked for default
 if xmin is None:
-   xmin, xmax = buffered_range(xmin, xmax, 0.05)
+   xmin, xmax = buffered_range(min(xvals), max(xvals), 0.05)
 if ymin is None:
-   ymin, ymax = buffered_range(ymin, ymax, 0.05)
+   ymin, ymax = buffered_range(min(yvals), max(yvals), 0.05)
 
 # Now convert to numpy arrays
 data = np.zeros(shape=(2,len(xvals)), order='F')

@@ -23,7 +23,7 @@ parser.add_option('-g', '--gnuplot', dest='gnuplot', default=None,
                   help='Name of gnuplot script to write.')
 parser.add_option('-c', '--columns', dest='columns', default=None,
                   help='Which two columns to analyze [##,##] starting from 1')
-parser.add_option('-d', '--delimiter', dest='delimiter', default=' ',
+parser.add_option('-d', '--delimiter', dest='delimiter', default=None,
                   help='The string/character that delimits fields in the ' +
                   'input data file')
 opt, args = parser.parse_args()
@@ -96,13 +96,17 @@ script_name = opt.gnuplot
 
 # load data into file
 for line in input_data:
-   words = line.split(opt.delimiter)
+   if opt.delimiter is None:
+      words = line.split()
+   else:
+      words = line.split(opt.delimiter)
    if len(words) < maxcol: # skip any lines that don't have enough values
       continue
    try: # skip any lines where at least 1 of first 2 columns are not floats
-      data1.append(float(words[col1]))
-      data2.append(float(words[col2]))
+      data1.append(float(words[col1].strip()))
+      data2.append(float(words[col2].strip()))
    except ValueError:
+      print words
       continue
 
 input_data.close()
@@ -121,8 +125,8 @@ if (binrange[0] == 0 and binrange[1] == 0) or \
 if bins[0] == 0 or bins[1] == 0:
    xinttmp = 3.5 * utilities.stdev(data1,'no') / float(len(data1)) ** (1/3)
    yinttmp = 3.5 * utilities.stdev(data2,'no') / float(len(data2)) ** (1/3)
-   bins[0] = int(math.ceil(binrange[1] - binrange[0]/xinttmp))
-   bins[1] = int(math.ceil(binrange[3] - binrange[2]/yinttmp))
+   bins[0] = int(math.ceil((binrange[1] - binrange[0])/xinttmp))
+   bins[1] = int(math.ceil((binrange[3] - binrange[2])/yinttmp))
 if opt.normalize: 
    pointweight /= float(len(data1)) * (
             binrange[1]-binrange[0])*(binrange[3]-binrange[2])/(bins[0]*bins[1])
@@ -136,6 +140,7 @@ for x in range(bins[0]):
    for y in range(bins[1]):
       phipsibins.append(0)
 
+skipped = 0
 for x in range(len(data1)):
 
    xval = data1[x]
@@ -151,7 +156,13 @@ for x in range(len(data1)):
 
    binnum = int(math.floor(xval/xinterval) * bins[1] + math.floor(yval/yinterval))
 
-   phipsibins[binnum] += pointweight
+   try:
+      phipsibins[binnum] += pointweight
+   except IndexError:
+      skipped += 1
+
+if skipped > 0:
+   print 'Warning: %d points did not fit into the range.' % skipped
 
 xprintval = binrange[0]
 yprintval = binrange[2]

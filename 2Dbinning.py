@@ -67,6 +67,9 @@ else:
 
 if opt.columns:
    optmatch = columns_re.match(opt.columns)
+   if not optmatch:
+      print 'Bad format for -c/--columns: INT,INT'
+      sys.exit(1)
    col1, col2 = tuple([int(i) for i in optmatch.groups()])
    # Adjust for indexing
    col1, col2 = col1 - 1, col2 - 1

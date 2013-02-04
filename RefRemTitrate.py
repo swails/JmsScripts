@@ -188,8 +188,9 @@ print " Successfully created topology file %s.parm7" % options.res
 # Create the cpin
 print "\n Creating cpin file"
 cpin = open(options.res + '.cpin', 'w')
-proc_return = Popen(['cpinutil.py', '-p', '%s.parm7' % options.res, '-igb', 
-                     str(options.igb)], stdout=cpin, stderr=log).wait()
+proc_return = Popen([cpinutil, '-p', '%s.parm7' % options.res, '-igb', 
+                     str(options.igb), '-intdiel', str(options.intdiel)],
+                     stdout=cpin, stderr=log).wait()
 cpin.close()
 print " Finished making cpin file"
 

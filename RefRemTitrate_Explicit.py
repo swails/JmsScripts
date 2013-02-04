@@ -66,6 +66,9 @@ group.add_option('-g', '--igb', dest='igb', default=5, type='int',
 group.add_option('--ntrelax', dest='ntrelax', type='int', metavar='INT',
                  default=50,
                  help='Water relaxation steps to run (Default %default)')
+group.add_option('-d', '--intdiel', dest='dielc', type='float', metavar='FLOAT',
+                 help='Internal dielectric constant to use for protonation '
+                 'state change evaluations. Default 1.' default=1.0)
 group.add_option('-t', '--nstlim', dest='nstlim', default=2000000, type='int',
                  help='How long to run each window')
 group.add_option('--heating-steps', dest='heatsteps', metavar='INT', type='int',
@@ -92,6 +95,8 @@ if options.res is None or options.pKa is None:
    parser.print_help()
    sys.exit(1)
 
+if options.dielc != 1 and options.dielc != 2:
+   sys.exit('--intdiel must be 1 or 2!')
 # Now determine where required programs are
 sander = which('sander.MPI')
 pmemd = which('pmemd.MPI')
@@ -246,7 +251,8 @@ else:
 print "\n Creating cpin file"
 cpin = open(options.res + '.cpin', 'w')
 proc_return = Popen([cpinutil, '-p', '%s.parm7' % options.res, '-igb', 
-                     '%d' % options.igb], stdout=cpin, stderr=log).wait()
+                     '%d' % options.igb, '-intdiel', '%s' % options.dielc],
+                     stdout=cpin, stderr=log).wait()
 cpin.close()
 print " Finished making cpin file"
 

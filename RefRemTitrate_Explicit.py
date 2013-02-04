@@ -68,7 +68,7 @@ group.add_option('--ntrelax', dest='ntrelax', type='int', metavar='INT',
                  help='Water relaxation steps to run (Default %default)')
 group.add_option('-d', '--intdiel', dest='dielc', type='float', metavar='FLOAT',
                  help='Internal dielectric constant to use for protonation '
-                 'state change evaluations. Default 1.' default=1.0)
+                 'state change evaluations. Default 1.', default=1.0)
 group.add_option('-t', '--nstlim', dest='nstlim', default=2000000, type='int',
                  help='How long to run each window')
 group.add_option('--heating-steps', dest='heatsteps', metavar='INT', type='int',

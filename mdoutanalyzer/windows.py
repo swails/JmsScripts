@@ -40,20 +40,16 @@ class TextWindow(Toplevel):
 
       # Add a 'file' Menu
       filemenu = Menu(self, tearoff=0)
-      filemenu.add_command(label='Save', activeforeground='white',
-                           activebackground='blue', command=self.savetext,
+      filemenu.add_command(label='Save', command=self.savetext,
                            accelerator='<Ctrl-s>')
-      filemenu.add_command(label='Save As', activeforeground='white',
-                           activebackground='blue', command=self.saveastext,
+      filemenu.add_command(label='Save As', command=self.saveastext,
                            accelerator='<Ctrl-S>')
       if noclose:
          filemenu.add_separator()
-         filemenu.add_command(label='Hide Window',  activeforeground='white',
-                              activebackground='blue', command=self.hideme)
+         filemenu.add_command(label='Hide Window', command=self.hideme)
       else:
          filemenu.add_separator()
-         filemenu.add_command(label='Close Window',  activeforeground='white',
-                              activebackground='blue', command=self.destroy)
+         filemenu.add_command(label='Close Window', command=self.destroy)
       # Add a menu bar
       menubar = Menu(self, tearoff=0)
       menubar.add_cascade(label='File', underline=0, menu=filemenu)

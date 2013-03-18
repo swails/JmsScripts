@@ -13,7 +13,7 @@ class FileMenu(Menu):
       self.add_separator()
       self.add_command(label='Edit Graph Properties', command=self._edit_props)
       self.add_separator()
-      self.add_command(label='Quit', command=master.master.destroy)
+      self.add_command(label='Quit', command=master.master.quit)
 
    def _add_mdout(self):
       """ Get open filenames """
@@ -32,9 +32,9 @@ class HelpMenu(Menu):
    def __init__(self, master):
       Menu.__init__(self, master, tearoff=0)
       # Holders
-      self.add_command(label='About', command=lambda: 0)
+      self.add_command(label='About', command=master.master.Credits)
       self.add_separator()
-      self.add_command(label='Help', command=lambda: 0)
+      self.add_command(label='Help', command=master.master.Help)
 
 class MainMenu(Menu):
    """ The main file menu for the main App """

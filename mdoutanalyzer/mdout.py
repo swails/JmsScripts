@@ -229,6 +229,8 @@ class AmberMdout(object):
                      if self.is_min and start_of_record.findall(rawline):
                         raise StopIteration
                      rawline = fl.readline()
+                     if not rawline:
+                        raise StopIteration
                      ignore_next_record = (ignore_next_record or 
                                            bool(ignore_record.match(rawline)))
                      items = energy_fields.findall(rawline)

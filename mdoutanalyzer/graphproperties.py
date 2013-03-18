@@ -24,16 +24,20 @@ class GraphProperties(object):
       self._gridlines = BooleanVar()
       self._nexcl = IntVar()
       self._stride = IntVar()
+      self._window = IntVar()
       self._use_time = BooleanVar()
+      self._separate = BooleanVar()
       # Set defaults
       self._legend.set(True)
       self._normalize.set(True)
       self._use_kde.set(False)
       self._gridlines.set(True)
       self._use_time.set(True)
+      self._separate.set(False)
       self._bin_width.set(0.0)
       self._nexcl.set(0)
       self._stride.set(1)
+      self._window.set(10)
       self._linewidth.set(1.0)
       self._pointsize.set(6.0)
       self._linestyle.set('-')
@@ -107,6 +111,12 @@ class GraphProperties(object):
    def stride(self):
       return self._stride.get()
 
+   def window(self):
+      return self._window.get()
+
+   def separate(self):
+      return self._separate.get()
+
    def graph_options(self):
       """ Returns a dict of the graph options """
       r = {'linestyle' : self.linestyle(),
@@ -156,12 +166,16 @@ class GraphControlWindow(Toplevel):
       self.kde = Checkbutton(self.check_frame,
                        text='Smooth Histograms (KDE)', onvalue=True,
                        offvalue=False, variable=self.graph_props._use_kde)
+      self.sep = Checkbutton(self.check_frame, text='Use Separate Plots',
+                       onvalue=True, offvalue=False,
+                       variable=self.graph_props._separate)
       # Now grid the entries
       self.legend.grid(column=0, row=0, padx=2, pady=2, sticky=N+S+E+W)
       self.gridl.grid(column=1, row=0, padx=2, pady=2, sticky=N+S+E+W)
       self.time.grid(column=2, row=0, padx=2, pady=4, sticky=N+S+E+W)
       self.norm.grid(column=0, row=1, padx=2, pady=4, sticky=N+S+E+W)
-      self.kde.grid(column=1, row=1, padx=2, pady=4, columnspan=2, sticky=N+S)
+      self.kde.grid(column=1, row=1, padx=2, pady=4, sticky=N+S+E+W)
+      self.sep.grid(column=2, row=1, padx=2, pady=4, sticky=N+S+E+W)
       self.check_frame.pack(fill=BOTH)
       # Draw the entries
       self.entry_frame = Frame(self)
@@ -171,28 +185,32 @@ class GraphControlWindow(Toplevel):
                              textvariable=self.graph_props._xlabel)
       self.yl = LabeledEntry(self.entry_frame, 'Y-axis Label', width=80,
                              textvariable=self.graph_props._ylabel)
-      self.lw = LabeledEntry(self.entry_frame, 'Line Width', width=40,
+      self.window = LabeledEntry(self.entry_frame, 'Running Avg. Window',
+                       width=20, textvariable=self.graph_props._window)
+      self.lw = LabeledEntry(self.entry_frame, 'Line Width', width=20,
                              textvariable=self.graph_props._linewidth)
-      self.ps = LabeledEntry(self.entry_frame, 'Point Size', width=40,
+      self.ps = LabeledEntry(self.entry_frame, 'Point Size', width=20,
                              textvariable=self.graph_props._pointsize)
       self.styles = StyleBoxes(self.entry_frame, self.graph_props._linestyle,
                                self.graph_props._pointstyle)
-      self.stride = LabeledEntry(self.entry_frame, 'Stride', width=40,
+      self.stride = LabeledEntry(self.entry_frame, 'Stride', width=20,
                                  textvariable=self.graph_props._stride)
-      self.bins = LabeledEntry(self.entry_frame, 'Bin Width or -Number of Bins',
-                             width=40, textvariable=self.graph_props._bin_width)
-      self.nexcl = LabeledEntry(self.entry_frame, 'Pts Skip From Beginning',
-                                width=40, textvariable=self.graph_props._nexcl)
+      self.bins = LabeledEntry(self.entry_frame, 'Bin Width or -# Bins',
+                             width=20, textvariable=self.graph_props._bin_width)
+      self.nexcl = LabeledEntry(self.entry_frame, 'Pts Skip From Begin',
+                                width=20, textvariable=self.graph_props._nexcl)
       # Now grid the entry buttons
-      self.ti.grid(column=0, row=0, columnspan=2, pady=4, sticky=N+S+E+W)
-      self.xl.grid(column=0, row=1, columnspan=2, pady=4, sticky=N+S+E+W)
-      self.yl.grid(column=0, row=2, columnspan=2, pady=4, sticky=N+S+E+W)
-      self.lw.grid(column=0, row=3, pady=4, padx=2, sticky=N+S+E+W)
-      self.ps.grid(column=1, row=3, pady=4, padx=2, sticky=N+S+E+W)
-      self.bins.grid(column=0, row=4, pady=4, padx=2, sticky=N+S+E+W)
-      self.nexcl.grid(column=1, row=4, pady=4, sticky=N+S+E+W)
-      self.stride.grid(column=0, row=5, pady=4, sticky=N+S+E+W)
-      self.styles.grid(column=1, row=5, pady=4, padx=2, sticky=N+S+E+W)
+      self.ti.grid(column=0, row=0, columnspan=4, pady=4, sticky=N+S+E+W)
+      self.xl.grid(column=0, row=1, columnspan=4, pady=4, sticky=N+S+E+W)
+      self.yl.grid(column=0, row=2, columnspan=4, pady=4, sticky=N+S+E+W)
+      self.nexcl.grid(column=0, row=3, pady=4, sticky=N+S+E+W)
+      self.stride.grid(column=1, row=3, pady=4, sticky=N+S+E+W)
+      self.bins.grid(column=2, row=3, pady=4, padx=2, sticky=N+S+E+W)
+      self.window.grid(column=3, row=3, pady=4, padx=2, sticky=N+S+E+W)
+      self.lw.grid(column=0, row=4, pady=4, padx=2, sticky=N+S+E+W)
+      self.ps.grid(column=1, row=4, pady=4, padx=2, sticky=N+S+E+W)
+      self.styles.grid(column=2, row=4, pady=4, padx=2, columnspan=2, 
+                       sticky=N+S+E+W)
       self.entry_frame.pack(fill=BOTH)
 
 class StyleBoxes(Frame):

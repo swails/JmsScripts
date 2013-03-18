@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+#! PYTHONEXE
 
 from tkFileDialog import askopenfilenames
 from Tkinter import Tk, BOTH
+import matplotlib
+matplotlib.use('TkAgg')
 from mdoutanalyzer import __version__, __author__, __date__
 from mdoutanalyzer.graphproperties import GraphControlWindow
 from mdoutanalyzer.mdout import AmberMdout
@@ -61,5 +63,11 @@ ggeo = [int(i) for i in geore.match(graphprops.geometry()).groups()]
 graphprops.geometry(geoformat % (ggeo[0], ggeo[1], rootgeo[2] + rootgeo[0] + 5,
                                  rootgeo[3])
                    )
+
+# For some reason it seems like mainloop is not exited properly if we simply
+# call root.destroy(). Therefore, we'll replace WM_DELTE_WINDOW with root.quit()
+# to bust out of the mainloop.
+root.protocol('WM_DELETE_WINDOW', root.quit)
+
 # Enter our mainloop
 root.mainloop()

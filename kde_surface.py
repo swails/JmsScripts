@@ -9,7 +9,7 @@ from signal import signal, SIGINT
 import sys
 import warnings
 
-parser = ArgumentParser(version='0.1a')
+parser = ArgumentParser(version='1.0')
 
 group = parser.add_argument_group('Files')
 group.add_argument('-i', '--input', dest='input', metavar='FILE', help='''Input
@@ -22,6 +22,26 @@ group = parser.add_argument_group('Input Options')
 group.add_argument('-c' ,'--columns', nargs=2, type=int, metavar='INT',
                    dest='columns', default=[0,1], help='''Which columns to
                    extract data from.  Default is first and second columns''')
+group.add_argument('-xp', '--x-periodic', dest='xperiodic', default=False,
+                   action='store_true', help='''The X-coordinate is periodic on
+                   the X-range, so the tails of the KDE will be translated to
+                   the other side (True for torsions by default, False
+                   otherwise)''')
+group.add_argument('-yp', '--y-periodic', dest='yperiodic', default=False,
+                   action='store_true', help='''The Y-coordinate is periodic on
+                   the Y-range, so the tails of the KDE will be translated to
+                   the other side (True for torsions by default, False
+                   otherwise)''')
+group.add_argument('-xt', '--xtorsion', default=False, dest='xtorsion',
+                   action='store_true', help='''The X-dimension is a periodic
+                   torsion, so plot from -180 to 180 degrees. This is a
+                   short-cut for specifying the periodicity and range for the
+                   X-dimension''')
+group.add_argument('-yt', '--ytorsion', default=False, dest='ytorsion',
+                   action='store_true', help='''The Y-dimension is a periodic
+                   torsion, so plot from -180 to 180 degrees. This is a
+                   short-cut for specifying the periodicity and range for the
+                   Y-dimension''')
 group = parser.add_argument_group('Output Options')
 group.add_argument('-xr', '--xrange', metavar='FLOAT', nargs=2, type=float,
                    dest='xrange', default=None, help='''Range of output data to
@@ -31,12 +51,6 @@ group.add_argument('-xr', '--xrange', metavar='FLOAT', nargs=2, type=float,
 group.add_argument('-yr', '--yrange', metavar='FLOAT', nargs=2, type=float,
                    dest='yrange', default=None, help='''Same as -xr/--xrange,
                    except in the Y-dimension.''')
-group.add_argument('-xt', '--xtorsion', default=False, dest='xtorsion',
-                   action='store_true', help='''The X-dimension is a torsion, so
-                   plot from -180 to 180 degrees''')
-group.add_argument('-yt', '--ytorsion', default=False, dest='ytorsion',
-                   action='store_true', help='''The Y-dimension is a torsion, so
-                   plot from -180 to 180 degrees''')
 group.add_argument('-res', '--resolution', metavar='INT', nargs=2, type=int,
                    dest='res', default=[100,100], help='''Number of points to
                    output in the X and Y dimensions, respectively. Defaults to
@@ -67,6 +81,7 @@ if opt.xrange is None and not opt.xtorsion:
    xmin, xmax = None, None
 elif opt.xtorsion:
    print('X-dimension is torsion. Using -180 to 180 range.')
+   opt.xperiodic = True # torsions are periodic
    xmin, xmax = -180.0, 180.0
 else:
    print('X-min: %g; X-max: %g' % opt.xrange)
@@ -77,6 +92,7 @@ if opt.yrange is None and not opt.ytorsion:
    ymin, ymax = None, None
 elif opt.ytorsion:
    print('Y-dimension is torsion. Using -180 to 180 range.')
+   opt.yperiodic = True # torsions are periodic
    ymin, ymax = -180.0, 180.0
 else:
    print('Y-min: %g; Y-max: %g' % opt.yrange)
@@ -138,10 +154,14 @@ for i in range(opt.res[0]):
    for j in range(opt.res[1]):
       xval = xmin + spacing[0] * i
       yval = ymin + spacing[1] * j
-      outfile.write('%13.7E %13.7E %13.7E\n' % (xval, yval,
-                              kernel.evaluate((xval, yval))
-                                             )
-                   )
+      zval = kernel.evaluate((xval, yval))
+      if opt.xperiodic:
+         zval += kernel.evaluate((xmin - spacing[0] * i, yval))
+         zval += kernel.evaluate((xmax + spacing[0] * i, yval))
+      if opt.yperiodic:
+         zval += kernel.evaluate((xval, ymin - spacing[1] * j))
+         zval += kernel.evaluate((xval, ymax + spacing[1] * j))
+      outfile.write('%13.7E %13.7E %13.7E\n' % (xval, yval, zval))
    outfile.write('\n')
 
 outfile.close()

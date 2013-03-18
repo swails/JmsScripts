@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
-from __future__ import division
-
 """ 
 This program will calculate the chi-squared of a best-fit titration curve to
 the Hill equation that it was fitted to
 """
+
+from __future__ import division
 
 from optparse import OptionParser
 from scipy.optimize import curve_fit
@@ -49,53 +48,58 @@ if __name__ == '__main__':
          print >> sys.stderr, 'Could not open %s for reading' % opt.input_file
          sys.exit(1)
    
+   if opt.protonated:
+      transform = lambda x: x
+   else:
+      transform = lambda x: 1 - x
    hasplt = hasplt and opt.plot
 
-   lines = infile.readlines()
+   ress = [x for i, x in enumerate(infile.readline().split()) if i > 1]
+   data = np.loadtxt(infile).transpose()
+   avgs = np.zeros(data.shape[0])
+   ncalls = np.zeros(data.shape[0], dtype=np.int8)
+   sum2s = np.zeros(data.shape[0])
+   paras = np.zeros(shape=(data.shape[0], 2))
 
-   xdata = np.zeros(len(lines))
-   ydata = np.zeros(len(lines))
+   # Generate initial guesses, which is just the average of the HH pKas
+   for j in range(1, data.shape[0]):
+      for i, x in enumerate(data[j]):
+         fd = transform(x)
+         if fd > 0 and fd < 1: 
+            avgs[j] += data[0][i] - math.log10(fd / (1-fd))
+            ncalls[j] += 1
+      avgs[j] /= ncalls[j]
 
-   for i, line in enumerate(lines):
-      if line.strip().startswith('#'): continue
-      xdata[i] = float(line.split()[0])  # pH
-      ydata[i] = float(line.split()[opt.col])  # Fraction deprotonated
-      if opt.protonated: ydata[i] = 1.0 - ydata[i]
+      params, cov = curve_fit(f, data[0], data[j], p0=(avgs[j],1))
 
-   # Generate an initial guess, which is just the average of the HH pKas
-   avg = 0.0
-   ncalls = 0
-   for i, fd in enumerate(ydata):
-      if fd > 0 and fd < 1: 
-         avg += xdata[i] - math.log10(fd / (1-fd))
-         ncalls += 1
-   avg /= ncalls
+      for i in range(len(data[0])):
+         sum2s[j] += (data[j][i] - f(data[0][i], params[0], params[1])) ** 2
 
-   params, cov = curve_fit(f, xdata, ydata, p0=(avg,1))
-
-   sum2 = 0.0
-   for i in range(len(xdata)):
-      sum2 += (ydata[i] - f(xdata[i], params[0], params[1])) ** 2
-
-
-   if not hasplt:
-      print 'pKa = %f' % params[0]
-      print 'n   = %f' % params[1]
-      print 'RSS = %f' % sum2
-      sys.exit(0)
+      paras[j][0], paras[j][1] = params[0], params[1]
+      if not hasplt:
+         print '%-20s: pKa = %8.3f n = %8.3f RSS = %8.3f' % (ress[j], params[0],
+                     params[1], sum2s[j])
    
+   if not hasplt:
+      sys.exit(0)
+
    if opt.title:
       opt.title = opt.title.strip() + ' '
 
    # Plot me
-   fcn_x = np.linspace(min(xdata)-1, max(xdata)+1, 1000)
-   fcn_y = [f(i, params[0], params[1]) for i in fcn_x]
-   plt.axis([min(xdata)-1, max(xdata)+1, 0, 1])
-   plt.xlabel('pH')
-   plt.ylabel('Fraction Deprotonated')
-   plt.title('%sTitration Curve' % opt.title)
-   plt.text(min(xdata)-0.9, 0.4, 'pKa = %.2f\nn    = %.2f\nRSS = %.4e' %
-            (params[0], params[1], sum2))
-   plt.grid(True)
-   myplot = plt.plot(xdata, ydata, 'bo', fcn_x, fcn_y, 'r-')
+   fig = plt.figure(1)
+   ncols = max(data.shape[0] - 1, 3)
+   nrows = max(1, int(np.ceil(data.shape[0] / 3)))
+   for j in range(1, data.shape[0]):
+      ax = fig.add_subplot(nrows, ncols, j)
+      ax.axis([np.min(data[0])-1, np.max(data[0])+1, 0, 1])
+      ax.xlabel('pH')
+      ax.ylabel('Fraction Deprotonated')
+      ax.title('%s Titration Curve' % ress[j])
+      fcn_x = np.linspace(np.min(data[0])-1, np.max(data[0])+1, 1000)
+      fcn_y = [f(i, paras[j][0], paras[j][1]) for i in fcn_x]
+      ax.text(np.min(data[0])-0.9, 0.4, 'pKa = %.2f\nn    = %.2f\nRSS = %.4e' %
+               (paras[j][0], paras[j][1], sum2s[j]))
+      ax.grid(True)
+      ax.plot(data[0], data[j], 'bo', fcn_x, fcn_y, 'r-')
    plt.show()

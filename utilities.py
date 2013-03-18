@@ -130,7 +130,7 @@ def getresinfo(res, topname, flag):
    parm = AmberParm(topname)
    return parm.parm_data[flag][res-1] # and simply return the residue of interest
 
-def getallresinfo(prmtop, flag):
+def getallresinfo(topname, flag):
    parm = AmberParm(topname)
    return parm.parm_data[flag]
 

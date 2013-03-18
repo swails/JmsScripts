@@ -138,7 +138,7 @@ for x in range(len(mdcrds)):
    if utilities.fileexists(mdcrds[x]) == -1:
       sys.exit()
 
-ptraj = utilities.which('ptraj')
+ptraj = utilities.which('cpptraj')
 
 if ptraj == 'none':
    print 'Error: ptraj needed for phipsigen.py!'

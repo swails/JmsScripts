@@ -74,10 +74,10 @@ if __name__ == '__main__':
             all1 = False
          elif fd == 1:
             all0 = False
-      avgs[j] /= ncalls[j]
 
       # If we have no initial guesses
       if ncalls[j] > 0:
+         avgs[j] /= ncalls[j]
          params, cov = curve_fit(f, data[0], data[j], p0=(avgs[j],1))
 
       for i in range(len(data[0])):

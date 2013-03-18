@@ -54,7 +54,7 @@ if __name__ == '__main__':
       transform = lambda x: 1 - x
    hasplt = hasplt and opt.plot
 
-   ress = [x for i, x in enumerate(infile.readline().split()) if i > 1]
+   ress = [x for i, x in enumerate(infile.readline().split()) if i > 0]
    data = np.loadtxt(infile).transpose()
    avgs = np.zeros(data.shape[0])
    ncalls = np.zeros(data.shape[0], dtype=np.int8)

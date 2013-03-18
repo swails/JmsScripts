@@ -11,6 +11,8 @@ from scipy.optimize import curve_fit
 import numpy as np
 import sys, math
 try:
+   import matplotlib
+   matplotlib.use('TkAgg')
    import matplotlib.pyplot as plt
    hasplt = True
 except:

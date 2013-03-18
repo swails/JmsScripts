@@ -62,23 +62,38 @@ if __name__ == '__main__':
    paras = np.zeros(shape=(data.shape[0], 2))
 
    # Generate initial guesses, which is just the average of the HH pKas
+   all0, all1 = True, True
    for j in range(1, data.shape[0]):
       for i, x in enumerate(data[j]):
          fd = transform(x)
          if fd > 0 and fd < 1: 
+            all0, all1 = False, False
             avgs[j] += data[0][i] - math.log10(fd / (1-fd))
             ncalls[j] += 1
+         elif fd == 0:
+            all1 = False
+         elif fd == 1:
+            all0 = False
       avgs[j] /= ncalls[j]
 
-      params, cov = curve_fit(f, data[0], data[j], p0=(avgs[j],1))
+      # If we have no initial guesses
+      if ncalls[j] > 0:
+         params, cov = curve_fit(f, data[0], data[j], p0=(avgs[j],1))
 
       for i in range(len(data[0])):
          sum2s[j] += (data[j][i] - f(data[0][i], params[0], params[1])) ** 2
 
+      if ncalls[j] == 0:
+         params = [0,0]
+         sum2s[j] = 0
+
       paras[j][0], paras[j][1] = params[0], params[1]
-      if not hasplt:
+      if not hasplt and ncalls[j] > 0:
          print '%-20s: pKa = %8.3f n = %8.3f RSS = %8.3f' % (ress[j], params[0],
                      params[1], sum2s[j])
+      elif not hasplt and all0:
+         print '%-20s: pKa = %8s n = %8s RSS = %8s' % (ress[j], 'Inf', 'N/A',
+                  'N/A')
    
    if not hasplt:
       sys.exit(0)

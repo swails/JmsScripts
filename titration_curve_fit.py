@@ -105,14 +105,14 @@ if __name__ == '__main__':
 
    # Plot me
    fig = plt.figure(1)
-   ncols = max(data.shape[0] - 1, 3)
+   ncols = min(data.shape[0] - 1, 3)
    nrows = max(1, int(np.ceil(data.shape[0] / 3)))
    for j in range(1, data.shape[0]):
       ax = fig.add_subplot(nrows, ncols, j)
       ax.axis([np.min(data[0])-1, np.max(data[0])+1, 0, 1])
-      ax.xlabel('pH')
-      ax.ylabel('Fraction Deprotonated')
-      ax.title('%s Titration Curve' % ress[j])
+      ax.set_xlabel('pH')
+      ax.set_ylabel('Fraction Deprotonated')
+      ax.set_title('%s Titration Curve' % ress[j])
       fcn_x = np.linspace(np.min(data[0])-1, np.max(data[0])+1, 1000)
       fcn_y = [f(i, paras[j][0], paras[j][1]) for i in fcn_x]
       ax.text(np.min(data[0])-0.9, 0.4, 'pKa = %.2f\nn    = %.2f\nRSS = %.4e' %

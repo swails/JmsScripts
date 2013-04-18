@@ -44,6 +44,10 @@ class AmberMdout(object):
       self.properties = {}     # List of input variables with their values
       self.get_properties()    # Get properties of output file
       keys = self.properties.keys()
+      if not keys:
+         # Treat this as a simple data file
+         return self.simple_data(filename)
+
       # Figure out if we're a minimization or an MD
       if 'imin' in keys:
          self.is_md = self.properties['imin'] == 0 # This is MD iff imin == 0
@@ -84,6 +88,43 @@ class AmberMdout(object):
             self.num_terms = AmberMdout.UNKNOWN
       self.get_data()
       
+   #================================================
+
+   def simple_data(self, filename):
+      """
+      Load a file name of simple data. The format is:
+      # name1        name2       name3       ...
+      1              2           3           ...
+      ...
+
+      In this case, the title line is unnecessary, but will be used to name the
+      data sets that result from it
+      """
+      from os.path import basename
+      f = open(filename, 'r')
+      l = f.readline()
+      if l.startswith('#'):
+         words = l[1:].split()
+      else:
+         words = []
+         f.seek(0)
+      data = np.loadtxt(f).transpose()
+      # Generate default names for any unnamed column: filename_COL#
+      if len(words) < data.shape[0]:
+         for i in range(len(words), data.shape[0]):
+            words.append('%s_%d' % (basename(filename), i))
+      # Make sure we don't have any duplicate names (if we do, distinguish by #
+      for i, word in enumerate(words):
+         if word in words[:i]:
+            c = 1
+            while word in words[:i]:
+               word = '%s_%d' % (basename(filename), c)
+               c += 1
+         self.data[word] = data[i]
+
+      self.num_steps = AmberMdout.UNKNOWN
+      self.num_terms = AmberMdout.UNKNOWN
+
    #================================================
 
    def get_properties(self):

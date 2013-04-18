@@ -1,4 +1,4 @@
-#! PYTHONEXE
+#! /usr/bin/env python
 
 from tkFileDialog import askopenfilenames
 from Tkinter import Tk, BOTH
@@ -16,7 +16,7 @@ geore = re.compile(r'(\d+)x(\d+)\+(\d+)\+(\d+)')
 geoformat = '%dx%d+%d+%d'
 
 verstring = """
-   %%prog : An AMBER MD output file parser and graphing utility
+   %%prog : An AMBER MD output file and data file parser and graphing utility
 
                               Version %s
                              %s
@@ -30,14 +30,15 @@ parser = OptionParser(usage='%prog [mdout1] [mdout2] ... [mdoutN]',
 opt, arg = parser.parse_args()
 
 root = Tk()
-root.title('Mdout Analyzer')
+root.title('Mdout and Data Analyzer')
 if not arg:
-   arg = askopenfilenames(title='Select Mdout File(s)', parent=root,
+   arg = askopenfilenames(title='Select Mdout or Data File(s)', parent=root,
                           filetypes=[('Mdout Files', '*.mdout'),
+                                     ('Data Files', '*.dat'),
                                      ('All Files', '*')])
 
 if not arg:
-   print ('No mdout files chosen!')
+   print ('No files chosen!')
    sys.exit(1)
 
 for f in arg:

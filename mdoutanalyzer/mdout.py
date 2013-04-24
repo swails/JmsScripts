@@ -313,7 +313,17 @@ class AmberMdout(object):
       # Find out how many terms we have (it's not always num_terms...)
       size1, size2 = len(self.data[selfkeys[0]]), len(other.data[otherkeys[0]])
       if selfkeys != otherkeys:
-         raise TypeError('Mismatch in data keys. Incompatible AmberMdouts!')
+         if not self.properties.keys():
+            # For pure data files, just add in new data that is not already
+            # present from a previous file.
+            for key in otherkeys:
+               if key in selfkeys: continue
+               self.data[key] = other.data[key]
+            return self
+         else:
+            raise TypeError('Mismatch in data keys. Incompatible AmberMdouts!')
+      elif not self.properties.keys():
+         return self
       # Create a new array that's as big as the other 2 together, then copy
       # them both into that new array one after another. Then put it into
       # self.data[key] to complete the in-place addition

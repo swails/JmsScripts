@@ -297,7 +297,7 @@ class HistButton(_AnaButton):
       return ""
 
    def default_ylabel(self):
-      if self.graph_props.normalize() or self.graph_props.kde():
+      if self.graph_props.normalize() or self.graph_props.use_kde():
          return 'Probability'
       else:
          return 'Frequency'

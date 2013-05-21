@@ -4,6 +4,6 @@
 
 __all__ = ['molecule','formats','periodic_table','exceptions','amber']
 
-__version__ = '1.1'
+__version__ = '13.0'
 __author__ = 'Jason Swails'
 

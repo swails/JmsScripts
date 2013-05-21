@@ -25,7 +25,15 @@ class AmberMask(object):
 
    #======================================================
 
-   def Selection(self, prnlev=0):
+   def Selected(self, invert=False):
+      """ Generator that returns the indexes of selected atoms """
+      for i, v in enumerate(self.Selection(invert=invert)):
+         if v:
+            yield i
+
+   #======================================================
+
+   def Selection(self, prnlev=0, invert=False):
       """ Parses the mask and analyzes the result to return an atom
           selection array
       """
@@ -46,6 +54,8 @@ class AmberMask(object):
       if prnlev > 5: stdout.write('postfix mask: ==%s==\n' % postfix)
 
       # 3) evaluate the postfix notation
+      if invert:
+         return [abs(i-1) for i in AmberMask._evaluate(self, postfix, prnlev)]
       return AmberMask._evaluate(self, postfix, prnlev)
 
    #======================================================
@@ -544,8 +554,8 @@ def _nameMatch(atnam1, atnam2):
    atnam1 = str(atnam1).replace(' ','')
    atnam2 = str(atnam2).replace(' ','')
    # Replace amber mask wildcards with appropriate regex wildcards and protect the +
-   atnam1 = atnam1.replace('*',r'\w*')
-   atnam1 = atnam1.replace('?',r'\w')
+   atnam1 = atnam1.replace('*',r'\S*')
+   atnam1 = atnam1.replace('?',r'\S')
    atnam1 = atnam1.replace('+',r'\+')
    # Now replace just the first instance of atnam2 in atnam2 with '', and return *not* that
    # DEBUG:

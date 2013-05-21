@@ -77,7 +77,7 @@ else: # read from stdin
 # Compute avg, stdev
 ave = run_sum / num_vals
 ave2 = run_sum2 / num_vals
-std = math.sqrt(ave2 - ave * ave)
+std = math.sqrt(abs(ave2 - ave * ave))
       
 if opt.verbose:
    print 'The average of column %d is: %15.5g' % (opt.col, ave)

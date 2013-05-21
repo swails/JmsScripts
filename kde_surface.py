@@ -3,6 +3,8 @@ from __future__ import division
 
 from array import array
 from argparse import ArgumentParser
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from scipy import stats
 from signal import signal, SIGINT
@@ -58,9 +60,22 @@ group.add_argument('-res', '--resolution', metavar='INT', nargs=2, type=int,
 group.add_argument('-b', '--bandwidth', default=None, type=float,
                    metavar='FLOAT', dest='bandwidth', help='''Kernel bandwidth
                    to use. Defaults to Scott's choice.''')
+group = parser.add_argument_group('Plotting Options')
 group.add_argument('--plot', dest='plot', action='store_true', default=False,
                    help='''Show surface plot using matplotlib. Default is not
                    to.''')
+group.add_argument('-x', '--xlabel', dest='xlabel', default='X value', 
+                   help='Label of the X-axis on the plot')
+group.add_argument('-y', '--ylabel', dest='ylabel', default='Probability',
+                   help='Label of the Y-axis on the plot')
+group.add_argument('--title', dest='title', default='KDE',
+                   help='Title of the plot')
+group.add_argument('--png', dest='savepic', default='plot.png', help='''Picture
+                   file to save the plot in''')
+group.add_argument('--x-range', dest='xrange', nargs=2, type=float, 
+                   default=None, help='X-range. Default is \'best choice\'')
+group.add_argument('--y-range', dest='yrange', nargs=2, type=float, 
+                   default=None, help='Y-range. Default is \'best choice\'')
 
 
 # Set up signal handler to print help
@@ -72,9 +87,6 @@ def buffered_range(n, x, buffer=0.1):
    return n - buffer * r, x + buffer * r
 
 opt = parser.parse_args()
-
-if opt.plot:
-   warnings.warn('matplotlib plotting is not yet supported.')
 
 if opt.xrange is None and not opt.xtorsion:
    print('Using range of data as default X-range (with 10% buffer)')
@@ -141,7 +153,7 @@ except TypeError:
       kernel.factor = opt.bandwidth
 
 # Output the results in a gnuplot-readable way
-if opt.output is None:
+if opt.output is None and not opt.plot:
    outfile = sys.stdout
 else:
    outfile = open(opt.output, 'w')
@@ -149,19 +161,23 @@ else:
 print ('The bandwidth is %s' % kernel.factor)
 spacing = [(xmax - xmin) / opt.res[0], (ymax - ymin) / opt.res[1]]
 
-outfile.write('#             X             Y           KDE\n')
-for i in range(opt.res[0]):
-   for j in range(opt.res[1]):
-      xval = xmin + spacing[0] * i
-      yval = ymin + spacing[1] * j
-      zval = kernel.evaluate((xval, yval))
-      if opt.xperiodic:
-         zval += kernel.evaluate((xmin - spacing[0] * i, yval))
-         zval += kernel.evaluate((xmax + spacing[0] * i, yval))
-      if opt.yperiodic:
-         zval += kernel.evaluate((xval, ymin - spacing[1] * j))
-         zval += kernel.evaluate((xval, ymax + spacing[1] * j))
-      outfile.write('%13.7E %13.7E %13.7E\n' % (xval, yval, zval))
-   outfile.write('\n')
+if opt.output is not None or not opt.plot:
+   outfile.write('#             X             Y           KDE\n')
+   for i in range(opt.res[0]):
+      for j in range(opt.res[1]):
+         xval = xmin + spacing[0] * i
+         yval = ymin + spacing[1] * j
+         zval = kernel.evaluate((xval, yval))
+         if opt.xperiodic:
+            zval += kernel.evaluate((xmin - spacing[0] * i, yval))
+            zval += kernel.evaluate((xmax + spacing[0] * i, yval))
+         if opt.yperiodic:
+            zval += kernel.evaluate((xval, ymin - spacing[1] * j))
+            zval += kernel.evaluate((xval, ymax + spacing[1] * j))
+         outfile.write('%13.7E %13.7E %13.7E\n' % (xval, yval, zval))
+      outfile.write('\n')
 
+# Time to plot
+if opt.plot:
+   
 outfile.close()

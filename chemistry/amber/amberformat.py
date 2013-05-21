@@ -166,7 +166,7 @@ class AmberFormat(object):
       self.prm_name = fname
       current_flag = ''
       gathering_data = False
-      self.version = '' # reset all topology information each time rdparm is called
+      self.version = None # reset all top infor each time rdparm is called
       self.formats = {}
       self.parm_data = {}
       self.parm_comments = {}

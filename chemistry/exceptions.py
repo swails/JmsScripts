@@ -54,7 +54,7 @@ class AmberParameterError(ChemError):
 class AmberParameterWarning(ChemWarning):
    """ If there is a warning to be raised with parameters """
 
-class MoleculeError(ChemError):
+class MoleculeWarning(ChemWarning):
    """ This occurs when there's a problem determining molecularity """
 
 class DihedralError(ChemError):

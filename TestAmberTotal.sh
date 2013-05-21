@@ -4,6 +4,8 @@
 #PBS -o MasterTest.out
 #PBS -e MasterTest.err
 
+branch=amber13-with-patches
+
 # Error message
 error() {
    echo "Error: $1"
@@ -16,11 +18,15 @@ module load intel/12.1.0
 module load cuda/5.0
 module load mpich2-intel/1.4.1p1_12.1.0
 
+logdir=$HOME/AmberBuildTest/$branch
+# Make sure the log directory exists; if not, create it.
+test -d $logdir || mkdir -p $logdir
+
 d=`date +%m-%d-%y`
 cd $AMBERHOME
-git checkout master 2>&1 > /dev/null || error "Checking out master"
+git checkout $branch 2>&1 > /dev/null || error "Checking out $branch"
 git clean -f -x -d 2>&1 > /dev/null
-git pull origin master  2>&1 > /dev/null || error "Pulling from origin"
+git pull origin $branch  2>&1 > /dev/null || error "Pulling from origin"
 
 echo "Configuring serial at `date`"
 (./configure intel 2>&1) > $logdir/${d}_intel_serial_config.log

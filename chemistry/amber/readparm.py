@@ -21,8 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 """
 
-from sys import stderr, stdout
-from chemistry import periodic_table
+from chemistry import periodic_table, __version__
 from chemistry.amber.topologyobjects import (Bond, Angle,
             Dihedral, ResidueList, AtomList, BondTypeList,
             AngleTypeList, DihedralTypeList, TrackedList)
@@ -33,9 +32,42 @@ from chemistry.amber.constants import (NATOM, NTYPES, NBONH, MBONA, NTHETH,
             NNB)
 from chemistry.amber.amberformat import AmberFormat
 from chemistry.exceptions import (AmberParmWarning, AmberParmError, ReadError,
-                                  MoleculeError)
+                                  MoleculeError, MoleculeWarning)
 from warnings import warn
 from math import ceil, sqrt
+
+# Import NetCDF support either from Scientific, netCDF4, or pynetcdf. Set up
+# API-independent reading and writing functions
+_HAS_NETCDF = True
+
+try:
+   from Scientific.IO.NetCDF import NetCDFFile as NetCDFFile
+   open_netcdf = lambda name, mode: NetCDFFile(name, mode)
+   get_int_dimension = lambda obj, name: obj.dimensions[name]
+   get_float_array = lambda obj, name: obj.variables[name].getValue()
+   get_float = lambda obj, name: obj.variables[name].getValue()
+except ImportError:
+   try:
+      from netCDF4 import Dataset as NetCDFFile
+      open_netcdf = lambda name, mode: NetCDFFile(name, mode, format='NETCDF3_64BIT')
+      get_int_dimension = lambda obj, name: len(obj.dimensions[name])
+      get_float_array = lambda obj, name: obj.variables[name][:]
+      get_float = lambda obj, name: obj.variables[name].getValue()[0]
+   except ImportError:
+      try:
+         from pynetcdf import NetCDFFile
+         open_netcdf = lambda name, mode: NetCDFFile(name, mode)
+         get_int_dimension = lambda obj, name: obj.dimensions[name]
+         get_float_array = lambda obj, name: obj.variables[name].getValue()
+         get_float = lambda obj, name: obj.variables[name].getValue()
+      except ImportError:
+         _HAS_NETCDF = False
+
+# Since numpy is a prereq for all NetCDF packages, this is OK
+if _HAS_NETCDF:
+   import numpy as np
+else:
+   np = None # to avoid NameError's
 
 class AmberParm(AmberFormat):
    """
@@ -105,9 +137,6 @@ class AmberParm(AmberFormat):
             warn('Problem parsing L-J 6-12 parameters. \n%s' % err,
                  AmberParmWarning)
 
-      if rst7_name is not None:
-         self.LoadRst7(rst7_name)
-
       # Load the structure arrays
       if self.valid and not self.chamber: 
          try:
@@ -134,6 +163,9 @@ class AmberParm(AmberFormat):
       # dihedral_type_list
       # dihedrals_inc_h
       # dihedrals_without_h
+
+      if rst7_name is not None:
+         self.LoadRst7(rst7_name)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    
@@ -280,8 +312,7 @@ class AmberParm(AmberFormat):
    def ptr(self,pointer):
       """
       Returns the value of the given pointer, and converts to upper-case so it's
-      case-insensitive. A pointer that doesn't exist is met with an error
-      message and a list of valid pointers
+      case-insensitive. A non-existent pointer meets with a KeyError
       """
       global AMBER_POINTERS
       return self.pointers[pointer.upper()]
@@ -569,20 +600,25 @@ class AmberParm(AmberFormat):
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def writeRst7(self, name):
+   def writeRst7(self, name, netcdf=None):
       """ Writes a restart file with the current coordinates and velocities
           and box info if it's present
       """
+      # By default, determine file type by extension (.ncrst is NetCDF)
+      if netcdf or (netcdf is None and name.endswith('.ncrst')):
+         return self._write_ncrst(name)
+
+      # If we are here, continue with the ASCII format
       restrt = open(name, 'w')
       restrt.write('Restart file written by amberParm\n')
       if len(self.atom_list) < 100000:
-         restrt.write('%5d%15.7e\n' % (len(self.atom_list), 0))
+         restrt.write('%5d%15.7e\n' % (len(self.atom_list), self.rst7.time))
       elif len(self.atom_list) < 1000000:
-         restrt.write('%6d%15.7e\n' % (len(self.atom_list), 0))
+         restrt.write('%6d%15.7e\n' % (len(self.atom_list), self.rst7.time))
       elif len(self.atom_list) < 10000000:
-         restrt.write('%7d%15.7e\n' % (len(self.atom_list), 0))
+         restrt.write('%7d%15.7e\n' % (len(self.atom_list), self.rst7.time))
       else:
-         restrt.write('%8d%15e7\n' % (len(self.atom_list), 0))
+         restrt.write('%8d%15e7\n' % (len(self.atom_list), self.rst7.time))
       # Write the coordinates
       num_writ = 0
       for i in range(len(self.atom_list)):
@@ -607,6 +643,60 @@ class AmberParm(AmberFormat):
          for num in self.box: restrt.write('%12.7f' % num)
          restrt.write('\n')
    
+      restrt.close()
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   def _write_ncrst(self, name):
+      """ Write a restart file in NetCDF format """
+      global np, open_netcdf
+      restrt = open_netcdf(name, 'w')
+      # Assign the main attributes
+      restrt.Conventions = 'AMBERRESTART'
+      restrt.ConventionVersion = "1.0"
+      restrt.title = self.rst7.title
+      restrt.application = "AMBER"
+      restrt.program = "ParmEd"
+      restrt.programVersion = str(__version__)
+      # Make all of the dimensions
+      restrt.createDimension('spatial', 3)
+      restrt.createDimension('atom', len(self.atom_list))
+      if self.rst7.hasbox:
+         restrt.createDimension('cell_spatial', 3)
+         restrt.createDimension('label', 5)
+         restrt.createDimension('cell_angular', 3)
+      else:
+         restrt.createDimension('label', 5)
+      restrt.createDimension('time', 1)
+      # Now make the variables
+      v = restrt.createVariable('time', 'd', ('time',))
+      v.units = 'picosecond'
+      v[0] = self.rst7.time
+      v = restrt.createVariable('spatial', 'c', ('spatial',))
+      v[:] = np.asarray(list('xyz'))
+      if self.rst7.hasbox:
+         v = restrt.createVariable('cell_angular', 'c', ('cell_angular', 'label'))
+         v[0] = np.asarray(list('alpha'))
+         v[1] = np.asarray(list('beta '))
+         v[2] = np.asarray(list('gamma'))
+         v = restrt.createVariable('cell_spatial', 'c', ('cell_spatial',))
+         v[0], v[1], v[2] = 'a', 'b', 'c'
+         v = restrt.createVariable('cell_lengths', 'd', ('cell_spatial',))
+         v.units = 'angstrom'
+         v[:] = np.asarray(self.rst7.box[:3])
+         v = restrt.createVariable('cell_angles', 'd', ('cell_angular',))
+         v.units = 'degree'
+         v[:] = np.asarray(self.rst7.box[3:])
+      v = restrt.createVariable('coordinates', 'd', ('atom', 'spatial'))
+
+      v.units = 'angstrom'
+      v[:] = np.asarray([[a.xx, a.xy, a.xz] for a in self.atom_list])
+      if self.rst7.hasvels:
+         v = restrt.createVariable('velocities', 'd', ('atom', 'spatial'))
+         v.units = 'angstrom/picosecond'
+         v.scale_factor = np.float32(20.455)
+         v[:] = np.asarray([[a.vx, a.vy, a.vz] for a in self.atom_list])
+      # Now we're done
       restrt.close()
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -896,12 +986,17 @@ class AmberParm(AmberFormat):
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   def rediscover_molecules(self, solute_ions=True):
-      """ This determines the molecularity """
+   def rediscover_molecules(self, solute_ions=True, fix_broken=True):
+      """
+      This determines the molecularity and sets the ATOMS_PER_MOLECULE and
+      SOLVENT_POINTERS sections of the prmtops. Returns the new atom sequence
+      in terms of the 'old' atom indexes if re-ordering was necessary to fix the
+      tleap bug. Returns None otherwise.
+      """
       # Bail out of we are not doing a solvated prmtop
-      if not self.ptr('ifbox'): return
+      if not self.ptr('ifbox'): return None
 
-      owner = set_molecules(self, solute_ions)
+      owner = set_molecules(self)
       ions = ['Br-','Cl-','Cs+','F-','I-','K+','Li+','Mg+','Na+','Rb+','IB',
               'CIO','MG2']
       indices = []
@@ -927,27 +1022,45 @@ class AmberParm(AmberFormat):
          except AttributeError:
             # So we don't have box information... doesn't matter :)
             pass
-         return
+         return None
       # Now remake our SOLVENT_POINTERS and ATOMS_PER_MOLECULE section
-      self.parm_data['SOLVENT_POINTERS'] = [0,0,0]
-      self.parm_data['SOLVENT_POINTERS'][0] = min(indices) # +1-1
-      self.parm_data['SOLVENT_POINTERS'][1] = max(owner)
+      self.parm_data['SOLVENT_POINTERS'] = [min(indices), len(owner), 0]
       first_solvent = self.parm_data['RESIDUE_POINTER'][min(indices)]
-      self.parm_data['SOLVENT_POINTERS'][2] = owner[first_solvent-1]
+      # Find the first solvent molecule
+      for i, mol in enumerate(owner):
+         if first_solvent-1 == mol[0]:
+            self.parm_data['SOLVENT_POINTERS'][2] = i + 1
+            break
+      else: # this else belongs to 'for', not 'if'
+         raise MoleculeError('Could not find first solvent atom!')
+
       # Now set up ATOMS_PER_MOLECULE and catch any errors
-      self.parm_data['ATOMS_PER_MOLECULE'] = [0 for i in range(max(owner))]
-      mol_num = owner[0]
-      num_atms = 1
-      for i in range(1, self.ptr('natom')):
-         if mol_num == owner[i]: num_atms += 1
-         elif owner[i] == mol_num + 1:
-            self.parm_data['ATOMS_PER_MOLECULE'][mol_num-1] = num_atms
-            num_atms = 1
-            mol_num += 1
-         else:
+      self.parm_data['ATOMS_PER_MOLECULE'] = [len(mol) for mol in owner]
+
+      # Check that all of our molecules are contiguous, because we have to
+      # re-order atoms if they're not
+      try:
+         for mol in owner:
+            for i in range(1, len(mol)):
+               if mol[i] != mol[i-1] + 1:
+                  raise StopIteration()
+      except StopIteration:
+         if not fix_broken:
             raise MoleculeError('Molecule atoms are not contiguous!')
-      # Set the last molecule, since loop broke out before this was done
-      self.parm_data['ATOMS_PER_MOLECULE'][mol_num-1] = num_atms
+         # Non-contiguous molecules detected... time to fix (ugh!)
+         warn('Molecule atoms are not contiguous! I am '
+              'attempting to fix this, but it may take a while.',
+              MoleculeWarning)
+         new_atoms = AtomList(self, fill_from=self.atom_list)
+         i = 0
+         for mol in owner:
+            for atm in mol:
+               new_atoms[i] = self.atom_list[atm]
+               i += 1
+         self.atom_list = new_atoms
+         return owner
+
+      return None
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1199,7 +1312,7 @@ class AmberParm(AmberFormat):
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-class rst7:
+class rst7(object):
    """ Amber input coordinate (or restart coordinate) file format """
    
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1211,9 +1324,16 @@ class rst7:
 
       try:
          self._read()
-      except BaseException, err:
-         raise(ReadError('Error parsing coordinates from %s: %s' %
-               (self.filename, err)))
+      except BaseException:
+         try:
+            self._readnc()
+         except ImportError:
+            raise ReadError(('Error parsing coordinates from %s. If this is a '
+                  'NetCDF restart file, you must install ScientificPython or '
+                  'pynetcdf') % self.filename)
+         except BaseException, err:
+            raise(ReadError('Error parsing coordinates from %s: %s' %
+                  (self.filename, err)))
 
       self.valid = True
 
@@ -1291,6 +1411,35 @@ class rst7:
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+   def _readnc(self):
+      """ Reads a NetCDF-format restart file """
+      global _HAS_NETCDF
+      if not _HAS_NETCDF:
+         raise ImportError('Could not import ScientificPython or netCDF4!')
+      # Get the helper functions
+      global get_int_dimension, get_float_array, get_float
+
+      # Open the restart file and get the title, number of atoms, and time
+      restrt = NetCDFFile(self.filename, 'r')
+      self.title = str(restrt.title)
+      self.natom = get_int_dimension(restrt, 'atom')
+      self.coords = get_float_array(restrt, 'coordinates').flatten().tolist()
+      self.time = get_float(restrt, 'time')
+      self.hasvels = 'velocities' in restrt.variables
+      self.hasbox = ('cell_lengths' in restrt.variables
+                  and 'cell_angles' in restrt.variables)
+      if self.hasvels:
+         self.vels = get_float_array(restrt, 'velocities').flatten().tolist()
+      else:
+         self.vels = []
+      if 'time' in restrt.variables:
+         self.time = get_float(restrt, 'time')
+      if self.hasbox:
+         self.box = (get_float_array(restrt, 'cell_lengths').tolist() +
+                     get_float_array(restrt, 'cell_angles').tolist())
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def Element(mass):
    """ Determines what element the given atom is based on its mass """
 
@@ -1319,33 +1468,10 @@ class amberParm(AmberParm):
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def set_molecules(parm, solute_ions=False):
+def set_molecules(parm):
    """ Correctly sets the ATOMS_PER_MOLECULE and SOLVENT_POINTERS sections
-       of the topology file. solute_ions indicate whether (True) or not (False)
-       the ions are considered to be part of the solute.
+       of the topology file.
    """
-   if not parm.ptr('ifbox'):
-      raise MoleculeError('Only periodic prmtops can have Molecule definitions')
-   # The molecule "ownership" list
-   owner = [0 for i in range(parm.ptr('natom'))]
-   # The way I do this is via a recursive algorithm, in which
-   # the "set_owner" method is called for each bonded partner an atom
-   # has, which in turn calls set_owner for each of its partners and 
-   # so on until everything has been assigned.
-   molecule_number = 1 # which molecule number we are on
-   for i in range(parm.ptr('natom')):
-      # If this atom has not yet been "owned", make it the next molecule
-      # However, we only increment which molecule number we're on if 
-      # we actually assigned a new molecule (obviously)
-      if not owner[i]: 
-         _set_owner(parm, owner, i, molecule_number)
-         molecule_number += 1
-   return owner
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-def _set_owner(parm, owner_array, atm, mol_id):
-   """ Recursively sets ownership of given atom and all bonded partners """
    from sys import setrecursionlimit, getrecursionlimit
    # Since we use a recursive function here, we make sure that the recursion
    # limit is large enough to handle the maximum possible recursion depth we'll
@@ -1356,11 +1482,41 @@ def _set_owner(parm, owner_array, atm, mol_id):
    # creation. Therefore, set the recursion limit to the greater of the current
    # limit or the number of atoms
    setrecursionlimit( max(parm.ptr('natom'),getrecursionlimit()) )
-   owner_array[atm] = mol_id
+
+   # Unmark all atoms so we can track which molecule each goes into
+   parm.atom_list.unmark()
+
+   if not parm.ptr('ifbox'):
+      raise MoleculeError('Only periodic prmtops can have Molecule definitions')
+   # The molecule "ownership" list
+   owner = []
+   # The way I do this is via a recursive algorithm, in which
+   # the "set_owner" method is called for each bonded partner an atom
+   # has, which in turn calls set_owner for each of its partners and 
+   # so on until everything has been assigned.
+   molecule_number = 1 # which molecule number we are on
+   for i in range(parm.ptr('natom')):
+      # If this atom has not yet been "owned", make it the next molecule
+      # However, we only increment which molecule number we're on if 
+      # we actually assigned a new molecule (obviously)
+      if not parm.atom_list[i].marked:
+         tmp = [i]
+         _set_owner(parm, tmp, i, molecule_number)
+         # Make sure the atom indexes are sorted
+         tmp.sort()
+         owner.append(tmp)
+         molecule_number += 1
+   return owner
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+def _set_owner(parm, owner_array, atm, mol_id):
+   """ Recursively sets ownership of given atom and all bonded partners """
+   parm.atom_list[atm].marked = mol_id
    for partner in parm.atom_list[atm].bond_partners:
-      if not owner_array[partner.starting_index]:
-         owner_array[partner.starting_index] = mol_id
+      if not partner.marked:
+         owner_array.append(partner.starting_index)
          _set_owner(parm, owner_array, partner.starting_index, mol_id)
-      elif owner_array[partner.starting_index] != mol_id:
+      elif partner.marked != mol_id:
          raise MoleculeError('Atom %d in multiple molecules' % 
                              partner.starting_index)

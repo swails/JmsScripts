@@ -86,6 +86,8 @@ group.add_option('-n', '--num-replicas', default=6, metavar='INT', dest='nreps',
 group.add_option('-m', '--mpi-cmd', dest='mpi_cmd', metavar='STRING',
                  help='MPI Command to run MPI programs on your machine. ('
                  'Default "%default")', default='mpiexec -n 6')
+group.add_option('--mccycles', dest='mccycles', metavar='INT', type='int',
+                 help='Number of monte carlo cycles to do.', default=1)
 parser.add_option_group(group)
 
 (options, args) = parser.parse_args()
@@ -97,6 +99,10 @@ if options.res is None or options.pKa is None:
 
 if options.dielc != 1 and options.dielc != 2:
    sys.exit('--intdiel must be 1 or 2!')
+
+if options.mccycles <= 0:
+   sys.exit('--mccycles must be a positive integer!')
+
 # Now determine where required programs are
 sander = which('sander.MPI')
 pmemd = which('pmemd.MPI')
@@ -136,9 +142,9 @@ md_mdin = """Mdin file for titrating stuff
    nrespa=1, tol=0.000001, icnstph=2,
    solvph=%%f, ntcnstph=%d, gamma_ln=2.0,
    ntwr=500, ioutfm=1, numexchg=%d,
-   ntrelax=%d, ntwx=1000,
+   ntrelax=%d, ntwx=1000, mccycles=%d
  /
-""" % (nstlim, options.ntcnstph, numexchg, options.ntrelax)
+""" % (nstlim, options.ntcnstph, numexchg, options.ntrelax, options.mccycles)
 
 min_mdin = """Minimization to relax initial bad contacts, explicit solvent
  &cntrl
@@ -348,11 +354,19 @@ for i, ph in enumerate(phlist):
    mdin.write(md_mdin % ph)
    mdin.close()
    opts['num'] = i; opts['ph'] = ph
-   grpfile.write(('-O -i mdin.%(num)s -c %(sys)s.equil.rst7 -p %(sys)s.parm7 '
-                  '-o %(sys)s_pH%(ph)s.mdout -r %(sys)s.md.rst7.%(num)s '
-                  '-inf %(num)s.mdinfo -cpin %(sys)s.cpin -cpout '
-                  '%(sys)s_pH%(ph)s.cpout -cprestrt %(num)d.cprestrt -rem 4 '
-                  '-remlog %(sys)s_rem.log -x %(sys)s_pH%(ph)s.nc\n') % opts)
+   if options.mccycles == 1:
+      grpfile.write(('-O -i mdin.%(num)s -c %(sys)s.equil.rst7 -p %(sys)s.parm7'
+                    ' -o %(sys)s_pH%(ph)s.mdout -r %(sys)s.md.rst7.%(num)s '
+                    '-inf %(num)s.mdinfo -cpin %(sys)s.cpin -cpout '
+                    '%(sys)s_pH%(ph)s.cpout -cprestrt %(num)d.cprestrt -rem 4 '
+                    '-remlog %(sys)s_rem.log -x %(sys)s_pH%(ph)s.nc\n') % opts)
+   else:
+      grpfile.write(('-O -i mdin.%(num)s -c %(sys)s.equil.rst7 -p %(sys)s.parm7'
+                    ' -o %(sys)s_pH%(ph)s.mdout -r %(sys)s.md.rst7.%(num)s '
+                    '-inf %(num)s.mdinfo -cpin %(sys)s.cpin -cpout '
+                    '%(sys)s_pH%(ph)s.cpout -cprestrt %(num)d.cprestrt -rem 4 '
+                    '-remlog %(sys)s_rem.log -x %(sys)s_pH%(ph)s.nc -cph-data '
+                    '%(sys)s_pops.dat.%(num)s\n') % opts)
 
 grpfile.close()
    

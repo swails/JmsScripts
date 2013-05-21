@@ -36,6 +36,8 @@ class Atom(object):
       self.starting_index = starting_index
       self.load_from_parm()
       self.residue = None
+      self.bonds, self.angles, self.dihedrals = [], [], []
+      self.marked = 0 # For setting molecules
    
    #===================================================
 
@@ -200,6 +202,8 @@ class Bond(object):
       # Register each as bonded to the other
       self.atom1.bond_to(atom2)
       self.atom2.bond_to(atom1)
+      self.atom1.bonds.append(self)
+      self.atom2.bonds.append(self)
       # Load the force constant and equilibrium distance
       self.bond_type = bond_type
 
@@ -268,6 +272,9 @@ class Angle(object):
       self.atom2.angle_to(self.atom3)
       self.atom3.angle_to(self.atom1)
       self.atom3.angle_to(self.atom2)
+      self.atom1.angles.append(self)
+      self.atom2.angles.append(self)
+      self.atom3.angles.append(self)
       # Load the force constant and equilibrium angle
       self.angle_type = angle_type
 
@@ -349,6 +356,10 @@ class Dihedral(object):
       self.atom4.dihedral_to(atom2)
       self.atom4.dihedral_to(atom3)
       self.atom4.dihedral_to(atom1)
+      self.atom1.dihedrals.append(self)
+      self.atom2.dihedrals.append(self)
+      self.atom3.dihedrals.append(self)
+      self.atom4.dihedrals.append(self)
       # Load the force constant and equilibrium angle
       self.dihed_type = dihed_type
       self.signs = signs # is our 3rd or 4th term negative?
@@ -492,10 +503,14 @@ class AtomList(list):
    """ Array of Atoms """
    #===================================================
 
-   def __init__(self, parm):
+   def __init__(self, parm, fill_from=None):
       self.parm = parm
-      list.__init__(self, [Atom(self.parm, i) for i in
-                           range(self.parm.ptr('natom'))])
+      if fill_from is None:
+         list.__init__(self, [Atom(self.parm, i) for i in
+                              range(self.parm.ptr('natom'))])
+      else:
+         list.__init__(self, [0 for i in range(self.parm.ptr('natom'))])
+         for i, atm in enumerate(fill_from): self[i] = atm
       self.changed = False
 
    #===================================================
@@ -505,6 +520,12 @@ class AtomList(list):
       self[idx].idx = -1
       list.__delitem__(self, idx)
       self.changed = True
+
+   #===================================================
+   
+   def unmark(self):
+      """ Unmark all atoms in this list """
+      for atm in self: atm.marked = 0
 
    #===================================================
    
@@ -599,6 +620,15 @@ class AtomList(list):
       """
       for atm in self:
          atm.load_from_parm()
+
+   #===================================================
+
+   def __setitem__(self, idx, thing):
+      """
+      This means we changed things...
+      """
+      self.changed = True
+      list.__setitem__(self, idx, thing)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

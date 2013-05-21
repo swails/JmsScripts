@@ -148,39 +148,43 @@ linecount = 0
 for line in datafile:
 	linecount = linecount + 1
 	data = line.split()
-	
-	if (len(data) > 2):
-		print "Warning: Too many entries on line "
-		+ str(linecount)
-		+ " (expected 2, found "
-		+ str(len(data))
+
+	startidx = 0
+	if (len(data) == 3):
+		startidx = 0
+
+	if (len(data) > 3):
+		print "Warning: Too many entries on line " \
+		+ str(linecount) \
+		+ " (expected 2, found " \
+		+ str(len(data)) \
 		+ "). Skipping."
 		continue
 	elif (len(data) < 2):
-		print "Warning: Too few entries on line "
-		+ str(linecount)
-		+ " (expected 2, found "
-		+ str(len(data))
+		print "Warning: Too few entries on line " \
+		+ str(linecount) \
+		+ " (expected 2, found " \
+		+ str(len(data)) \
 		+ "). Skipping."
 		continue
 	else:
 		try:
-			xval = float(data[0])
+			xval = float(data[startidx])
 		except ValueError as xve:
-			print "Warning: On line "
-			+ str(linecount)
-			+ ", could not convert text \""
-			+ data[0]
+			print "Warning: On line " \
+			+ str(linecount) \
+			+ ", could not convert text \"" \
+			+ data[0] \
 			+ "\" to a floating-point number. Skipping."
 			continue
 		
 		try:
-			yval = float(data[1])
+			yval = float(data[startidx+1])
 		except ValueError as yve:
-			print "Warning: On line "
-			+ str(linecount)
-			+ ", could not convert text \""
-			+ data[1]
+			print "Warning: On line " \
+			+ str(linecount) \
+			+ ", could not convert text \"" \
+			+ data[1] \
 			+ "\" to a floating-point number. Skipping."
 			continue
 		

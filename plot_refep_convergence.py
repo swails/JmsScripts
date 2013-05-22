@@ -7,6 +7,7 @@ This program plots convergence of REFEP calculations
 from __future__ import division
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 from remd import HRemLog
 from argparse import ArgumentParser
 
@@ -14,7 +15,8 @@ if __name__ == '__main__':
    parser = ArgumentParser()
    group = parser.add_argument_group('Files')
    group.add_argument('-i', '--input', dest='remlog', metavar='FILE',
-            default=None, help='Input REMD log file', required=True)
+            default=[], help='Input REMD log file', required=True,
+            action='append')
    group.add_argument('-o', '--output', dest='output', metavar='IMAGE_FILE',
             default=None, help='''Image with graphed convergence. By default,
             just show the graph on the screen.''')
@@ -34,25 +36,36 @@ if __name__ == '__main__':
    
    opt = parser.parse_args()
 
-   remlog = HRemLog(opt.remlog)
+   remlogs = [HRemLog(remlog) for remlog in opt.remlog]
 
-   left_fe = np.zeros(remlog.numexchg)
-   right_fe = np.zeros(remlog.numexchg)
-   time = np.arange(0, remlog.numexchg*opt.eaf, opt.eaf)
+   nreps = len(remlogs[0].reps)
+   tot_exchg = sum([remlog.numexchg for remlog in remlogs])
+   time = np.arange(0, tot_exchg*opt.eaf, opt.eaf*2)
 
-   for i in range(remlog.numexchg):
-      lfe = 0.0
-      rfe = 0.0
-      for j, rep in enumerate(remlog.reps):
-         if j == 0:
-            rfe += rep.right_fe[i]
-         elif j == len(remlog.reps) - 1:
-            lfe += rep.left_fe[i]
-         else:
-            rfe += rep.right_fe[i]
-            lfe += rep.left_fe[i]
-      left_fe[i] = -lfe
-      right_fe[i] = rfe
+   KBT = 0.00199 * 300
+   ONEKT = 1 / KBT
+   # Now compute the left- and right- free energies
+   rdiffs = [[] for i in range(nreps)]
+   ldiffs = [[] for i in range(nreps)]
+   for remlog in remlogs:
+      for i, rep in enumerate(remlog.reps):
+         for j, oidx in enumerate(rep.neighbor_index):
+            orep = remlog.reps[oidx]
+            if rep.index[j] == oidx+1 or (rep.index[j] == 0 and oidx == nreps-1):
+               ldiffs[i].append(math.exp((rep.potene1[j]-orep.potene2[j])*ONEKT))
+#              ldiffs[i].append(rep.potene1[j]-orep.potene2[j])
+            else:
+               rdiffs[i].append(math.exp((rep.potene1[j]-orep.potene2[j])*ONEKT))
+#              rdiffs[i].append(rep.potene1[j]-orep.potene2[j])
+
+   left_fe = np.zeros(len(ldiffs[0]))
+   right_fe = np.zeros(len(rdiffs[0]))
+   for i in range(len(ldiffs[0])):
+      for j in range(1, len(ldiffs)):
+         left_fe[i] -= KBT * math.log(sum(ldiffs[j][:i+1]) / (i+1))
+   for i in range(len(rdiffs[0])):
+      for j in range(len(rdiffs)-1):
+         right_fe[i] += KBT * math.log(sum(rdiffs[j][:i+1]) / (i+1))
 
    fig = plt.figure(1, figsize=(8,5))
    ax = fig.add_subplot(111)

@@ -28,6 +28,9 @@ if __name__ == '__main__':
             the plot appears.''')
    group.add_argument('-t', '--title', default='REFEP Free Energies',
             dest='title', help='Title of the plot.')
+   group.add_argument('-d', '--plot-diff', dest='diff', default=False,
+            action='store_true', help='''Plot the difference between the forward
+            and reverse free energies to show convergence.''')
    
    opt = parser.parse_args()
 
@@ -53,6 +56,12 @@ if __name__ == '__main__':
 
    fig = plt.figure(1, figsize=(8,5))
    ax = fig.add_subplot(111)
+   middle = (left_fe[i] + right_fe[i]) * 0.5
+   print 'The final, average free energy is %.4f' % middle
+   low = min(np.min(left_fe), np.min(right_fe))
+   high = max(np.max(left_fe), np.max(right_fe))
+   tdiff = max(middle - low, high - middle)
+   ax.set_ylim(middle-tdiff, middle+tdiff)
 
    fontdict = dict(size=20, family='sans-serif')
    fontdict2 = dict(size=18, family='sans-serif')
@@ -62,8 +71,19 @@ if __name__ == '__main__':
    pl1, = ax.plot(time, left_fe, 'k-', lw=2)
    pl2, = ax.plot(time, right_fe, 'r-', lw=2)
    ax.grid(lw=1)
-   ax.legend((pl1, pl2), ('Forward FEP', '-Reverse FEP'), loc='best')
 
+   # Now plot the difference if requested
+   if opt.diff:
+      ax2 = ax.twinx()
+      pl3, = ax2.plot(time, left_fe - right_fe, 'g--', lw=2)
+      ax2.set_ylabel('Difference (kcal mol$^{-1}$)', color='g',
+                     fontdict=fontdict2)
+      ax.legend((pl1, pl2, pl3), ('Forward FEP', '-Reverse FEP', 'Difference'),
+                loc=1)
+      # Change the color of the tics and its labels
+      for tic in ax2.get_yticklabels(): tic.set_color('g')
+   else:
+      ax.legend((pl1, pl2), ('Forward FEP', '-Reverse FEP'), loc=1)
    if opt.output:
       fig.savefig(opt.output)
       print ('Saved %s. Done!' % opt.output)

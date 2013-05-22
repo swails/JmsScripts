@@ -16,7 +16,7 @@ if __name__ == '__main__':
    group = parser.add_argument_group('Files')
    group.add_argument('-i', '--input', dest='remlog', metavar='FILE',
             default=[], help='Input REMD log file', required=True,
-            action='append')
+            nargs='*')
    group.add_argument('-o', '--output', dest='output', metavar='IMAGE_FILE',
             default=None, help='''Image with graphed convergence. By default,
             just show the graph on the screen.''')
@@ -29,10 +29,13 @@ if __name__ == '__main__':
    group = parser.add_argument_group('Plot Options', '''These options change how
             the plot appears.''')
    group.add_argument('-t', '--title', default='REFEP Free Energies',
-            dest='title', help='Title of the plot.')
+            dest='title', help='Title of the plot. Default [[ %(default)s ]]')
    group.add_argument('-d', '--plot-diff', dest='diff', default=False,
             action='store_true', help='''Plot the difference between the forward
             and reverse free energies to show convergence.''')
+   group.add_argument('-l', '--lag', default=0, type=int, metavar='INT',
+            help='''The number of points to omit from plotting the differences.
+            Default is %(default)s''')
    
    opt = parser.parse_args()
 
@@ -53,10 +56,8 @@ if __name__ == '__main__':
             orep = remlog.reps[oidx]
             if rep.index[j] == oidx+1 or (rep.index[j] == 0 and oidx == nreps-1):
                ldiffs[i].append(math.exp((rep.potene1[j]-orep.potene2[j])*ONEKT))
-#              ldiffs[i].append(rep.potene1[j]-orep.potene2[j])
             else:
                rdiffs[i].append(math.exp((rep.potene1[j]-orep.potene2[j])*ONEKT))
-#              rdiffs[i].append(rep.potene1[j]-orep.potene2[j])
 
    left_fe = np.zeros(len(ldiffs[0]))
    right_fe = np.zeros(len(rdiffs[0]))
@@ -88,7 +89,7 @@ if __name__ == '__main__':
    # Now plot the difference if requested
    if opt.diff:
       ax2 = ax.twinx()
-      pl3, = ax2.plot(time, left_fe - right_fe, 'g--', lw=2)
+      pl3, = ax2.plot(time[opt.lag:], (left_fe-right_fe)[opt.lag:], 'g--', lw=2)
       ax2.set_ylabel('Difference (kcal mol$^{-1}$)', color='g',
                      fontdict=fontdict2)
       ax.legend((pl1, pl2, pl3), ('Forward FEP', '-Reverse FEP', 'Difference'),

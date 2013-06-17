@@ -132,8 +132,9 @@ min_mdin = """Minimization to relax initial bad contacts, implicit solvent
    ntpr=50,
    ntb=0,
    cut=1000,
+   igb=%d,
  /
-"""
+""" % options.igb
 
 if options.leftres is not None:
    left_term = options.leftres

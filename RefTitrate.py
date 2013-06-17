@@ -70,19 +70,16 @@ if options.res == None or options.pH == None:
 
 # Now determine where required programs are
 sander = which('sander')
+pmemd = which('pmemd.cuda')
 tleap = which('tleap')
 cpinutil = which('cpinutil.py')
-converter = which('parmed.py')
 
-if 'none' in [sander, tleap, cpinutil]:
-   print >> sys.stderr, 'sander, tleap, and cpinutil.py are all necessary!'
+if None in [sander, pmemd, tleap, cpinutil]:
+   print('sander, pmemd.cuda, tleap, cpinutil.py, and parmed.py are all '
+         'necessary!')
    commworld.Abort()
 
-if options.igb == 8 and converter == 'none':
-   print >> sys.stderr, 'parmed.py is needed for igb = 8!'
-   commworld.Abort()
-
-print " Found necessary programs!"
+print(" Found necessary programs!")
 
 # Keep a log of all stdout
 log = open('%s.log' % os.path.split(sys.argv[0])[1].strip('.py'), 'w')
@@ -93,11 +90,11 @@ md_mdin = """Mdin file for titrating stuff
    ntpr=1000, nstlim=%s,
    dt=0.002, ntt=3, tempi=300,
    temp0=300, tautp=2.0, ig=-1,
-   ntp=0, ntc=2, ntf=2, cut=999,
+   ntp=0, ntc=2, ntf=2, cut=1000.0,
    ntb=0, igb=%s, saltcon=0.1,
    nrespa=1, tol=0.000001, icnstph=1,
    solvph=%%s, ntcnstph=5, gamma_ln=2.0,
-   ntwr=500, ioutfm=1,
+   ntwr=50000, ioutfm=1,
  /
 """ % (options.nstlim, options.igb)
 
@@ -109,8 +106,10 @@ min_mdin = """Minimization to relax initial bad contacts, implicit solvent
    ntpr=50,
    ntb=0,
    cut=1000,
+   igb=%s,
+   saltcon=0.1,
  /
-"""
+""" % (options.igb)
 
 if options.leftres is not None:
    left_term = options.leftres
@@ -134,57 +133,30 @@ if options.lib is not None:
    tleapin += "loadoff %s\n" % options.lib
 
 tleapin += """l = sequence {%s %s %s}
+set default PBRadii %%s
 saveamberparm l %s.parm7 %s.rst7
 quit
 """ % (left_term, options.res, right_term, options.res, options.res)
 
-f = open('tleap.in', 'w')
-f.write(tleapin)
-f.close()
-
 if master:
+   if options.igb == 8:
+      open('tleap.in', 'w').write(tleapin % 'mbondi3')
+   else:
+      open('tleap.in', 'w').write(tleapin % 'mbondi2')
    # First it's time to create the prmtop
    print "\n Making topology file"
-   file = open('tleap.in', 'w')
-   file.write(tleapin)
-   file.close()
-
-   proc_return = Popen(['tleap', '-f', 'tleap.in'], executable=tleap, stdout=log).wait()
-
-   if proc_return != 0:
+   if Popen([tleap, '-f', 'tleap.in'], stdout=log, stderr=log).wait():
       print >> sys.stderr, 'tleap error!'
       commworld.Abort()
 
    print " Successfully created topology file %s.parm7" % options.res
    
-   print "\n Setting prmtop radii"
-   # If we're doing igb = 8, do the prmtop conversion
-   if options.igb == 8:
-      file = open('__TMP__','w')
-      file.write('changeradii mbondi3\nsetoverwrite True\nparmout %s.parm7\n' % options.res)
-      file.close()
-      file = open('__TMP__','r')
-      proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
-         stdin=file).wait()
-      file.close()
-      os.remove('__TMP__')
-      print " Set prmtop radii to mbondi3"
-   else:
-      file = open('__TMP__','w')
-      file.write('changeradii mbondi2\nsetoverwrite True\nparmout %s.parm7\n' % options.res)
-      file.close()
-      file = open('__TMP__','r')
-      proc_return = Popen(['parmed.py','%s.parm7' % options.res], executable=converter, stdout=log,
-         stdin=file).wait()
-      file.close()
-      os.remove('__TMP__')
-      print " Set prmtop radii to mbondi2"
-
    # Create the cpin
    print "\n Creating cpin file"
    cpin = open(options.res + '.cpin', 'w')
-   proc_return = Popen(['cpinutil.py', '-p', '%s.parm7' % options.res, '-igb', '%d' % options.igb, '--ignore-warnings'],
-                       executable=cpinutil, stdout=cpin, stderr=log).wait()
+   proc_return = Popen(['cpinutil.py', '-p', '%s.parm7' % options.res, '-igb',
+                        str(options.igb), '-o', '%s.cpin' % options.res],
+                       stderr=log).wait()
    cpin.close()
    print " Finished making cpin file"
 
@@ -198,9 +170,9 @@ if master:
    mdin.close()
    
    print "\n Minimizing initial structure"
-   proc_return = Popen(['sander', '-O', '-i', 'mdin.min', '-c', '%s.rst7' % options.res, '-p', 
-                        '%s.parm7' % options.res,'-o', 'min.mdout', '-r', '%s.min.rst7' % options.res], 
-                        executable=sander).wait()
+   proc_return = Popen([pmemd, '-O', '-i', 'mdin.min', '-c', '%s.rst7' %
+                        options.res, '-p', '%s.parm7' % options.res,'-o', 
+                        'min.mdout', '-r', '%s.min.rst7' % options.res]).wait()
 
    if proc_return != 0:
       print >> sys.stderr, 'sander minimization error!'
@@ -273,7 +245,7 @@ for i in range(start_frame, end_frame):
    mdin.write(md_mdin % pH_sims[i])
    mdin.close()
 
-   proc_return = Popen(['sander', '-O', '-i', 'mdin.%s' % commrank, '-c', '%s.min.rst7' % options.res, '-p', 
+   proc_return = Popen([pmemd, '-O', '-i', 'mdin.%s' % commrank, '-c', '%s.min.rst7' % options.res, '-p', 
                         '%s.parm7' % options.res,'-o', '%s_pH%s.mdout' % (options.res, pH_sims[i]), '-r', 
                         '%s.md.rst7.%s' % (options.res, commrank), '-inf', str(commrank) + '.mdinfo', 
                         '-cpin', options.res + '.cpin', '-cpout', 

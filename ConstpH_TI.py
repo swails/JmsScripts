@@ -163,7 +163,11 @@ saveamberparm %s %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, resname, resname.lower(), resname.lower())
 
-   if igb == 8:
+   if igb == 1:
+      tleap_script = tleap_script % 'mbondi'
+   elif igb == 7:
+      tleap_script = tleap_script % 'bondi'
+   elif igb == 8:
       tleap_script = tleap_script % 'mbondi3'
    else:
       tleap_script = tleap_script % 'mbondi2'
@@ -179,7 +183,11 @@ set default pbradii %%s
 saveamberparm l %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
-   if igb == 8:
+   if igb == 1:
+      tleap_script = tleap_script % 'mbondi'
+   elif igb == 7:
+      tleap_script = tleap_script % 'bondi'
+   elif igb == 8:
       tleap_script = tleap_script % 'mbondi3'
    else:
       tleap_script = tleap_script % 'mbondi2'
@@ -197,7 +205,11 @@ saveamberparm l %s0.prmtop %s0.inpcrd
 quit
 """ % (extras, prev_str, resname, next_str, resname.lower(), resname.lower())
 
-   if igb == 8:
+   if igb == 1:
+      tleap_script = tleap_script % 'mbondi'
+   elif igb == 7:
+      tleap_script = tleap_script % 'bondi'
+   elif igb == 8:
       tleap_script = tleap_script % 'mbondi3'
    else:
       tleap_script = tleap_script % 'mbondi2'

@@ -2,50 +2,31 @@
 
 # Finds the sum of a specific column of a given file
 
+def do_sum(f, c):
+   mysum = 0
+   for line in f:
+      try:
+         mysum += float(line.split()[c])
+      except (ValueError, IndexError):
+         pass
+   return mysum
+
 import sys
+from argparse import ArgumentParser
 
-if len(sys.argv) < 2:
-   print 'This utility computes the sum a given column of data in given data files.\n'
-   print 'Usage: sum.py file1 file2 ... filen column'
-   sys.exit()
-
-list = []
-  
-col = sys.argv.pop()
-try:
-   column = int(col)
-except ValueError:
-   print 'Usage: sum.py file1 file2 ... filen column'
-   print '%s is not an integer!' % col
-   sys.exit()
+parser = ArgumentParser()
+parser.add_argument('-i', '--input', dest='input', metavar='FILE', default=[],
+                  help='Input file. Default is read from stdin', nargs='*')
+parser.add_argument('-n' ,'--column', dest='col', metavar='INT', default=1,
+                  type=int, help='Column with data you want to sum.')
+opt = parser.parse_args()
 
 sum = 0
-
-if len(sys.argv) >= 2:
-   for x in range(len(sys.argv)-1):
-      y = x + 1
-      try:
-         file = open(sys.argv[y],'r')
-      except IOError:
-         print 'Usage: sum.py file1 file2 ... filen column'
-         print sys.argv[y] + ' could not be opened!'
-         continue
-      
-      for line in file:
-         words = line.split()
-         if len(words) < column:
-            continue
-         try:
-            sum = sum + float(words[column - 1])
-         except ValueError:
-            continue
-      
-      file.close()
+if not opt.input:
+   sum += do_sum(sys.stdin, opt.col-1)
 else:
-   for line in sys.stdin:
-      try:
-         sum += float(line.split()[column - 1])
-      except:
-         continue
-   
-print 'The sum of column ' + str(column) + ' is: ' + str(sum)
+   for fname in opt.input:
+      with open(fname, 'r') as f:
+         sum += do_sum(sys.stdin, opt.col-1)
+
+print sum

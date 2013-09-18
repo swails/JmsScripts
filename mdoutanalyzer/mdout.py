@@ -44,10 +44,6 @@ class AmberMdout(object):
       self.properties = {}     # List of input variables with their values
       self.get_properties()    # Get properties of output file
       keys = self.properties.keys()
-      if not keys:
-         # Treat this as a simple data file
-         return self.simple_data(filename)
-
       # Figure out if we're a minimization or an MD
       if 'imin' in keys:
          self.is_md = self.properties['imin'] == 0 # This is MD iff imin == 0
@@ -65,7 +61,7 @@ class AmberMdout(object):
       # Determine how many steps we've done
       if (self.is_min and 'maxcyc' in keys)or(self.is_md and 'nstlim' in keys):
          if self.is_min:
-            self.num_steps = self.properties['maxcyc']
+            self.num_steps = max(self.properties['maxcyc'], 1)
             if self.properties['imin'] == 5:
                self.num_steps = self._get_imin5_nsteps()
          if self.is_md:
@@ -77,9 +73,8 @@ class AmberMdout(object):
          # If maxcyc and nstlim are in properties, then ntpr HAS to be
          self.num_terms = self.num_steps / self.properties['ntpr'] + 1
          # For restart, we don't have that extra term at the beginning
-         if self.is_restart: self.num_terms -= 1
-         if self.properties['imin'] == 5:
-            self.num_terms *= self._get_imin5_nsteps()
+         if self.is_restart or (self.is_min and self.properties['maxcyc'] <= 1):
+            self.num_terms -= 1
       else:
          if self.properties['imin'] == 5:
             self.num_steps = self.num_terms = self._get_imin5_nsteps()
@@ -88,43 +83,6 @@ class AmberMdout(object):
             self.num_terms = AmberMdout.UNKNOWN
       self.get_data()
       
-   #================================================
-
-   def simple_data(self, filename):
-      """
-      Load a file name of simple data. The format is:
-      # name1        name2       name3       ...
-      1              2           3           ...
-      ...
-
-      In this case, the title line is unnecessary, but will be used to name the
-      data sets that result from it
-      """
-      from os.path import basename
-      f = open(filename, 'r')
-      l = f.readline()
-      if l.startswith('#'):
-         words = l[1:].split()
-      else:
-         words = []
-         f.seek(0)
-      data = np.loadtxt(f).transpose()
-      # Generate default names for any unnamed column: filename_COL#
-      if len(words) < data.shape[0]:
-         for i in range(len(words), data.shape[0]):
-            words.append('%s_%d' % (basename(filename), i))
-      # Make sure we don't have any duplicate names (if we do, distinguish by #
-      for i, word in enumerate(words):
-         if word in words[:i]:
-            c = 1
-            while word in words[:i]:
-               word = '%s_%d' % (basename(filename), c)
-               c += 1
-         self.data[word] = data[i]
-
-      self.num_steps = AmberMdout.UNKNOWN
-      self.num_terms = AmberMdout.UNKNOWN
-
    #================================================
 
    def get_properties(self):
@@ -313,17 +271,7 @@ class AmberMdout(object):
       # Find out how many terms we have (it's not always num_terms...)
       size1, size2 = len(self.data[selfkeys[0]]), len(other.data[otherkeys[0]])
       if selfkeys != otherkeys:
-         if not self.properties.keys():
-            # For pure data files, just add in new data that is not already
-            # present from a previous file.
-            for key in otherkeys:
-               if key in selfkeys: continue
-               self.data[key] = other.data[key]
-            return self
-         else:
-            raise TypeError('Mismatch in data keys. Incompatible AmberMdouts!')
-      elif not self.properties.keys():
-         return self
+         raise TypeError('Mismatch in data keys. Incompatible AmberMdouts!')
       # Create a new array that's as big as the other 2 together, then copy
       # them both into that new array one after another. Then put it into
       # self.data[key] to complete the in-place addition
@@ -346,7 +294,7 @@ class AmberMdout(object):
       nsets = 0
       for line in fl:
          if line.startswith('minimizing coord set #'):
-            nsets = max(nsets, int(line[22:].strip()))
+            nsets += 1
       fl.close()
       if nsets == 0:
          raise MdoutError('Could not find number of frames for imin=5!')

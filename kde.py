@@ -71,7 +71,7 @@ elif opt.torsion:
    print('Data is from a torsion. Using -180 to 180 range.')
    xmin, xmax = -180.0, 180.0
 else:
-   print('X-min: %g; X-max: %g' % opt.xrange)
+   print('X-min: %g; X-max: %g' % tuple(opt.xrange))
    xmin, xmax = opt.xrange
 
 if opt.input is None:

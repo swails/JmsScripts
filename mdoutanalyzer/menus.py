@@ -17,10 +17,8 @@ class FileMenu(Menu):
 
    def _add_mdout(self):
       """ Get open filenames """
-      fnames = askopenfilenames(title='Select Mdout or Data File(s)',
-                                parent=self,
+      fnames = askopenfilenames(title='Select Mdout File(s)', parent=self,
                                 filetypes=[('Mdout Files', '*.mdout'),
-                                           ('Data Files', '*.dat'),
                                            ('All Files', '*')])
       for f in fnames:
          self.mdout += AmberMdout(f)

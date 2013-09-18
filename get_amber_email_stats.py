@@ -6,7 +6,7 @@ from optparse import OptionParser
 from urllib import urlopen
 
 mailre = re.compile(r'.*\(([SMTWF][a-z]{2}) *([FMJASOND][a-z]{2}) *(\d+) *(\d{4}).*\)')
-cudare = re.compile(r'(cuda|gpu|nvidia)', re.I)
+cudare = re.compile(r'(cuda|gpu|nvidia|k20|gtx|titan|tesla)', re.I)
 cudacount = 0
 count = 0
 
@@ -63,13 +63,13 @@ keys.sort()
 for key in yr_mail_cnt:
    print '%9s | %10d (%7d CUDA)' % (key, yr_mail_cnt[key], cuyr_mail_cnt[key])
 
-print '\n------------------------\n'
+print '\n------------------------' + '-'*15 + '\n'
 print '    Month |   # Emails'
 print '------------------------' + '-'*15
 for key in mnth_mail_cnt:
    print '%9s | %10d (%7d CUDA)' % (key, mnth_mail_cnt[key], cumnth_mail_cnt[key])
 
-print '\n------------------------\n'
+print '\n------------------------' + '-'*15 + '\n'
 print '      Day |   # Emails'
 print '------------------------' + '-'*15
 for key in day_mail_cnt:

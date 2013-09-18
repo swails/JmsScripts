@@ -53,7 +53,7 @@ def make_figure_window(fcn):
          newax.set_xlabel(xlab)
          newax.set_ylabel(ylab)
          if self.graph_props.title():
-            title = self.graph_props.title()
+            title = self.graph_props.title(i)
          else:
             title = self.default_title(i+1)
          newax.set_title(title)

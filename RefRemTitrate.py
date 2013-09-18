@@ -165,6 +165,10 @@ quit
 
 if options.igb == 8:
    tleapin = tleapin % 'mbondi3'
+elif options.igb == 7:
+   tleapin = tleapin % 'bondi'
+elif options.igb == 1:
+   tleapin = tleapin % 'mbondi'
 else:
    tleapin = tleapin % 'mbondi2'
 

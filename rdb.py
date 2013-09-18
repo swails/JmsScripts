@@ -7,6 +7,13 @@ from __future__ import division, with_statement, print_function
 from collections import OrderedDict
 from functools import wraps
 import re
+import warnings
+
+try:
+   import numpy as np
+   _HAS_NUMPY = True
+except ImportError:
+   _HAS_NUMPY = False
 
 # Python 3 support
 try:
@@ -83,8 +90,12 @@ class RDB(OrderedDict):
 
    @classmethod
    @_ensurefile('r', clsmeth=True)
-   def load_from_file(cls, f):
+   def load_from_file(cls, f, use_numpy=True):
       """ Loads the data structure from an RDB file """
+      global _HAS_NUMPY
+      if use_numpy and not _HAS_NUMPY:
+         warnings.warn('numpy could not be found. Using lists.')
+         use_numpy = False
       inst = RDB()
       for key in f.readline()[:-1].split('\t'):
          inst[key] = []
@@ -127,4 +138,11 @@ class RDB(OrderedDict):
                   # Only hit here if original type was int and current is string
                   inst[inst.keys()[i]].append(unicode(d))
                   inst._types[i] = unicode
+      if use_numpy:
+         # Convert data to numpy arrays
+         for i, key in enumerate(self):
+            if self._types[i] is int:
+               self[key] = np.asarray(self[key], dtype=np.int)
+            elif self._types[i] is float:
+               self[key] = np.asarray(self[key], dtype=np.float)
       return inst

@@ -34,7 +34,7 @@ get_wget() {
    fi
 
    pdbcode=`python -c "print('$1'.lower())"`
-   mid=`python -c "print("$pdbcode"[1:3])"`
+   mid=`python -c "print('$pdbcode'[1:3])"`
 
    url=ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/$mid/pdb$pdbcode.ent.gz
    wget $url
@@ -63,9 +63,9 @@ wget_="F"
 curl_="F"
 # See if we have wget and/or curl
 (which wget 2>&1) > /dev/null
-test $# -eq 0 && wget_="T"
+test $? -eq 0 && wget_="T"
 (which curl 2>&1) > /dev/null
-test $# -eq 0 && curl_="T"
+test $? -eq 0 && curl_="T"
 
 if [ "$wget_" = "F" -a "$curl_" = "F" ]; then
    echo "You must have either 'curl' or 'wget' to download PDBs!"

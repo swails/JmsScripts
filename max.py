@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division, print_function
 
-import sys
+import os, sys
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -36,7 +36,10 @@ for file in files:
       except NameError:
          _min = num
 
-if sys.argv[0].lower().startswith('max'):
+prog = os.path.basename(sys.argv[0]).lower()
+if prog.startswith('max'):
    print(_max)
-else if sys.argv[0].lower().startswith('min'):
+elif prog.startswith('min'):
    print(_min)
+else:
+   print('%g\t%g' % (_min, _max))

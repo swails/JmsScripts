@@ -5,7 +5,6 @@ This program plots convergence of REFEP calculations
 """
 
 from __future__ import division
-import matplotlib.pyplot as plt
 import numpy as np
 import math
 from remd import HRemLog
@@ -36,8 +35,16 @@ if __name__ == '__main__':
    group.add_argument('-l', '--lag', default=0, type=int, metavar='INT',
             help='''The number of points to omit from plotting the differences.
             Default is %(default)s''')
+   group.add_argument('--data-file', dest='datafile', metavar='FILE',
+            default=None, help='Save the data to a file instead.')
    
    opt = parser.parse_args()
+
+   if opt.datafile is None:
+      import matplotlib
+      if opt.output is not None:
+         matplotlib.use('Agg')
+      import matplotlib.pyplot as plt
 
    remlogs = [HRemLog(remlog) for remlog in opt.remlog]
 
@@ -68,10 +75,19 @@ if __name__ == '__main__':
       for j in range(len(rdiffs)-1):
          right_fe[i] += KBT * math.log(sum(rdiffs[j][:i+1]) / (i+1))
 
-   fig = plt.figure(1, figsize=(8,5))
-   ax = fig.add_subplot(111)
    middle = (left_fe[i] + right_fe[i]) * 0.5
    print 'The final, average free energy is %.4f' % middle
+   if opt.datafile is not None:
+      with open(opt.datafile, 'w') as f:
+         f.write('%10s %15s %15s\n' % ('Frame', 'Left FE', 'Right FE'))
+         f.write('-'*(42))
+         f.write('\n')
+         for i in range(min(len(left_fe), len(right_fe))):
+            f.write('%10d %15g %15g\n' % i, left_fe[i], right_fe[i])
+      sys.exit(0)
+
+   fig = plt.figure(1, figsize=(8,5))
+   ax = fig.add_subplot(111)
    low = min(np.min(left_fe), np.min(right_fe))
    high = max(np.max(left_fe), np.max(right_fe))
    tdiff = max(middle - low, high - middle)

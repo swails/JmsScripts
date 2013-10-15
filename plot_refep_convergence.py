@@ -9,6 +9,7 @@ import numpy as np
 import math
 from remd import HRemLog
 from argparse import ArgumentParser
+import sys
 
 if __name__ == '__main__':
    parser = ArgumentParser()

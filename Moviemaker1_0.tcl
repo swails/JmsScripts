@@ -3,7 +3,7 @@ set xcom {frame .top.toprotate.frmx -relief groove -pady 5}
 proc makeTop { } {
 	global x y z t scalefac framea frameb rot zoom fade clip traj trans i fadearr fadei degx degy degz trajec scale time degtx degty newmat degtz
 	set i 1
-	set newmat 20
+	set newmat 22
 	set fadei 0
 	#creates master gui
 	toplevel .top

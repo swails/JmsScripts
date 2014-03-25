@@ -93,6 +93,7 @@ class AmberRestart(file):
       self.write('%12.7F%12.7F%12.7F' % (a, b, c))
       if not None in (alpha, beta, gamma):
          self.write('%12.7F%12.7F%12.7F' % (alpha, beta, gamma))
+      self.write('\n')
 
 #~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+~+#
 
@@ -248,6 +249,7 @@ files and preserve any velocity information that may be present."""
          rst_file.write_coordinate(traj.variables['coordinates'][idx][it][0],
                                    traj.variables['coordinates'][idx][it][1],
                                    traj.variables['coordinates'][idx][it][2])
+      if traj.dimensions['atom'] % 2 != 0: rst_file.write('\n')
       # Now write the velocities
       if 'velocities' in traj.variables.keys():
          vels = traj.variables['velocities'][idx]
@@ -257,6 +259,7 @@ files and preserve any velocity information that may be present."""
       # Now write the velocities
       for it in range(traj.dimensions['atom']):
          rst_file.write_velocity(vels[it][0], vels[it][1], vels[it][2])
+      if traj.dimensions['atom'] % 2 != 0: rst_file.write('\n')
 
       # Now write the box information if it's present
       if 'cell_lengths' in traj.variables.keys():

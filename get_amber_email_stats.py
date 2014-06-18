@@ -6,7 +6,8 @@ from optparse import OptionParser
 from urllib import urlopen
 
 mailre = re.compile(r'.*\(([SMTWF][a-z]{2}) *([FMJASOND][a-z]{2}) *(\d+) *(\d{4}).*\)')
-cudare = re.compile(r'(cuda|gpu|nvidia|k20|gtx|titan|tesla|k10|2050|2070)', re.I)
+cudare = re.compile(r'(cuda|gpu|nvidia|k20|gtx|titan|tesla|'
+                    r'2050|2070|kepler|fermi)', re.I)
 cudacount = 0
 count = 0
 

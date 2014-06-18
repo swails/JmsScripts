@@ -6,7 +6,7 @@ from optparse import OptionParser
 from urllib import urlopen
 
 mailre = re.compile(r'.*\(([SMTWF][a-z]{2}) *([FMJASOND][a-z]{2}) *(\d+) *(\d{4}).*\)')
-cudare = re.compile(r'(cuda|gpu|nvidia|k20|gtx|titan|tesla)', re.I)
+cudare = re.compile(r'(cuda|gpu|nvidia|k20|gtx|titan|tesla|k10|2050|2070)', re.I)
 cudacount = 0
 count = 0
 
@@ -66,13 +66,16 @@ for key in yr_mail_cnt:
 print '\n------------------------' + '-'*15 + '\n'
 print '    Month |   # Emails'
 print '------------------------' + '-'*15
-for key in mnth_mail_cnt:
+mnths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+         'Oct', 'Nov', 'Dec']
+for key in mnths:
    print '%9s | %10d (%7d CUDA)' % (key, mnth_mail_cnt[key], cumnth_mail_cnt[key])
 
 print '\n------------------------' + '-'*15 + '\n'
 print '      Day |   # Emails'
 print '------------------------' + '-'*15
-for key in day_mail_cnt:
+days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+for key in days:
    print '%9s | %10d (%7d CUDA)' % (key, day_mail_cnt[key], cuday_mail_cnt[key])
 
 if opt.name is not None:

@@ -1,0 +1,72 @@
+FILES:
+------
+
+sans/   -- SANS parser package
+   test.py -- SANS parsing example for NMR-STAR
+ciftest.py -- ditto, for mmCIF
+
+bmrb.py -- STAR object model implemented in python. Allows easy reading from STAR files and generating them programmatically.
+
+INSTALL:
+--------
+sans parsers: simply copy sans subdirectory somewhere.
+
+USE:
+----
+
+SANS:
+
+Use ciftest.py and/or test.py as starting point.
+
+if sans is a subdirectory in . : import sans
+if sans is in /var/tmp/sans    : sys.path.append( "/var/tmp" )
+                                 import sans
+
+from sans STARLexer
+from sans import ErrorHandler, ContentHandler*
+from sans import *parser
+ -- pick the content handler and parser you want to use:
+  parser/cifparser need ContentHandler, parser2 needs ContentHandler2
+
+Finally, write a handler class with methods that'll do something useful 
+with the data.
+
+BMRB:
+
+Simply 'import bmrb' when you are in the same directory as this README. Make sure the sans folder is also present as it is a dependency.
+
+It is easy to use 'help(bmrb)' in python to see the full range of what the BMRB module is capable of, but here are two examples:
+
+Remove a saveframe from a STAR file that is read from the BMRB archive and then write it to disk:
+
+ent15000 = bmrb.entry.fromDatabase(15000)
+del ent15000['entry_information']
+with open("/tmp/15000","wb") as f:
+    f.write(str(ent15000))
+
+Compare two entries for equivalence, using a syntax-aware checker. Then check one against the BMRB schema for validity:
+
+ent15001 = bmrb.entry.fromDatabase(15001)
+ent15000 = bmrb.entry.fromFile("/tmp/15000")
+# Print differences between the two entries
+bmrb.diff(ent15000,ent15001)
+# Validate the first entry against the standard schema
+bmrb.validate(ent15000)
+
+DOCUMENTATION:
+--------------
+SANS is modelled after SAX parsers, if you know how those work look up 
+the *Handler classes in sans/handlers.py and you should be all set.
+
+To generate SANS documentation you'll need ant. Run "ant javadoc" in java 
+subdirectory, then  look in java/doc/api.
+
+Java documentation is not 100% accurate for python version, but the
+descriptions of handler classes and parser basics are close enough.
+
+
+BMRB:
+
+Simply use python's built in help method on the BMRB class for the full documentation. The code is also well-commented if you need even more details on the module's operation than are provided in the built in help.
+
+Also see the included PDF (PY-NMR-STAR.pdf) for an introduction.

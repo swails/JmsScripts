@@ -52,28 +52,28 @@ integer :: number_steps, i, c
 
 !============================ GET TEMPERATURE =============================================
 do
-print*, "Enter the temperature of the system."
-read (*,*) TEMP
+    print*, "Enter the temperature of the system."
+    read (*,*) TEMP
 
-if (TEMP < 0) then
-print*, "Invalid Temperature.  Enter system temp in K"
-else if (TEMP < 100) then
-write (*,*) "Is the temperature really ", TEMP, " K?"
-read (*,*) response
-if (response == "yes" .or. response == "Yes" .or. response == "YES" .or. response == "y" &
-   .or. response == "Y" .or. response == "YEs" .or. response == "yES") then
-exit
-end if ! response == ...
-else if (TEMP > 1000) then
-write (*,*) "Is the temperature really ", TEMP, " K?"
-read (*,*) response
-if (response == "yes" .or. response == "Yes" .or. response == "YES" .or. response == "y" &
-   .or. response == "Y" .or. response == "YEs" .or. response == "yES") then
-exit
-end if ! response == ...
-else
-exit
-end if ! TEMP <, etc.
+    if (TEMP < 0) then
+        print*, "Invalid Temperature.  Enter system temp in K"
+    else if (TEMP < 100) then
+        write (*,*) "Is the temperature really ", TEMP, " K?"
+        read (*,*) response
+        if (response == "yes" .or. response == "Yes" .or. response == "YES" .or. response == "y" &
+           .or. response == "Y" .or. response == "YEs" .or. response == "yES") then
+            exit
+        end if ! response == ...
+    else if (TEMP > 1000) then
+        write (*,*) "Is the temperature really ", TEMP, " K?"
+        read (*,*) response
+        if (response == "yes" .or. response == "Yes" .or. response == "YES" .or. response == "y" &
+           .or. response == "Y" .or. response == "YEs" .or. response == "yES") then
+            exit
+        end if ! response == ...
+    else
+        exit
+    end if ! TEMP <, etc.
 end do
 !========================= END OF GET TEMPERATURE ========================================
 
@@ -83,13 +83,13 @@ end do
 input_open = "n"
 
 10 if ( input_open == "y" ) then
-print*, "There was an error opening the file, enter another one."
+    print*, "There was an error opening the file, enter another one."
 end if
 
 print*,"Enter the name of the file with the data."
 read(*,*) dataFile
 if ( dataFile == "quit" ) then
-goto 12
+    goto 12
 end if
 
 input_open = "y"
@@ -98,7 +98,7 @@ open(7,file=dataFile,STATUS='OLD',ERR=10)
 print*,"Enter the desired name of the output file."
 read(*,*) outputFile
 if( outputFile == "quit" ) then
-goto 12
+    goto 12
 end if
 
 
@@ -108,9 +108,9 @@ end if
 NUM_TRIALS = 0
 i = 1
 do
-	NUM_TRIALS = NUM_TRIALS + 1
-	read(7,FMT='(F8.5)',eor=100,advance='NO') holder
-	i = i + 1
+    NUM_TRIALS = NUM_TRIALS + 1
+    read(7,FMT='(F8.5)',eor=100,advance='NO') holder
+    i = i + 1
 end do
 100 rewind(7)
 
@@ -128,26 +128,30 @@ open(8, file=outputFile)
 ! Implement Jarzynski's method
 ! exp(FE(x)/kT) = < exp(W(x)/kT) >
 do
-read(7,*,end=11)(Work_array(i), i=1,NUM_TRIALS)
-distance = Work_array(1)
+    read(7,*,end=11)(Work_array(i), i=1,NUM_TRIALS)
+    distance = Work_array(1)
 
-	do c=2, NUM_TRIALS
-	work = exp(-BETA * Work_array(c)) + work
-	end do
+    do c=2, NUM_TRIALS
+        work = exp(-BETA * Work_array(c)) + work
+    end do
 
-holder = - log (work / (NUM_TRIALS - 1) ) / BETA
-write (8,*) distance, holder
-number_steps = number_steps + 1
-work = 0
+    holder = - log (work / (NUM_TRIALS - 1) ) / BETA
+    write (8,*) distance, holder
+    number_steps = number_steps + 1
+    work = 0
 end do
 
 
 ! End the program, deallocate the array and close the files
-11     deallocate(Work_array)
-       close(7)
-       close(8)
-       print*, "Your free energy profile is complete! ", outputFile
-12     if( dataFile == "quit" .or. outputFile == "quit") then
-       print*, "Program terminated.  Nothing computed."
-       end if
+11 continue
+deallocate(Work_array)
+close(7)
+close(8)
+print*, "Your free energy profile is complete! ", outputFile
+
+12 continue
+if( dataFile == "quit" .or. outputFile == "quit") then
+    print*, "Program terminated.  Nothing computed."
+end if
+
 end program SMD_to_FE

@@ -5,6 +5,7 @@
 #  This script will locate salt bridges in a trajectory.                      #
 #                                                                             #
 ###############################################################################
+from __future__ import division
 
 import sys, utilities, os
 from chemistry.amber.readparm import amberParm
@@ -59,10 +60,10 @@ parm = amberParm(prmtop)
 if len(mdcrds) == 0: # if no mdcrd supplied, give default
    mdcrds.append('mdcrd')
 
-ptraj = utilities.which('ptraj') # look for ptraj
+ptraj = utilities.which('cpptraj') # look for ptraj
 
-if ptraj == 'none': 
-   print 'Error: ptraj needed for FindSaltbridge.py!'
+if ptraj is None:
+   print 'Error: cpptraj needed for FindSaltbridge.py!'
    sys.exit() # quit if not found
 
 if not parm.valid:
@@ -109,11 +110,11 @@ for x in range(len(pairs)):
 
 file.close()
 
-os.system('ptraj {0} _FSB_dist.ptraj'.format(prmtop))
+os.system('cpptraj {0} _FSB_dist.ptraj'.format(prmtop))
 
-print 'Done with ptraj...'
+print 'Done with cpptraj...'
 
-outputfile = open(output,'w',0)
+outputfile = open(output,'w')
 
 for x in range(len(pairs)):
    file = open('_FSB_{0}_{1}.dat'.format(pairs[x][0],pairs[x][1]),'r')

@@ -9,7 +9,7 @@ get_curl() {
    fi
 
    pdbcode=`python -c "print('$1'.lower())"`
-   mid=`python -c "print("$pdbcode"[1:3])"`
+   mid=`python -c "print(\"$pdbcode\"[1:3])"`
 
    url=ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/$mid/pdb$pdbcode.ent.gz
    curl $url > $1.pdb.gz

@@ -16,6 +16,41 @@
 ! compiling a single file in the format read by this program from raw data files generated
 ! by AMBER's SMD module.
 
+subroutine get_num_tokens(string, token_num)
+
+  implicit none
+
+! Passed arguments
+
+  character(*), intent(in) :: string
+
+  integer, intent(out)     :: token_num
+
+! Local variables
+
+  integer :: string_loc  ! our location in the string
+  integer :: iend        ! last non-whitespace character location
+
+  string_loc = 1
+  iend = len_trim(string)
+  token_num = 0
+
+  do while (string_loc .le. iend)
+
+    if ( string(string_loc:string_loc) .le. ' ' ) then
+      string_loc = string_loc + 1
+    else
+
+      do while ( string(string_loc:string_loc) .gt. ' ' )
+        string_loc = string_loc + 1
+      end do
+
+      token_num = token_num + 1
+    end if
+  end do
+
+end subroutine get_num_tokens
+
 program SMD_to_FE
 implicit none
 
@@ -24,7 +59,8 @@ real, dimension(:), allocatable :: Work_array
 real, parameter :: KB = 1.98722E-3
 real :: TEMP, distance, BETA, work, holder
 integer :: num_trials
-character (len=40) :: dataFile, outputFile
+character (len=256) :: dataFile, outputFile
+character (len=2048) :: line
 character (len=3) :: response
 character (len=1) :: input_open
 integer :: i, c
@@ -103,14 +139,10 @@ end if
 !======================== END OF GET FILE NAMES ========================================
 
 ! Here, determine the number of trials that were done
-num_trials = 0
 i = 1
-do
-    num_trials = num_trials + 1
-    read(7,FMT='(F8.5)',eor=100,advance='NO') holder
-    i = i + 1
-end do
-100 rewind(7)
+read(7, fmt='(a)') line
+call get_num_tokens(line, num_trials)
+rewind(7)
 
 !======================== END OF TRIAL NUM DETERMINATION ===============================
 ! Set initial values

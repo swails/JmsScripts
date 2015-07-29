@@ -27,7 +27,7 @@ integer :: num_trials
 character (len=40) :: dataFile, outputFile
 character (len=3) :: response
 character (len=1) :: input_open
-integer :: number_steps, i, c
+integer :: i, c
 
 ! Work_array stores the values of work for each simulation: updated every new distance
 ! KB = Boltzmann's constant in kcal/mol*K (R, or gas constant)
@@ -38,7 +38,6 @@ integer :: number_steps, i, c
 ! outputFile = name of file created to store output
 ! response = yes/no response to queries
 ! input_open = indicator so that error message is not displayed before error is made
-! number_steps = counter that keeps track of the number of steps written to jar.log by AMBER
 ! i, c = counters used in loops to keep track of indices
 ! BETA = stat-mech beta, 1/kT
 ! work = keeps track of exponential of work 
@@ -117,7 +116,6 @@ end do
 ! Set initial values
 work = 0
 BETA = 1 / (KB * TEMP)
-number_steps = 1
 allocate (Work_array(num_trials))
 
 ! Create the output file
@@ -136,7 +134,6 @@ do
 
     holder = - log (work / (num_trials - 1) ) / BETA
     write (8,*) distance, holder
-    number_steps = number_steps + 1
     work = 0
 end do
 

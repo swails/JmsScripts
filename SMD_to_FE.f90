@@ -23,7 +23,7 @@ real, dimension(:), allocatable :: Work_array
 
 real, parameter :: KB = 1.98722E-3
 real :: TEMP, distance, BETA, work, holder
-integer :: NUM_TRIALS
+integer :: num_trials
 character (len=40) :: dataFile, outputFile
 character (len=3) :: response
 character (len=1) :: input_open
@@ -33,8 +33,7 @@ integer :: number_steps, i, c
 ! KB = Boltzmann's constant in kcal/mol*K (R, or gas constant)
 ! TEMP = system temperature, input by the user and checked for mistakes
 ! distance = the distance at which the Work values occur in the file
-! NUM_TRIALS = number of trials, set to 100 is an upper limit, if more are needed this
-!	       value can be changed and program recompiled
+! num_trials = number of trials
 ! dataFile = input name for the file containing the data
 ! outputFile = name of file created to store output
 ! response = yes/no response to queries
@@ -105,10 +104,10 @@ end if
 !======================== END OF GET FILE NAMES ========================================
 
 ! Here, determine the number of trials that were done
-NUM_TRIALS = 0
+num_trials = 0
 i = 1
 do
-    NUM_TRIALS = NUM_TRIALS + 1
+    num_trials = num_trials + 1
     read(7,FMT='(F8.5)',eor=100,advance='NO') holder
     i = i + 1
 end do
@@ -119,7 +118,7 @@ end do
 work = 0
 BETA = 1 / (KB * TEMP)
 number_steps = 1
-allocate (Work_array(NUM_TRIALS))
+allocate (Work_array(num_trials))
 
 ! Create the output file
 open(8, file=outputFile)
@@ -128,14 +127,14 @@ open(8, file=outputFile)
 ! Implement Jarzynski's method
 ! exp(FE(x)/kT) = < exp(W(x)/kT) >
 do
-    read(7,*,end=11)(Work_array(i), i=1,NUM_TRIALS)
+    read(7,*,end=11)(Work_array(i), i=1,num_trials)
     distance = Work_array(1)
 
-    do c=2, NUM_TRIALS
+    do c=2, num_trials
         work = exp(-BETA * Work_array(c)) + work
     end do
 
-    holder = - log (work / (NUM_TRIALS - 1) ) / BETA
+    holder = - log (work / (num_trials - 1) ) / BETA
     write (8,*) distance, holder
     number_steps = number_steps + 1
     work = 0

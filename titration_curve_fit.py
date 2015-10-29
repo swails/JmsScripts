@@ -27,7 +27,7 @@ if __name__ == '__main__':
                      help='Input file with titration data. Default stdin.',
                      default=None)
    parser.add_option('-d', '--deprotonated', dest='protonated', default=True,
-                     action='store_false', help='The input data is fraction ' +
+                     action='store_false', help='The input data is fraction '
                      'deprotonated. NOT default behavior.')
    parser.add_option('-t', '--title', dest='title', default='',
                      metavar='STRING',help='Title for the plot (appended with '
@@ -35,10 +35,6 @@ if __name__ == '__main__':
    parser.add_option('--no-plot', dest='plot', default=True,
                      action='store_false', help='Do not plot the titration '
                      'curve.')
-   parser.add_option('-c', '--column', dest='col', default=1, type='int',
-                     metavar='INT', help='Column that titration data is in. '
-                     'First column, column 0, must have the pH values. Default '
-                     '(%default)')
    opt, arg = parser.parse_args()
 
    if not opt.input_file:
@@ -47,8 +43,7 @@ if __name__ == '__main__':
       try:
          infile = open(opt.input_file, 'r')
       except IOError:
-         print >> sys.stderr, 'Could not open %s for reading' % opt.input_file
-         sys.exit(1)
+         sys.exit('Could not open %s for reading' % opt.input_file)
    
    if opt.protonated:
       transform = lambda x: 1 - x

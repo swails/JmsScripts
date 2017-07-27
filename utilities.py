@@ -33,8 +33,9 @@
 # add_log: adds logs of two numbers and stores it as the log of the sum
 #
 ################################################################################
+from __future__ import print_function
 
-from chemistry.amber.readparm import AmberParm
+from parmed.amber.readparm import AmberParm
 import os, math
 
 def which(program):
@@ -198,9 +199,7 @@ def getresdecmp_prmtop(file):
    try:
       prmtop = open(file,'r')
    except IOError:
-      print >> sys.stderr, "Error: Topology file " + file +            \
-               " does not exist!"
-      sys.exit()
+      sys.exit("Error: Topology file %s does not exist" % file)
    
    lines = prmtop.readlines()
    prmtop.close()
@@ -217,7 +216,7 @@ def getresdecmp_prmtop(file):
          if add:
             unkres.append(residues[x])
    
-   print unkres 
+   print(unkres)
 
    return residue_decomp
 
@@ -232,7 +231,7 @@ def getresdecmp_pdb(file):
    try:
       pdb = open(file,'r')
    except IOError:
-      print >> sys.stderr, "Error: PDB file " + file + "doesn't exist!"
+      print("Error: PDB file " + file + "doesn't exist!", file=sys.stderr)
 
    lines = pdb.readlines()
    pdb.close()

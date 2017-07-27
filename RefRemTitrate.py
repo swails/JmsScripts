@@ -6,7 +6,7 @@ how their energies should be adjusted in order to get
 the correct populations
 """
 
-from __future__ import division
+from __future__ import division, print_function
 
 # Should all be here
 from optparse import OptionParser, OptionGroup
@@ -14,6 +14,8 @@ import os
 from subprocess import Popen
 import sys
 from utilities import which
+
+import parmed as pmd
 
 # Set up the parser and add options
 parser = OptionParser()
@@ -87,21 +89,21 @@ sander = which('sander')
 sanderMPI = which('sander.MPI')
 tleap = which('tleap')
 cpinutil = which('cpinutil.py')
-converter = which('parmed.py')
+converter = which('parmed')
 
 if options.nreps % 2 != 0:
-   print >> sys.stderr, 'Error: Even number of replicas required!'
+   print('Error: Even number of replicas required!', file=sys.stderr)
    sys.exit(1)
 
 if None in [sander, sanderMPI, tleap, cpinutil]:
-   print >> sys.stderr, 'sander, tleap, and cpinutil.py are all necessary!'
+   print('sander, tleap, and cpinutil.py are all necessary!', file=sys.stderr)
    sys.exit(1)
 
 if options.igb == 8 and converter is None:
-   print >> sys.stderr, 'parmed.py is needed for igb = 8!'
+   print('parmed is needed for igb = 8!', file=sys.stderr)
    sys.exit(1)
 
-print " Found necessary programs!"
+print(" Found necessary programs!")
 
 # Keep a log of all stdout
 log = open('%s.log' % os.path.split(sys.argv[0])[1].strip('.py'), 'w')
@@ -177,7 +179,7 @@ f.write(tleapin)
 f.close()
 
 # First it's time to create the prmtop
-print "\n Making topology file"
+print("\n Making topology file")
 file = open('tleap.in', 'w')
 file.write(tleapin)
 file.close()
@@ -185,22 +187,27 @@ file.close()
 proc_return = Popen(['tleap', '-f', 'tleap.in'], executable=tleap, stdout=log).wait()
 
 if proc_return != 0:
-   print >> sys.stderr, 'tleap error!'
+   print('tleap error!', file=sys.stderr)
    sys.exit(1)
 
-print " Successfully created topology file %s.parm7" % options.res
+print(" Successfully created topology file %s.parm7" % options.res)
+
+#print(' Changing the carboxylate radii to 1.3 A')
+#parm = pmd.load_file('%s.parm7' % options.res)
+#pmd.tools.change(parm, 'RADII', '@OD=,OE=', 1.3).execute()
+#parm.write_parm('%s.parm7' % options.res)
 
 # Create the cpin
-print "\n Creating cpin file"
+print("\n Creating cpin file")
 cpin = open(options.res + '.cpin', 'w')
 proc_return = Popen([cpinutil, '-p', '%s.parm7' % options.res, '-igb', 
                      str(options.igb), '-intdiel', str(options.intdiel)],
                      stdout=cpin, stderr=log).wait()
 cpin.close()
-print " Finished making cpin file"
+print(" Finished making cpin file")
 
 if proc_return != 0:
-   print >> sys.stderr, 'cpinutil error!'
+   print('cpinutil error!', file=sys.stderr)
    sys.exit(1)
 
 # Now it's time to minimize the structure
@@ -208,16 +215,16 @@ mdin = open('mdin.min', 'w')
 mdin.write(min_mdin)
 mdin.close()
 
-print "\n Minimizing initial structure"
+print("\n Minimizing initial structure")
 proc_return = Popen([sander, '-O', '-i', 'mdin.min', '-c',
                    '%s.rst7' % options.res, '-p', '%s.parm7' % options.res,
                    '-o', 'min.mdout', '-r', '%s.min.rst7' % options.res]).wait()
 
 if proc_return != 0:
-   print >> sys.stderr, 'sander minimization error!'
+   print('sander minimization error!', file=sys.stderr)
    sys.exit(1)
 
-print " Structure minimized"
+print(" Structure minimized")
 
 os.unlink('min.mdout')
 os.unlink('leap.log')
@@ -261,12 +268,12 @@ for i, ph in enumerate(phlist):
 grpfile.close()
    
 # Now run the simulation!
-print 'Beginning titration of %d replicas...' % options.nreps
-print '\tpKa is %f' % options.pKa
-print '\tSimulating pH values ' + ', '.join([str(i) for i in phlist])
+print('Beginning titration of %d replicas...' % options.nreps)
+print('\tpKa is %f' % options.pKa)
+print('\tSimulating pH values ' + ', '.join([str(i) for i in phlist]))
 if os.system('%s %s -ng %d -groupfile groupfile' % (options.mpi_cmd, sanderMPI,
                                                     options.nreps)):
-   print 'Error during calculation!'
+   print('Error during calculation!')
    sys.exit(1)
 
-print 'Done! Don\'t forget to process output as pH-REMD'
+print('Done! Don\'t forget to process output as pH-REMD')

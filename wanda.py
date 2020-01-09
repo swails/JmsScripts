@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from Tkinter import *
-from ttk import Button, Scrollbar
+from tkinter import *
+from tkinter.ttk import Button, Scrollbar
 from subprocess import Popen, PIPE
 
 class TextWindow(Frame):
    """ A basic, scrollable text window that can either be editable or not """
    def __init__(self, master):
       """ Make a scrollable, resizeable text """
-      Frame.__init__(self, master)
+      super().__init__(master)
       # Add a horizontal and vertical scroller
       self.hscroller = Scrollbar(self, orient=HORIZONTAL)
       self.vscroller = Scrollbar(self, orient=VERTICAL)
@@ -30,7 +30,7 @@ class TextWindow(Frame):
       self.vscroller.configure(command=self.text.yview)
 
    def write(self, s):
-      """ 
+      """
       Writes 's' to the window, such that it will emulate a file.  We have to
       change the state to ACTIVE in order to add text, but then change it back
       to the original state afterwards
@@ -48,7 +48,7 @@ class TextWindow(Frame):
 class RefreshButton(Button):
    """ Allows refreshing of the fortune """
    def __init__(self, master, textwindow):
-      Button.__init__(self, text='Speak again!', command=self.update)
+      super().__init__(text='Speak again!', command=self.update)
       self.textwindow = textwindow
 
    def update(self):
@@ -63,19 +63,23 @@ class RefreshButton(Button):
          process = Popen(['fortune'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
       except OSError:
          return '\tInstall "fortune" for Wanda to give your fortune'
-      out, err = process.communicate('')
+      out, err = process.communicate(b'')
       if process.wait() != 0:
          raise RuntimeError('fortune failed!')
-      return '\t' + '\n\t'.join(out.split('\n'))
+      return '\t' + '\n\t'.join(out.decode('utf-8').split('\n'))
 
-root = Tk()
-root.title('Wanda!')
+def main():
+    root = Tk()
+    root.title('Wanda!')
 
-textbox = TextWindow(root)
-button = RefreshButton(root, textbox)
+    textbox = TextWindow(root)
+    button = RefreshButton(root, textbox)
 
-textbox.pack(fill=BOTH, expand=1)
-button.pack(fill=BOTH, expand=0)
-button.update()
+    textbox.pack(fill=BOTH, expand=1)
+    button.pack(fill=BOTH, expand=0)
+    button.update()
 
-root.mainloop()
+    root.mainloop()
+
+if __name__ == '__main__':
+    main()

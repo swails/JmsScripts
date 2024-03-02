@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import division
-
 """
 This script will calculate a pKa as a function of time fitting to a titration
 curve
@@ -14,15 +12,11 @@ try:
    from scipy import optimize
    from scipy import __version__ as sp_version
 except ImportError:
-   print >> sys.stderr, 'Error: running_titration_curve.py depends on both ' + \
-                        'numpy and scipy. Quitting'
-   sys.exit(1)
+   sys.exit('Error: running_titration_curve.py depends on both numpy and scipy. Quitting')
 
 # Make sure we have a version of scipy with curve_fit
 if not hasattr(optimize, 'curve_fit'):
-   print >> sys.stderr, ('Error: Your version of scipy [%s] does not have ' + \
-         'curve_fit. You need at least scipy version 0.9.0') % sp_version
-   sys.exit(1)
+   sys.exit(f'Error: Your version of scipy [sp_version] does not have curve_fit. You need at least scipy version 0.9.0')
 
 #-------------------------------------------------------------------------------
 
@@ -279,14 +273,13 @@ if __name__ == '__main__':
 
    # Check that we have input data files
    if not args:
-      print >> sys.stderr, 'Error: Missing pH data files'
+      print('Error: Missing pH data files')
       parser.print_help()
       sys.exit(1)
    # Check that all files exist
    for fname in args:
       if not os.path.exists(fname):
-         print >> sys.stderr, 'Error: File [%s] cannot be found!' % fname
-         sys.exit(1)
+         sys.exit(f'Error: File [{fname}] cannot be found!')
    # Select our fitting function
    fit_func = curve_no_hillcoef
    starting_guess = 1
@@ -297,4 +290,4 @@ if __name__ == '__main__':
       fit_func = None
    # Now call our main function
    main(args, opt.outprefix, fit_func, starting_guess, opt.chunk, opt.hill)
-   print 'Finished: I took %.3f minutes' % ((time()-start)/60)
+   print('Finished: I took %.3f minutes' % ((time()-start)/60))

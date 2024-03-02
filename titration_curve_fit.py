@@ -86,11 +86,11 @@ if __name__ == '__main__':
 
       paras[j][0], paras[j][1] = params[0], params[1]
       if not hasplt and ncalls[j] > 0:
-         print '%-20s: pKa = %8.3f n = %8.3f RSS = %10.3e' % (ress[j], params[0],
-                     params[1], sum2s[j])
+         print('%-20s: pKa = %8.3f n = %8.3f RSS = %10.3e' % (ress[j], params[0],
+                     params[1], sum2s[j]))
       elif not hasplt and all0:
-         print '%-20s: pKa = %8s n = %8s RSS = %10s' % (ress[j], 'Inf', 'N/A',
-                  'N/A')
+         print('%-20s: pKa = %8s n = %8s RSS = %10s' % (ress[j], 'Inf', 'N/A',
+                  'N/A'))
    
    if not hasplt:
       sys.exit(0)
